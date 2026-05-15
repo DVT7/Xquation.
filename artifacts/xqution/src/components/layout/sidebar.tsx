@@ -9,7 +9,8 @@ import {
   Star, 
   Info,
   Menu,
-  Telescope
+  Telescope,
+  Stars
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/constants", label: "Constants", icon: BookOpen },
   { href: "/calculators", label: "Calculators", icon: Calculator },
   { href: "/converter", label: "Unit Converter", icon: ArrowRightLeft },
+  { href: "/astronomy-tools", label: "Astronomy Tools", icon: Stars },
   { href: "/glossary", label: "Glossary", icon: BookA },
   { href: "/favorites", label: "Favorites", icon: Star },
   { href: "/about", label: "About", icon: Info },

@@ -1,0 +1,160 @@
+Create a professional educational website called XQution, with the X displayed as a capital letter in bright electric blue (#00D9FF) and Qution in white or light gray. The branding should be sleek, modern, and scientific, with a subtle orbit, telescope, or star icon.
+
+Tagline: Explore. Calculate. Understand.
+
+Design the website as a complete interactive platform for physics, mathematics, and astronomy, aimed at students and lifelong learners.
+
+Overall Design
+Dark, space-inspired theme
+Deep navy background
+Cyan/electric blue as the primary accent color
+Modern dashboard layout with a left sidebar
+Fully responsive
+Smooth animations and hover effects
+Sidebar Navigation
+
+Include:
+
+Formulas
+Constants
+Calculators
+Unit Converter
+Astronomy Tools
+Practice
+Glossary
+Favorites
+About
+Homepage Dashboard
+
+At the top, display summary cards:
+
+Total formulas
+Total constants
+Total categories
+
+Below, include a Domains section with expandable cards for:
+
+Mechanics
+Thermodynamics
+Waves & Optics
+Electricity & Magnetism
+Modern Physics
+Astronomy
+Expandable Domain Cards
+
+When a category card is clicked:
+
+It expands smoothly like an accordion
+Reveals a list of formulas in that category
+Only one category remains open at a time
+Clicking a formula opens its dedicated page
+Formula Link Hover Effect
+
+When hovering over a formula name:
+
+Text changes to electric blue (#00D9FF)
+Slightly shifts to the right
+Displays a subtle cyan glow
+Dedicated Formula Pages
+
+Each formula page should include:
+
+Formula rendered in LaTeX
+Color-coded symbols
+Interactive hover tooltips
+Variable definitions and SI units
+Worked example
+Interactive calculator
+Related constants
+Related formulas
+Practice problems
+Interactive Formula Tooltips
+
+Every symbol, constant, and significant number should be individually hoverable.
+
+On hover, display a tooltip with:
+
+Name
+Meaning
+SI unit
+Constant value (if applicable)
+Short explanation
+
+Support both desktop hover and mobile tap.
+
+Formula Color Scheme
+Element	Color	Hex
+Variables	Electric Blue	#00BFFF
+Physical Constants	Gold	#FFD700
+Numbers & Coefficients	Bright Orange	#FF8C42
+Operators	White	#FFFFFF
+Units	Green	#4ADE80
+Greek Letters	Pink	#F472B6
+Search System
+
+Include a global search bar that can find:
+
+Formulas
+Constants
+Calculators
+Glossary terms
+Constants Library
+
+For each constant, display:
+
+Name
+Symbol
+Value
+Units
+Description
+Unit Converter
+
+Support conversions for:
+
+Length
+Mass
+Time
+Energy
+Temperature
+Pressure
+Astronomical units
+Interactive Calculators
+
+Include calculators for:
+
+Kinematics
+Kinetic Energy
+Escape Velocity
+Orbital Period
+Schwarzschild Radius
+Mass–energy equivalence
+Ohm’s Law
+
+Each calculator should show:
+
+Input fields
+Formula used
+Step-by-step calculations
+Final answer with units
+Astronomy Tools
+
+Include:
+
+Redshift calculator
+Luminosity calculator
+Hubble’s Law calculator
+Kepler’s Laws tools
+Additional Features
+Favorites/bookmarks
+Dark/light mode toggle
+Search suggestions
+Formula legend explaining the color system
+Save recent calculations
+Responsive layout
+Site Color Palette
+Background: #020B24
+Sidebar: #061235
+Cards: #081B45
+Electric Blue Accent: #00D9FF
+Main Text: #F8FAFC
+Secondary Text: #94A3B8
