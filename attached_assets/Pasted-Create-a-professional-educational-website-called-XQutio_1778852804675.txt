@@ -1,0 +1,158 @@
+Create a professional educational website called XQution — a comprehensive physics and astronomy formula platform designed for students, especially those interested in astrophysics.
+
+Overall Goal
+
+Build a modern, responsive website that serves as a complete reference and calculation tool for physics, mathematics, and astronomy. The site should combine formulas, constants, unit conversions, interactive calculators, and practice problems in one place.
+
+Design Requirements
+Clean and modern user interface
+Dark mode as the default theme
+Accent colors inspired by space (blue, purple, cyan)
+Fully responsive for desktop and mobile
+Fast search functionality across all formulas and constants
+Elegant cards with subtle animations
+Sidebar or top navigation
+Main Sections
+1. Home Page
+Hero section with the title XQution
+Subtitle: “Physics, Mathematics, and Astronomy Calculations Made Simple”
+Search bar to quickly find formulas, constants, and calculators
+Featured categories
+Quick links to popular tools
+2. Formula Explorer
+
+Organize formulas into categories:
+
+Mechanics
+Kinematics
+Newton’s Laws
+Work, Energy, and Power
+Momentum
+Gravitation
+Thermodynamics
+Ideal Gas Law
+Heat equations
+Waves and Optics
+Wave speed
+Lens and mirror equations
+Electricity and Magnetism
+Ohm’s Law
+Coulomb’s Law
+Electric power
+Modern Physics
+Mass–energy equivalence
+Photon energy
+de Broglie wavelength
+Astronomy
+Kepler’s Laws
+Schwarzschild radius
+Escape velocity
+Luminosity and flux
+
+For each formula card include:
+
+Formula rendered in LaTeX
+Variable definitions
+SI units
+Worked example
+Related formulas
+3. Constants Library
+
+Include scientific constants such as:
+
+Speed of light
+Gravitational constant
+Planck constant
+Reduced Planck constant
+Elementary charge
+Boltzmann constant
+Avogadro constant
+Stefan–Boltzmann constant
+Astronomical Unit
+Light-year
+Parsec
+Solar mass, radius, and luminosity
+
+For each constant include:
+
+Symbol
+Value
+Units
+Description
+4. Unit Converter
+
+Conversions for:
+
+Length
+Mass
+Time
+Energy
+Temperature
+Pressure
+Astronomical distances
+Angle units
+Velocity
+5. Interactive Calculators
+
+Build calculators for:
+
+Kinematics
+Gravitational force
+Escape velocity
+Orbital period
+Kinetic energy
+Potential energy
+Ohm’s Law
+Lens equation
+Schwarzschild radius
+E = mc²
+
+Each calculator should:
+
+Accept user inputs
+Validate values
+Show the formula used
+Display step-by-step calculations
+Present the final answer with units
+6. Astronomy Tools
+Distance conversions (AU, light-years, parsecs)
+Stellar luminosity calculator
+Black hole radius calculator
+Redshift calculator
+Telescope resolution calculator
+7. Practice Problems
+Topic-based questions
+Hints and full solutions
+Difficulty levels
+8. Glossary
+
+Definitions of important physics and astronomy terms.
+
+9. Favorites
+
+Allow users to bookmark formulas and constants.
+
+10. About Page
+
+Explain the purpose of XQution and its educational mission.
+
+Advanced Features
+Global search
+Dark/light theme toggle
+Save recent calculations
+Export results to PDF
+Shareable calculator links
+Quiz mode
+Graph plotting for functions
+Technology Stack
+
+Use:
+
+Python with Flask for the backend
+HTML, CSS, and JavaScript for the frontend
+MathJax or KaTeX for LaTeX rendering
+SQLite for storing formulas and constants
+Chart.js for graphs
+Content Quality
+
+Ensure all formulas and constants are scientifically accurate and presented with proper SI units.

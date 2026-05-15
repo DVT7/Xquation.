@@ -1,15 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: XQution - Physics and Astronomy Formula Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: formulas
+    description: Formula operations
+  - name: constants
+    description: Physical and astronomical constants
+  - name: problems
+    description: Practice problems
+  - name: glossary
+    description: Glossary terms
+  - name: favorites
+    description: User favorites
+  - name: search
+    description: Global search
+  - name: stats
+    description: Site statistics
+
 paths:
   /healthz:
     get:
@@ -24,6 +38,301 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /formulas:
+    get:
+      operationId: listFormulas
+      tags: [formulas]
+      summary: List all formulas
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of formulas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Formula"
+
+  /formulas/{id}:
+    get:
+      operationId: getFormula
+      tags: [formulas]
+      summary: Get a formula by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Formula
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+        "404":
+          description: Not found
+
+  /formulas/categories:
+    get:
+      operationId: listFormulaCategories
+      tags: [formulas]
+      summary: List all formula categories with counts
+      responses:
+        "200":
+          description: Categories with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryCount"
+
+  /constants:
+    get:
+      operationId: listConstants
+      tags: [constants]
+      summary: List all physical constants
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of constants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Constant"
+
+  /constants/{id}:
+    get:
+      operationId: getConstant
+      tags: [constants]
+      summary: Get a constant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Constant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Constant"
+        "404":
+          description: Not found
+
+  /problems:
+    get:
+      operationId: listProblems
+      tags: [problems]
+      summary: List practice problems
+      parameters:
+        - name: topic
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of problems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Problem"
+
+  /problems/{id}:
+    get:
+      operationId: getProblem
+      tags: [problems]
+      summary: Get a problem by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Problem
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not found
+
+  /glossary:
+    get:
+      operationId: listGlossaryTerms
+      tags: [glossary]
+      summary: List glossary terms
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of glossary terms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GlossaryTerm"
+
+  /glossary/{id}:
+    get:
+      operationId: getGlossaryTerm
+      tags: [glossary]
+      summary: Get a glossary term by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Glossary term
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GlossaryTerm"
+        "404":
+          description: Not found
+
+  /favorites:
+    get:
+      operationId: listFavorites
+      tags: [favorites]
+      summary: List all favorites
+      responses:
+        "200":
+          description: List of favorites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Favorite"
+    post:
+      operationId: addFavorite
+      tags: [favorites]
+      summary: Add a favorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteInput"
+      responses:
+        "201":
+          description: Created favorite
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Favorite"
+
+  /favorites/{id}:
+    delete:
+      operationId: removeFavorite
+      tags: [favorites]
+      summary: Remove a favorite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /search:
+    get:
+      operationId: globalSearch
+      tags: [search]
+      summary: Search across all content
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get platform statistics
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  /formulas/featured:
+    get:
+      operationId: listFeaturedFormulas
+      tags: [formulas]
+      summary: List featured/popular formulas
+      responses:
+        "200":
+          description: Featured formulas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Formula"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +343,151 @@ components:
       required:
         - status
 
+    Formula:
+      type: object
+      required: [id, name, category, latex, description]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: ["string", "null"]
+        latex:
+          type: string
+        description:
+          type: string
+        variables:
+          type: string
+        siUnits:
+          type: ["string", "null"]
+        example:
+          type: ["string", "null"]
+        relatedFormulas:
+          type: ["string", "null"]
+        isFeatured:
+          type: boolean
+
+    Constant:
+      type: object
+      required: [id, name, symbol, value, units, description]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        symbol:
+          type: string
+        value:
+          type: string
+        units:
+          type: string
+        description:
+          type: string
+        category:
+          type: ["string", "null"]
+
+    Problem:
+      type: object
+      required: [id, topic, question, difficulty]
+      properties:
+        id:
+          type: integer
+        topic:
+          type: string
+        question:
+          type: string
+        difficulty:
+          type: string
+        hint:
+          type: ["string", "null"]
+        solution:
+          type: ["string", "null"]
+        answer:
+          type: ["string", "null"]
+
+    GlossaryTerm:
+      type: object
+      required: [id, term, definition]
+      properties:
+        id:
+          type: integer
+        term:
+          type: string
+        definition:
+          type: string
+        category:
+          type: ["string", "null"]
+
+    Favorite:
+      type: object
+      required: [id, itemType, itemId, itemName]
+      properties:
+        id:
+          type: integer
+        itemType:
+          type: string
+        itemId:
+          type: integer
+        itemName:
+          type: string
+        createdAt:
+          type: string
+
+    FavoriteInput:
+      type: object
+      required: [itemType, itemId, itemName]
+      properties:
+        itemType:
+          type: string
+        itemId:
+          type: integer
+        itemName:
+          type: string
+
+    CategoryCount:
+      type: object
+      required: [category, count]
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+
+    SearchResults:
+      type: object
+      required: [formulas, constants, problems, glossary]
+      properties:
+        formulas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Formula"
+        constants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Constant"
+        problems:
+          type: array
+          items:
+            $ref: "#/components/schemas/Problem"
+        glossary:
+          type: array
+          items:
+            $ref: "#/components/schemas/GlossaryTerm"
+
+    PlatformStats:
+      type: object
+      required: [formulaCount, constantCount, problemCount, glossaryCount, categoryCount]
+      properties:
+        formulaCount:
+          type: integer
+        constantCount:
+          type: integer
+        problemCount:
+          type: integer
+        glossaryCount:
+          type: integer
+        categoryCount:
+          type: integer
