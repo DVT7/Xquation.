@@ -1,6 +1,6 @@
 import { useGetStats, useListFeaturedFormulas, useListFormulaCategories } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Search, Activity, BookOpen, BrainCircuit, Hash } from "lucide-react";
+import { ArrowRight, Search, Activity, BookOpen, Hash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { BlockMath } from "@/components/ui/math";
@@ -48,11 +48,10 @@ export default function Home() {
       </section>
 
       {/* Stats row */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: "Formulas", value: stats?.formulaCount, icon: Hash, loading: statsLoading },
           { label: "Constants", value: stats?.constantCount, icon: BookOpen, loading: statsLoading },
-          { label: "Problems", value: stats?.problemCount, icon: BrainCircuit, loading: statsLoading },
           { label: "Categories", value: stats?.categoryCount, icon: Activity, loading: statsLoading },
         ].map((stat, i) => (
           <Card key={i} className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
