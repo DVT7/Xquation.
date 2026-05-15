@@ -81,14 +81,14 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {categoriesLoading ? (
-             Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
+             Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)
           ) : (
             categories?.map((cat) => (
               <Link key={cat.category} href={`/formulas?category=${encodeURIComponent(cat.category)}`} className="block">
-                <Card className="h-full bg-card/40 hover:bg-card border-border/50 hover:border-primary/50 transition-all cursor-pointer group">
-                  <CardHeader className="p-5">
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">{cat.category}</CardTitle>
-                    <CardDescription>{cat.count} formulas</CardDescription>
+                <Card className="h-full bg-card/40 hover:bg-card border-border/50 hover:border-primary/50 transition-all cursor-pointer group min-h-[100px]">
+                  <CardHeader className="p-6">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">{cat.category}</CardTitle>
+                    <CardDescription className="mt-1">{cat.count} formulas</CardDescription>
                   </CardHeader>
                 </Card>
               </Link>
