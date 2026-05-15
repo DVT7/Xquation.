@@ -21,7 +21,6 @@ const Formulas = lazy(() => import("@/pages/formulas"));
 const Constants = lazy(() => import("@/pages/constants"));
 const Calculators = lazy(() => import("@/pages/calculators"));
 const Converter = lazy(() => import("@/pages/converter"));
-const Problems = lazy(() => import("@/pages/problems"));
 const Glossary = lazy(() => import("@/pages/glossary"));
 const Favorites = lazy(() => import("@/pages/favorites"));
 const About = lazy(() => import("@/pages/about"));
@@ -45,7 +44,6 @@ function Router() {
           <Route path="/constants" component={Constants} />
           <Route path="/calculators" component={Calculators} />
           <Route path="/converter" component={Converter} />
-          <Route path="/problems" component={Problems} />
           <Route path="/glossary" component={Glossary} />
           <Route path="/favorites" component={Favorites} />
           <Route path="/about" component={About} />
