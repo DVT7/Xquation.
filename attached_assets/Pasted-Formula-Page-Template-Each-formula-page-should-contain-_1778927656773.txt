@@ -1,0 +1,200 @@
+Formula Page Template
+
+Each formula page should contain the following sections in order:
+
+Header Section
+Main Formula Card
+Formula Components Cards
+Interactive Calculator
+Interactive Simulation (when applicable)
+Worked Example
+Related Formulas
+Related Constants
+Related Topics
+Derivation
+Derivation Formula Cards
+Practice Problems
+Footer Navigation
+1. Header Section
+
+Display:
+
+Formula title
+Category breadcrumb (e.g., Astronomy → Black Holes)
+Tags
+Favorite button
+Copy LaTeX button
+Share button
+2. Main Formula Card
+
+Display the equation prominently and render it in LaTeX.
+
+The main equation must be fully color-coded.
+
+Symbol Color Rules
+Symbol Type	Color	Hex
+Final Answer Variable (left-hand side)	White	#FFFFFF
+Variables	Electric Blue	#00BFFF
+Physical Constants	Gold	#FFD700
+Numbers & Coefficients	Bright Orange	#FF8C42
+Operators	White	#FFFFFF
+Units	Green	#4ADE80
+Greek Letters (variables)	Electric Blue	#00BFFF
+Greek Letters (constants)	Gold	#FFD700
+Classification Rule
+
+Classify symbols based on their meaning in the current formula, not just the symbol itself.
+
+Examples:
+
+In PE = mgh, h = height → variable (blue).
+In E = hf, h = Planck constant → constant (gold).
+Formula Legend
+
+Display a legend below the equation.
+
+Symbol Tooltips
+
+Every symbol should be hoverable/tappable and show:
+
+Name
+Meaning
+SI unit
+Constant value (if applicable)
+Short explanation
+3. Formula Components Cards
+
+Generate one card for every variable, constant, and important coefficient.
+
+Each card shows:
+
+Symbol
+Name
+Description
+Unit
+Value (for constants)
+Type
+Card Behavior
+Border color matches symbol color.
+Hover glow.
+Clickable.
+Navigation Rules
+Constants → constant page.
+Variables → glossary page.
+Derived quantities → glossary or formula page.
+
+Hovering over a symbol highlights the matching card and vice versa.
+
+4. Interactive Calculator
+
+Embed a calculator directly in the formula page.
+
+Features:
+
+Input fields and/or sliders.
+Unit selectors.
+Real-time calculation.
+Step-by-step breakdown.
+Final answer with units.
+Reset button.
+Copy result button.
+
+Every formula in XQution should have a corresponding calculator.
+
+5. Interactive Simulation (When Applicable)
+
+Include for formulas that benefit from visualization.
+
+Two-column layout:
+
+Left: formula, controls, result.
+Right: SVG/Canvas visualization.
+
+Examples:
+
+Kinetic Energy
+Gravitational Force
+Schwarzschild Radius
+Orbital Motion
+6. Worked Example
+
+Provide a fully solved example including:
+
+Problem statement
+Given values
+Formula
+Substitution
+Step-by-step calculations
+Final answer
+
+Use color-coded symbols throughout.
+
+7. Related Formulas
+
+Display clickable cards linking to conceptually related formulas.
+
+8. Related Constants
+
+Display clickable cards linking to relevant constant pages.
+
+9. Related Topics
+
+Display clickable cards linking to glossary/topic pages from the site index.
+
+Examples:
+
+Black Holes
+Event Horizon
+General Relativity
+10. Derivation
+
+Show a step-by-step derivation of the formula using:
+
+LaTeX equations
+Explanatory text
+Color-coded symbols
+11. Derivation Formula Cards
+
+Below the derivation, display cards for every formula used in the derivation.
+
+Each card:
+
+Shows formula name and mini equation preview.
+Is clickable.
+Opens the corresponding formula page.
+12. Practice Problems
+
+Include exactly 10 practice problems per formula.
+
+Problem Features
+Difficulty badge
+Problem statement
+Hint button
+Show Solution toggle
+Fully worked solution
+Final answer
+Difficulty Scale
+Level	Educational Stage	Badge Color	Hex
+1	Grade 5 and Below	Green	#22C55E
+2	Grade 6–7	Lime	#84CC16
+3	Grade 8	Yellow-Green	#A3E635
+4	Grade 9–10	Amber	#F59E0B
+5	Grade 11–12	Orange	#F97316
+6	IB HL / AP / A-Level	Deep Orange	#EA580C
+7	First-Year University	Red	#EF4444
+8	Undergraduate	Rose	#E11D48
+9	Advanced Undergraduate	Purple	#8B5CF6
+10	Expert / Graduate	Violet	#A855F7
+
+Display a Difficulty Legend at the top of the section.
+
+Use color-coded symbols in all questions and solutions.
+
+13. Footer Navigation
+
+Include:
+
+Previous Formula
+Next Formula
+Back to Category
+Back to Top

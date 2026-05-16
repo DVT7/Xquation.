@@ -18,6 +18,7 @@ const queryClient = new QueryClient({
 
 const Home = lazy(() => import("@/pages/home"));
 const Formulas = lazy(() => import("@/pages/formulas"));
+const FormulaDetail = lazy(() => import("@/pages/formula-detail"));
 const Constants = lazy(() => import("@/pages/constants"));
 const Calculators = lazy(() => import("@/pages/calculators"));
 const Converter = lazy(() => import("@/pages/converter"));
@@ -41,6 +42,7 @@ function Router() {
       <Suspense fallback={<LoadingFallback />}>
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/formulas/:id" component={FormulaDetail} />
           <Route path="/formulas" component={Formulas} />
           <Route path="/constants" component={Constants} />
           <Route path="/calculators" component={Calculators} />

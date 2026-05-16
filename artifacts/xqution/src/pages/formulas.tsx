@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function Formulas() {
   const [location] = useLocation();
@@ -107,7 +107,9 @@ export default function Formulas() {
               <CardHeader className="bg-muted/20 border-b border-border/50 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <CardTitle className="text-xl mb-1">{formula.name}</CardTitle>
+                    <Link href={`/formulas/${formula.id}`}>
+                      <CardTitle className="text-xl mb-1 hover:text-primary transition-colors cursor-pointer">{formula.name}</CardTitle>
+                    </Link>
                     <div className="flex gap-2 items-center">
                       <Badge variant="secondary" className="font-mono text-xs">{formula.category}</Badge>
                       {formula.subcategory && <span className="text-xs text-muted-foreground">{formula.subcategory}</span>}
