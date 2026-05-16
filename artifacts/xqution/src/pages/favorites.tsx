@@ -58,7 +58,7 @@ export default function Favorites() {
           {favorites?.map(fav => {
             const isRemoving = removing === fav.id;
             const linkHref = fav.itemType === "formula"
-              ? `/formulas?search=${encodeURIComponent(fav.itemName)}`
+              ? `/formulas/${fav.itemId}`
               : `/constants?search=${encodeURIComponent(fav.itemName)}`;
 
             return (

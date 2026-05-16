@@ -173,6 +173,14 @@ export default function Formulas() {
                     )}
                   </Accordion>
                 )}
+
+                <div className="mt-5 pt-4 border-t border-border/40">
+                  <Link href={`/formulas/${formula.id}`}>
+                    <Button variant="outline" size="sm" className="w-full font-mono text-xs border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/60">
+                      View Full Details — Worked Example, Derivation &amp; Practice Problems →
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ))
