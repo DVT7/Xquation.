@@ -5,6 +5,7 @@ import { Search, Star, Filter, Copy, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { BlockMath, InlineMath } from "@/components/ui/math";
+import { SymbolCards } from "@/components/formula/symbol-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
@@ -133,26 +134,20 @@ export default function Formulas() {
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="bg-background/80 rounded-md p-6 border border-border/50 flex items-center justify-center overflow-x-auto min-h-[120px] mb-6">
+                <div className="bg-background/80 rounded-md p-6 border border-border/50 flex items-center justify-center overflow-x-auto min-h-[120px]">
                   <BlockMath math={formula.latex} />
                 </div>
-                
-                <p className="text-sm text-foreground/80 mb-6">{formula.description}</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {formula.variables && (
-                    <div>
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Variables</h4>
-                      <p className="text-sm font-mono text-foreground/70 whitespace-pre-wrap">{formula.variables}</p>
-                    </div>
-                  )}
-                  {formula.siUnits && (
-                    <div>
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">SI Units</h4>
-                      <p className="text-sm font-mono text-foreground/70">{formula.siUnits}</p>
-                    </div>
-                  )}
-                </div>
+
+                <SymbolCards variables={formula.variables} />
+
+                <p className="text-sm text-foreground/80 mt-6 mb-4">{formula.description}</p>
+
+                {formula.siUnits && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Result Unit:</span>
+                    <span className="text-xs font-mono text-green-400">{formula.siUnits}</span>
+                  </div>
+                )}
 
                 {(formula.example || formula.relatedFormulas) && (
                   <Accordion type="single" collapsible className="mt-6">

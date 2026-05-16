@@ -1,0 +1,178 @@
+Enhance every formula page in XQution so that, directly below the main equation, there is a set of interactive symbol cards—one card for each variable, constant, or important coefficient used in the formula.
+
+These cards should make it easy for users to understand each symbol at a glance.
+
+Symbol Cards Section
+
+For every formula, automatically generate cards for all symbols appearing in the equation.
+
+Each card should include:
+
+Symbol (large and color-coded)
+Name
+Description
+SI Unit
+Value (for constants)
+Type (Variable, Constant, Number, Derived Quantity)
+Card Color Rules
+
+Use the same color system as the formula itself:
+
+Symbol Type	Color
+Final Answer Variable	White
+Variables	Electric Blue (#00BFFF)
+Physical Constants	Gold (#FFD700)
+Numbers/Coefficients	Bright Orange (#FF8C42)
+Units	Green (#4ADE80)
+
+Each card should have:
+
+Dark background
+Border matching the symbol color
+Rounded corners
+Soft glow on hover
+Example: Schwarzschild Radius
+
+r
+s
+	​
+
+=
+c
+2
+2GM
+	​
+
+
+Generate these cards:
+
+r
+s
+	​
+
+Name: Schwarzschild Radius
+Description: Radius of the event horizon
+Unit: m
+Type: Final Answer
+G
+Name: Gravitational Constant
+Value: 6.67430×10
+−11
+Unit: N·m²/kg²
+Type: Physical Constant
+M
+Name: Mass
+Unit: kg
+Type: Variable
+c
+Name: Speed of Light
+Value: 299,792,458
+Unit: m/s
+Type: Physical Constant
+2
+Name: Numerical Coefficient
+Type: Constant Number
+Example: Kinetic Energy
+KE=
+2
+1
+	​
+
+mv
+2
+m
+1
+	​
+
+m
+2
+	​
+
+v
+m1
+m2
+
+Create cards for:
+
+KE
+Kinetic Energy
+Unit: J
+Type: Final Answer
+m
+Mass
+Unit: kg
+Type: Variable
+v
+Velocity
+Unit: m/s
+Type: Variable
+1/2
+Numerical Coefficient
+Type: Constant Number
+2
+Exponent
+Indicates squaring of velocity
+Example: Gravitational Force
+
+F=G
+r
+2
+m
+1
+	​
+
+m
+2
+	​
+
+	​
+
+
+Create cards for:
+
+F: Gravitational Force
+G: Gravitational Constant
+m
+1
+	​
+
+: Mass of object 1
+m
+2
+	​
+
+: Mass of object 2
+r: Distance between centers
+2: Exponent
+Card Layout
+
+Display cards in a responsive grid:
+
+Desktop: 3–4 cards per row
+Tablet: 2 per row
+Mobile: 1 per row
+Hover Effects
+
+When hovering over a card:
+
+Slight upward motion
+Border brightens
+Soft colored glow
+Optional subtle scale increase
+Interaction Between Formula and Cards
+Hovering over a symbol in the equation highlights the matching card.
+Hovering over a card highlights the corresponding symbol in the equation.
+Clicking a card can pin its tooltip.
+Section Heading
+
+Use a heading such as:
+
+Formula Components
+
+or
+
+Variables and Constants
+
+Goal
+
+Every formula page should not only display the equation, but also provide a complete visual breakdown of all variables, constants, and coefficients through interactive cards. This makes each formula easy to understand and transforms XQution into a truly educational and interactive platform.

@@ -11,7 +11,8 @@ const router: IRouter = Router();
 
 router.get("/favorites", async (_req, res): Promise<void> => {
   const favorites = await db.select().from(favoritesTable).orderBy(favoritesTable.createdAt);
-  res.json(ListFavoritesResponse.parse(favorites));
+  const serialized = favorites.map(f => ({ ...f, createdAt: f.createdAt?.toISOString() }));
+  res.json(ListFavoritesResponse.parse(serialized));
 });
 
 router.post("/favorites", async (req, res): Promise<void> => {
