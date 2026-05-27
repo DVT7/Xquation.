@@ -120,13 +120,23 @@ function buildColorMap(variables: string): Record<string, string> {
   const parts = variables.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
   let isFirst = true;
 
+  // Symbols without a description yet — they share the next part's description.
+  // e.g. "m₁, m₂ = masses" splits into ["m₁"] then ["m₂ = masses"]; m₁ is pending.
+  let pending: string[] = [];
+
   for (const part of parts) {
     const eqIdx = part.indexOf(' = ');
-    if (eqIdx === -1) continue;
+    if (eqIdx === -1) {
+      pending.push(part.trim());
+      continue;
+    }
     const rawSym = part.substring(0, eqIdx).trim();
     const desc   = part.substring(eqIdx + 3).trim();
 
-    for (const sym of rawSym.split(/,\s*/)) {
+    const allSyms = [...pending, ...rawSym.split(/,\s*/)];
+    pending = [];
+
+    for (const sym of allSyms) {
       const s = sym.trim();
       if (!s) continue;
       const type  = symType(s, desc, isFirst);
@@ -140,7 +150,7 @@ function buildColorMap(variables: string): Record<string, string> {
         if (!map[key]) map[key] = color;
       }
       // Also register the traditional unicodeSubToLatex form for plain ASCII
-      // subscript-letter symbols like r_s, v_0 (matched as whole tokens).
+      // subscript-letter symbols like r_s (matched as whole tokens in the LaTeX).
       const traditionalKey = unicodeSubToLatex(s);
       if (traditionalKey !== s && !UNICODE_TO_LATEX[s[0]] && !map[traditionalKey]) {
         map[traditionalKey] = color;

@@ -73,17 +73,26 @@ function parseVariables(variables: string): SymbolCard[] {
 
   const parts = variables.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
 
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
+  // Symbols that have no description yet — they share the next part's description.
+  // e.g. "m₁, m₂ = masses" splits into ["m₁"] and ["m₂ = masses"]; m₁ is pending.
+  let pending: string[] = [];
+
+  for (const part of parts) {
     const eqIdx = part.indexOf(" = ");
-    if (eqIdx === -1) continue;
+    if (eqIdx === -1) {
+      // No description — queue this symbol for the next description we find
+      pending.push(part.trim());
+      continue;
+    }
 
     const rawSymbol = part.substring(0, eqIdx).trim();
     const description = part.substring(eqIdx + 3).trim();
 
-    // Handle joint definitions like "m₁, m₂ = masses"
-    const symbols = rawSymbol.split(/,\s*/);
-    for (const sym of symbols) {
+    // All pending symbols + any comma-separated symbols in this part share this description
+    const allSyms = [...pending, ...rawSymbol.split(/,\s*/)];
+    pending = [];
+
+    for (const sym of allSyms) {
       const s = sym.trim();
       if (!s) continue;
       const type = detectType(s, description, cards.length);
