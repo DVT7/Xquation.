@@ -37,20 +37,33 @@ const KNOWN_CONSTANTS: Record<string, { value: string; unit: string }> = {
 // Detect if a description implies a known numeric constant value inline
 const VALUE_PATTERN = /\([\d.,×^⁻]+\s*[^\)]*\)/;
 
+// Descriptions that should always be treated as variables, even if the symbol
+// appears in KNOWN_CONSTANTS (e.g. h = height vs h = Planck's constant)
+const VARIABLE_DESCRIPTIONS = new Set([
+  "height", "depth", "altitude", "displacement", "distance",
+  "time", "position", "length", "width", "radius", "angle",
+]);
+
 function detectType(symbol: string, description: string, index: number): SymbolType {
   if (index === 0) return "answer";
+  // If the description clearly names a physical variable, don't treat it as a constant
+  const descLower = description.toLowerCase().trim();
+  if (VARIABLE_DESCRIPTIONS.has(descLower)) return "variable";
   const base = symbol.split(/[₀₁₂]/)[0];
   if (KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base]) return "constant";
   if (VALUE_PATTERN.test(description)) return "constant";
   return "variable";
 }
 
-function getUnit(symbol: string): string {
+function getUnit(symbol: string, description: string): string {
+  // Don't pull a unit from KNOWN_CONSTANTS if the description marks this as a plain variable
+  if (VARIABLE_DESCRIPTIONS.has(description.toLowerCase().trim())) return "";
   const base = symbol.split(/[₀₁₂]/)[0];
   return KNOWN_CONSTANTS[symbol]?.unit ?? KNOWN_CONSTANTS[base]?.unit ?? "";
 }
 
 function getValue(symbol: string, description: string): string | undefined {
+  if (VARIABLE_DESCRIPTIONS.has(description.toLowerCase().trim())) return undefined;
   const base = symbol.split(/[₀₁₂]/)[0];
   const known = KNOWN_CONSTANTS[symbol] ?? KNOWN_CONSTANTS[base];
   if (known) return known.value;
@@ -82,7 +95,7 @@ function parseVariables(variables: string): SymbolCard[] {
         symbol: s,
         name: description.replace(VALUE_PATTERN, "").trim(),
         description,
-        unit: getUnit(s),
+        unit: getUnit(s, description),
         value: type === "constant" ? getValue(s, description) : undefined,
         type,
       });
