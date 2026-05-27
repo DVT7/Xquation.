@@ -30,6 +30,7 @@ const KNOWN_CONSTANTS: Record<string, { value: string; unit: string }> = {
   "g":  { value: "9.81",         unit: "m/s²" },
   "Nₐ": { value: "6.022×10²³",   unit: "mol⁻¹" },
   "e":  { value: "1.602×10⁻¹⁹",  unit: "C" },
+  "π":  { value: "3.141592653",  unit: "dimensionless" },
 };
 
 // Detect if a description implies a known numeric constant value inline

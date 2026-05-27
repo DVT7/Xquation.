@@ -78,7 +78,13 @@ function symToLatexKeys(raw: string): string[] {
 
 // ── Type detection ────────────────────────────────────────────────────────────
 
-const KNOWN_CONST_SET = new Set(['G', 'c', 'σ', 'g', 'h', 'ℏ', 'e', 'Nₐ', 'H₀', 'kₑ']);
+const KNOWN_CONST_SET = new Set(['G', 'c', 'σ', 'g', 'h', 'ℏ', 'e', 'Nₐ', 'H₀', 'kₑ', 'π']);
+
+// LaTeX commands that are always constants regardless of the variables string.
+// \pi is a mathematical constant; inject it into every formula's color map.
+const ALWAYS_CONST_COMMANDS: Record<string, string> = {
+  '\\pi': '#FFD700',
+};
 
 const VAR_DESC_RE =
   /\b(height|depth|altitude|displacement|distance|time|position|length|width|radius|angle|velocity|resistance|temperature|pressure|volume|mass|force|charge|current|frequency|wavelength|momentum|acceleration|period|luminosity|separation|moles|amplitude|density|index|indices|refractive|star|orbital|surface|central|initial|final|incident|refracted|uncertainty|internal|energy|change)\b/i;
@@ -304,6 +310,10 @@ function colorizeWithMap(
 export function colorizeLatex(latex: string, variables?: string | null): string {
   if (!variables) return latex;
   const colorMap = buildColorMap(variables);
+  // Inject always-constant commands (e.g. \pi) that may not appear in variables
+  for (const [cmd, color] of Object.entries(ALWAYS_CONST_COMMANDS)) {
+    if (!colorMap[cmd]) colorMap[cmd] = color;
+  }
   if (Object.keys(colorMap).length === 0) return latex;
   const symbols  = Object.keys(colorMap).filter(k => !k.startsWith('\\')).sort((a, b) => b.length - a.length);
   const commands = Object.keys(colorMap).filter(k => k.startsWith('\\'));
