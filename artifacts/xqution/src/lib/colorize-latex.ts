@@ -13,6 +13,7 @@
  *   LaTeX command form and matched when the colorizer encounters those commands.
  * - Δ-prefixed compound symbols (Δp, Δt) each contribute \Delta AND the
  *   trailing letter(s) to the color map so both parts are colored.
+ * - In \frac{number}{symbol} the numerator number inherits the denominator's color.
  */
 
 // ── Unicode subscript → LaTeX subscript notation ─────────────────────────────
@@ -24,18 +25,15 @@ const UNI_SUB: Record<string, string> = {
 
 // ── Unicode character → LaTeX command ────────────────────────────────────────
 const UNICODE_TO_LATEX: Record<string, string> = {
-  // Greek lowercase
   'α': '\\alpha', 'β': '\\beta',  'γ': '\\gamma',   'δ': '\\delta',
   'ε': '\\epsilon','ζ': '\\zeta', 'η': '\\eta',      'θ': '\\theta',
   'ι': '\\iota',  'κ': '\\kappa', 'λ': '\\lambda',   'μ': '\\mu',
   'ν': '\\nu',    'ξ': '\\xi',    'π': '\\pi',        'ρ': '\\rho',
-  'τ': '\\tau',   'υ': '\\upsilon','φ': '\\phi',      'χ': '\\chi',
+  'τ': '\\tau',   'υ': '\\upsilon', 'φ': '\\phi',      'χ': '\\chi',
   'ψ': '\\psi',   'ω': '\\omega',
-  // Greek uppercase
   'Γ': '\\Gamma', 'Δ': '\\Delta', 'Θ': '\\Theta', 'Λ': '\\Lambda',
   'Ξ': '\\Xi',    'Π': '\\Pi',    'Σ': '\\Sigma', 'Υ': '\\Upsilon',
   'Φ': '\\Phi',   'Ψ': '\\Psi',  'Ω': '\\Omega',
-  // Special physics symbols
   'ℏ': '\\hbar',
 };
 
@@ -48,17 +46,11 @@ function unicodeSubToLatex(sym: string): string {
 }
 
 /**
- * Convert a raw symbol (from the variables string) to the set of LaTeX tokens
- * that represent it in a formula.
- *
- * - Greek / special chars → \command  (e.g. θ → \theta, Δ → \Delta, ℏ → \hbar)
- * - Unicode subscript digits → skipped (subscript is a positional marker; the
- *   base letter gets the color and the subscript digit stays white)
- * - Unicode subscript letters (ₛ, ₑ …) → kept as _letter for compound symbols
- *   like rₛ (Schwarzschild radius)
- * - Plain ASCII → kept as-is
- * - Δ-prefixed symbols (Δp, Δt, ΔU) emit BOTH \Delta AND the trailing letter(s)
- *   so the whole expression is colored in the equation.
+ * Convert a raw symbol to the set of LaTeX tokens that represent it.
+ * - Greek/special chars → \command  (θ → \theta, Δ → \Delta, ℏ → \hbar)
+ * - Unicode subscript digits → skipped (base letter gets the color; digit stays white)
+ * - Unicode subscript letters (ₛ …) → kept as _letter for compound symbols like rₛ
+ * - Δ-prefixed symbols (Δp, ΔU) emit BOTH \Delta AND the trailing letter(s)
  */
 function symToLatexKeys(raw: string): string[] {
   const keys: string[] = [];
@@ -70,10 +62,10 @@ function symToLatexKeys(raw: string): string[] {
       i++;
     } else if (UNI_SUB[ch] !== undefined) {
       const mapped = UNI_SUB[ch];
-      // Only keep subscript LETTERS as part of the key (e.g. ₛ → _s for rₛ).
-      // Subscript digits are positional markers — skip them so θ₁ → \theta only.
-      if (/[a-zA-Z]/.test(mapped)) {
-        keys[keys.length - 1] = (keys[keys.length - 1] ?? '') + '_' + mapped;
+      // Keep subscript LETTERS as part of the previous key (e.g. ₛ → _s for rₛ).
+      // Subscript digits are positional markers — skip so θ₁ → [\theta] not [\theta, _1].
+      if (/[a-zA-Z]/.test(mapped) && keys.length > 0) {
+        keys[keys.length - 1] = keys[keys.length - 1] + '_' + mapped;
       }
       i++;
     } else {
@@ -86,17 +78,11 @@ function symToLatexKeys(raw: string): string[] {
 
 // ── Type detection ────────────────────────────────────────────────────────────
 
-// Only symbols that are ALWAYS physical constants regardless of context.
-// Ambiguous symbols (R, k, H₀) excluded — they rely on description matching.
 const KNOWN_CONST_SET = new Set(['G', 'c', 'σ', 'g', 'h', 'ℏ', 'e', 'Nₐ', 'H₀', 'kₑ']);
 
-// Word-boundary regex: "star radius" matches "radius", "surface temperature"
-// matches "temperature", "orbital period" matches "period", etc.
 const VAR_DESC_RE =
   /\b(height|depth|altitude|displacement|distance|time|position|length|width|radius|angle|velocity|resistance|temperature|pressure|volume|mass|force|charge|current|frequency|wavelength|momentum|acceleration|period|luminosity|separation|moles|amplitude|density|index|indices|refractive|star|orbital|surface|central|initial|final|incident|refracted|uncertainty|internal|energy|change)\b/i;
 
-// Value-in-parens → constant (e.g. "Planck constant (6.626×10⁻³⁴ J·s)").
-// Allows optional ~ or ≈ before the numeric value.
 const VAL_PAT = /\([~≈]?[\d.,×^⁻]+/;
 
 function symType(sym: string, desc: string, isFirst: boolean): 'answer' | 'variable' | 'constant' {
@@ -119,9 +105,6 @@ function buildColorMap(variables: string): Record<string, string> {
   const map: Record<string, string> = {};
   const parts = variables.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
   let isFirst = true;
-
-  // Symbols without a description yet — they share the next part's description.
-  // e.g. "m₁, m₂ = masses" splits into ["m₁"] then ["m₂ = masses"]; m₁ is pending.
   let pending: string[] = [];
 
   for (const part of parts) {
@@ -132,7 +115,6 @@ function buildColorMap(variables: string): Record<string, string> {
     }
     const rawSym = part.substring(0, eqIdx).trim();
     const desc   = part.substring(eqIdx + 3).trim();
-
     const allSyms = [...pending, ...rawSym.split(/,\s*/)];
     pending = [];
 
@@ -143,14 +125,10 @@ function buildColorMap(variables: string): Record<string, string> {
       isFirst = false;
       const color = TYPE_COLORS[type];
 
-      // Convert the unicode symbol to its LaTeX token(s) and register each key.
-      // First-wins: don't overwrite if this key already has a color (e.g. when
-      // both v and v₀ appear, the answer v keeps its white color).
       for (const key of symToLatexKeys(s)) {
         if (!map[key]) map[key] = color;
       }
-      // Also register the traditional unicodeSubToLatex form for plain ASCII
-      // subscript-letter symbols like r_s (matched as whole tokens in the LaTeX).
+      // Also keep the unicodeSubToLatex form for subscript-letter symbols like r_s
       const traditionalKey = unicodeSubToLatex(s);
       if (traditionalKey !== s && !UNICODE_TO_LATEX[s[0]] && !map[traditionalKey]) {
         map[traditionalKey] = color;
@@ -161,7 +139,42 @@ function buildColorMap(variables: string): Record<string, string> {
   return map;
 }
 
-// ── Colorizer ─────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Extract a balanced brace group starting at pos.  Returns content + end index. */
+function extractGroup(s: string, pos: number): { content: string; end: number } | null {
+  if (s[pos] !== '{') return null;
+  let depth = 0;
+  for (let i = pos; i < s.length; i++) {
+    if (s[i] === '{') depth++;
+    else if (s[i] === '}') {
+      depth--;
+      if (depth === 0) return { content: s.slice(pos + 1, i), end: i + 1 };
+    }
+  }
+  return null;
+}
+
+/** Find the color of the first recognizable symbol in a snippet of LaTeX. */
+function snippetColor(
+  snippet: string,
+  colorMap: Record<string, string>,
+  symbols: string[],
+  commands: string[],
+): string | null {
+  const t = snippet.trim();
+  // LaTeX command (e.g. \hbar)
+  const cmdMatch = t.match(/^\\([a-zA-Z]+)/);
+  if (cmdMatch) {
+    const key = '\\' + cmdMatch[1];
+    if (commands.includes(key) && colorMap[key]) return colorMap[key];
+  }
+  // Plain symbol — longest first
+  for (const sym of symbols) {
+    if (t.startsWith(sym) || t === sym) return colorMap[sym];
+  }
+  return null;
+}
 
 /** Wrap token in \textcolor, with an outer {} group when after ^ or _. */
 function colored(color: string, token: string, needsGroup: boolean): string {
@@ -169,33 +182,69 @@ function colored(color: string, token: string, needsGroup: boolean): string {
   return needsGroup ? `{${inner}}` : inner;
 }
 
-export function colorizeLatex(latex: string, variables?: string | null): string {
-  if (!variables) return latex;
+// ── Core colorizer (works on a pre-built colorMap) ────────────────────────────
 
-  const colorMap = buildColorMap(variables);
-  if (Object.keys(colorMap).length === 0) return latex;
-
-  // Longest symbol first so compound keys like "v_0" are tried before "v"
-  const symbols = Object.keys(colorMap).filter(k => !k.startsWith('\\')).sort((a, b) => b.length - a.length);
-  const commands = Object.keys(colorMap).filter(k => k.startsWith('\\'));
-
+function colorizeWithMap(
+  latex: string,
+  colorMap: Record<string, string>,
+  symbols: string[],
+  commands: string[],
+): string {
   let i = 0;
   let out = '';
-  // True when the immediately preceding output char was ^ or _ (script context)
   let afterScript = false;
 
   while (i < latex.length) {
     const ch = latex[i];
 
-    // ── LaTeX command (backslash) ─────────────────────────────────────────────
+    // ── LaTeX command ─────────────────────────────────────────────────────────
     if (ch === '\\') {
       i++;
       let cmd = '';
       while (i < latex.length && /[a-zA-Z]/.test(latex[i])) cmd += latex[i++];
       const latexCmd = '\\' + cmd;
-      const cmdColor = colorMap[latexCmd];
-      if (cmdColor && commands.includes(latexCmd)) {
-        out += colored(cmdColor, latexCmd, afterScript);
+
+      // Special case: \frac{numerator}{denominator}
+      // If numerator is a bare integer and denominator starts with a colored symbol,
+      // give the numerator the same color as the denominator.
+      if (cmd === 'frac') {
+        let j = i;
+        while (j < latex.length && latex[j] === ' ') j++;
+        const g1 = extractGroup(latex, j);
+        if (g1) {
+          let k = g1.end;
+          while (k < latex.length && latex[k] === ' ') k++;
+          const g2 = extractGroup(latex, k);
+          if (g2) {
+            const numStr   = g1.content.trim();
+            const isPureNum = /^\d+(\.\d+)?$/.test(numStr);
+            const coloredDenom = colorizeWithMap(g2.content, colorMap, symbols, commands);
+
+            let coloredNum: string;
+            if (isPureNum) {
+              const denomColor = snippetColor(g2.content, colorMap, symbols, commands);
+              coloredNum = denomColor
+                ? `\\textcolor{${denomColor}}{${numStr}}`
+                : `\\textcolor{#A855F7}{${numStr}}`;
+            } else {
+              coloredNum = colorizeWithMap(g1.content, colorMap, symbols, commands);
+            }
+
+            out += `\\frac{${coloredNum}}{${coloredDenom}}`;
+            i = g2.end;
+            afterScript = false;
+            continue;
+          }
+        }
+        // Fallback — couldn't parse groups
+        out += latexCmd;
+        afterScript = false;
+        continue;
+      }
+
+      // Regular colorable command (\theta, \Delta, \hbar, …)
+      if (commands.includes(latexCmd) && colorMap[latexCmd]) {
+        out += colored(colorMap[latexCmd], latexCmd, afterScript);
       } else {
         out += latexCmd;
       }
@@ -203,7 +252,7 @@ export function colorizeLatex(latex: string, variables?: string | null): string 
       continue;
     }
 
-    // ── Record ^ / _ so next token gets wrapped in {} ─────────────────────────
+    // ── ^ / _ → next token needs {} wrapping ─────────────────────────────────
     if (ch === '^' || ch === '_') {
       out += ch;
       i++;
@@ -211,7 +260,7 @@ export function colorizeLatex(latex: string, variables?: string | null): string 
       continue;
     }
 
-    // ── Opening brace already groups what follows; reset flag ─────────────────
+    // ── Opening brace — reset afterScript (user-supplied group) ──────────────
     if (ch === '{') {
       out += ch;
       i++;
@@ -222,18 +271,13 @@ export function colorizeLatex(latex: string, variables?: string | null): string 
     const needsGroup = afterScript;
     afterScript = false;
 
-    // ── Try to match a known symbol at this position ──────────────────────────
+    // ── Try to match a known symbol ───────────────────────────────────────────
     let matched = false;
     for (const sym of symbols) {
       if (!latex.startsWith(sym, i)) continue;
-
       const after = latex[i + sym.length];
       const isMultiLetter = sym.length > 1 && !sym.includes('_');
-
-      // Multi-letter plain symbols (PE, KE) need a word boundary.
-      // Single-letter symbols never do — implicit multiplication is standard.
       if (isMultiLetter && after && /[a-zA-Z]/.test(after)) continue;
-
       out += colored(colorMap[sym], sym, needsGroup);
       i += sym.length;
       matched = true;
@@ -241,16 +285,11 @@ export function colorizeLatex(latex: string, variables?: string | null): string 
     }
     if (matched) continue;
 
-    // ── Color standalone digit sequences purple ───────────────────────────────
-    // Exception: digits in superscript/subscript position stay white
+    // ── Digit sequences — purple, except in superscript/subscript position ────
     if (/[0-9]/.test(ch)) {
       let num = '';
       while (i < latex.length && /[0-9.]/.test(latex[i])) num += latex[i++];
-      if (needsGroup) {
-        out += `{${num}}`;
-      } else {
-        out += colored('#A855F7', num, false);
-      }
+      out += needsGroup ? `{${num}}` : colored('#A855F7', num, false);
       continue;
     }
 
@@ -258,4 +297,15 @@ export function colorizeLatex(latex: string, variables?: string | null): string 
   }
 
   return out;
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+export function colorizeLatex(latex: string, variables?: string | null): string {
+  if (!variables) return latex;
+  const colorMap = buildColorMap(variables);
+  if (Object.keys(colorMap).length === 0) return latex;
+  const symbols  = Object.keys(colorMap).filter(k => !k.startsWith('\\')).sort((a, b) => b.length - a.length);
+  const commands = Object.keys(colorMap).filter(k => k.startsWith('\\'));
+  return colorizeWithMap(latex, colorMap, symbols, commands);
 }
