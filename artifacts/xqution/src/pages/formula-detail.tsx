@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { BlockMath } from "@/components/ui/math";
+import { BlockMath, ColoredBlockMath } from "@/components/ui/math";
 import { SymbolCards } from "@/components/formula/symbol-cards";
 import {
   Star, Copy, Check, ChevronLeft, ChevronRight, ArrowUp,
@@ -121,7 +121,7 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
 
 /* ─── Worked Example ─────────────────────────────────────────────────────── */
 
-function WorkedExampleSection({ formulaId, latex }: { formulaId: number; latex: string }) {
+function WorkedExampleSection({ formulaId, latex, variables }: { formulaId: number; latex: string; variables?: string | null }) {
   const ex = WORKED_EXAMPLES[formulaId];
   if (!ex) return null;
 
@@ -145,7 +145,7 @@ function WorkedExampleSection({ formulaId, latex }: { formulaId: number; latex: 
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Formula</p>
           <div className="bg-background/60 border border-border/40 rounded-lg px-4 py-3 overflow-x-auto">
-            <BlockMath math={latex} />
+            <ColoredBlockMath math={latex} variables={variables} />
           </div>
         </div>
 
@@ -420,7 +420,7 @@ export default function FormulaDetail() {
       <Card className="border-border/50 bg-card">
         <CardContent className="pt-6">
           <div className="bg-background/80 rounded-lg p-8 border border-border/50 flex items-center justify-center overflow-x-auto min-h-[140px] mb-6">
-            <BlockMath math={formula.latex} />
+            <ColoredBlockMath math={formula.latex} variables={formula.variables} />
           </div>
 
           {/* ── 3. Symbol Cards ────────────────────────────────────────── */}
@@ -450,7 +450,7 @@ export default function FormulaDetail() {
       </Card>
 
       {/* ── 5. Worked Example ─────────────────────────────────────────── */}
-      <WorkedExampleSection formulaId={id} latex={formula.latex} />
+      <WorkedExampleSection formulaId={id} latex={formula.latex} variables={formula.variables} />
 
       {/* ── 6. Related Formulas ───────────────────────────────────────── */}
       {relatedFormulaObjs.length > 0 && (

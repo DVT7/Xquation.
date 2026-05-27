@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Star, Filter, Copy, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { BlockMath, InlineMath } from "@/components/ui/math";
+import { ColoredBlockMath, InlineMath } from "@/components/ui/math";
 import { SymbolCards } from "@/components/formula/symbol-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,7 @@ export default function Formulas() {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="bg-background/80 rounded-md p-6 border border-border/50 flex items-center justify-center overflow-x-auto min-h-[120px]">
-                  <BlockMath math={formula.latex} />
+                  <ColoredBlockMath math={formula.latex} variables={formula.variables} />
                 </div>
 
                 <SymbolCards variables={formula.variables} />
