@@ -16,7 +16,7 @@ function CategoryFormulas({ category }: { category: string }) {
     <ul className="divide-y divide-border/40">
       {formulas?.map((f) => (
         <li key={f.id}>
-          <Link href={`/formulas?search=${encodeURIComponent(f.name)}`} className="group flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-all">
+          <Link href={`/formulas/${f.id}`} className="group flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-all">
             <span className="text-sm font-medium text-foreground/80 group-hover:text-primary group-hover:translate-x-1 transition-all duration-150 inline-block">
               {f.name}
             </span>
@@ -174,7 +174,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="p-3 bg-card flex justify-end">
                     <Link
-                      href={`/formulas?search=${encodeURIComponent(formula.name)}`}
+                      href={`/formulas/${formula.id}`}
                       className="text-xs font-mono text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
                     >
                       Details <ArrowRight className="w-3 h-3" />
