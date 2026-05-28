@@ -9,6 +9,7 @@ export interface SolveMode {
   key: string;
   label: string;
   unit: string;
+  latex: string;
   inputs: CalcField[];
   calculate: (v: Record<string, number>) => number;
   steps: (v: Record<string, number>, r: number) => string[];
@@ -30,7 +31,6 @@ const hbar = 1.055e-34;
 const sigma = 5.671e-8;
 const ke = 8.99e9;
 const R_gas = 8.314;
-const g = 9.81;
 
 export const CALCULATORS: Record<number, CalcConfig> = {
   1: {
@@ -49,6 +49,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "v0", label: "Initial Velocity (v₀)", unit: "m/s",
+        latex: "v_0 = v - at",
         inputs: [
           { key: "v", label: "Final Velocity (v)", unit: "m/s" },
           { key: "a", label: "Acceleration (a)",   unit: "m/s²" },
@@ -59,8 +60,9 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "a", label: "Acceleration (a)", unit: "m/s²",
+        latex: "a = \\frac{v - v_0}{t}",
         inputs: [
-          { key: "v",  label: "Final Velocity (v)",   unit: "m/s" },
+          { key: "v",  label: "Final Velocity (v)",    unit: "m/s" },
           { key: "v0", label: "Initial Velocity (v₀)", unit: "m/s", default: "0" },
           { key: "t",  label: "Time (t)",              unit: "s" },
         ],
@@ -69,6 +71,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "t", label: "Time (t)", unit: "s",
+        latex: "t = \\frac{v - v_0}{a}",
         inputs: [
           { key: "v",  label: "Final Velocity (v)",    unit: "m/s" },
           { key: "v0", label: "Initial Velocity (v₀)", unit: "m/s", default: "0" },
@@ -95,6 +98,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "v0", label: "Initial Velocity (v₀)", unit: "m/s",
+        latex: "v_0 = \\frac{x - \\frac{1}{2}at^2}{t}",
         inputs: [
           { key: "x", label: "Displacement (x)", unit: "m" },
           { key: "a", label: "Acceleration (a)", unit: "m/s²" },
@@ -105,6 +109,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "a", label: "Acceleration (a)", unit: "m/s²",
+        latex: "a = \\frac{2(x - v_0 t)}{t^2}",
         inputs: [
           { key: "x",  label: "Displacement (x)",      unit: "m" },
           { key: "v0", label: "Initial Velocity (v₀)", unit: "m/s", default: "0" },
@@ -131,6 +136,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "a", label: "Acceleration (a)", unit: "m/s²",
+        latex: "a = \\frac{v^2 - v_0^2}{2x}",
         inputs: [
           { key: "v",  label: "Final Velocity (v)",    unit: "m/s" },
           { key: "v0", label: "Initial Velocity (v₀)", unit: "m/s", default: "0" },
@@ -141,6 +147,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "x", label: "Displacement (x)", unit: "m",
+        latex: "x = \\frac{v^2 - v_0^2}{2a}",
         inputs: [
           { key: "v",  label: "Final Velocity (v)",    unit: "m/s" },
           { key: "v0", label: "Initial Velocity (v₀)", unit: "m/s", default: "0" },
@@ -162,8 +169,9 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{F}{a}",
         inputs: [
-          { key: "F", label: "Force (F)",            unit: "N" },
+          { key: "F", label: "Force (F)",        unit: "N" },
           { key: "a", label: "Acceleration (a)", unit: "m/s²" },
         ],
         calculate: ({ F, a }) => F / a,
@@ -171,9 +179,10 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "a", label: "Acceleration (a)", unit: "m/s²",
+        latex: "a = \\frac{F}{m}",
         inputs: [
-          { key: "F", label: "Force (F)",  unit: "N" },
-          { key: "m", label: "Mass (m)",   unit: "kg" },
+          { key: "F", label: "Force (F)", unit: "N" },
+          { key: "m", label: "Mass (m)",  unit: "kg" },
         ],
         calculate: ({ F, m }) => F / m,
         steps: ({ F, m }, r) => [`a = F/m`, `a = ${F} / ${m}`, `a = ${r.toPrecision(4)} m/s²`],
@@ -191,21 +200,13 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{W}{g}",
         inputs: [
           { key: "W", label: "Weight (W)",              unit: "N" },
           { key: "g", label: "Gravitational Accel (g)", unit: "m/s²", default: "9.81" },
         ],
         calculate: ({ W, g: gv }) => W / gv,
         steps: ({ W, g: gv }, r) => [`m = W/g`, `m = ${W} / ${gv}`, `m = ${r.toPrecision(4)} kg`],
-      },
-      {
-        key: "g", label: "Gravitational Accel (g)", unit: "m/s²",
-        inputs: [
-          { key: "W", label: "Weight (W)", unit: "N" },
-          { key: "m", label: "Mass (m)",   unit: "kg" },
-        ],
-        calculate: ({ W, m }) => W / m,
-        steps: ({ W, m }, r) => [`g = W/m`, `g = ${W} / ${m}`, `g = ${r.toPrecision(4)} m/s²`],
       },
     ],
   },
@@ -222,6 +223,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{2\\,KE}{v^2}",
         inputs: [
           { key: "KE", label: "Kinetic Energy (KE)", unit: "J" },
           { key: "v",  label: "Velocity (v)",        unit: "m/s" },
@@ -231,6 +233,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "v", label: "Velocity (v)", unit: "m/s",
+        latex: "v = \\sqrt{\\frac{2\\,KE}{m}}",
         inputs: [
           { key: "KE", label: "Kinetic Energy (KE)", unit: "J" },
           { key: "m",  label: "Mass (m)",            unit: "kg" },
@@ -252,8 +255,9 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{PE}{gh}",
         inputs: [
-          { key: "PE", label: "Potential Energy (PE)",  unit: "J" },
+          { key: "PE", label: "Potential Energy (PE)",   unit: "J" },
           { key: "g",  label: "Gravitational Accel (g)", unit: "m/s²", default: "9.81" },
           { key: "h",  label: "Height (h)",              unit: "m" },
         ],
@@ -262,6 +266,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "h", label: "Height (h)", unit: "m",
+        latex: "h = \\frac{PE}{mg}",
         inputs: [
           { key: "PE", label: "Potential Energy (PE)",   unit: "J" },
           { key: "m",  label: "Mass (m)",                unit: "kg" },
@@ -286,6 +291,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "F", label: "Force (F)", unit: "N",
+        latex: "F = \\frac{W}{d\\cos\\theta}",
         inputs: [
           { key: "W",     label: "Work (W)",         unit: "J" },
           { key: "d",     label: "Displacement (d)", unit: "m" },
@@ -296,6 +302,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "d", label: "Displacement (d)", unit: "m",
+        latex: "d = \\frac{W}{F\\cos\\theta}",
         inputs: [
           { key: "W",     label: "Work (W)",   unit: "J" },
           { key: "F",     label: "Force (F)",  unit: "N" },
@@ -317,18 +324,20 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "W", label: "Work (W)", unit: "J",
+        latex: "W = Pt",
         inputs: [
           { key: "P", label: "Power (P)", unit: "W" },
-          { key: "t", label: "Time (t)", unit: "s" },
+          { key: "t", label: "Time (t)",  unit: "s" },
         ],
         calculate: ({ P, t }) => P * t,
         steps: ({ P, t }, r) => [`W = Pt`, `W = (${P})(${t})`, `W = ${r.toPrecision(4)} J`],
       },
       {
         key: "t", label: "Time (t)", unit: "s",
+        latex: "t = \\frac{W}{P}",
         inputs: [
-          { key: "W", label: "Work (W)",   unit: "J" },
-          { key: "P", label: "Power (P)",  unit: "W" },
+          { key: "W", label: "Work (W)",  unit: "J" },
+          { key: "P", label: "Power (P)", unit: "W" },
         ],
         calculate: ({ W: Wv, P }) => Wv / P,
         steps: ({ W: Wv, P }, r) => [`t = W/P`, `t = ${Wv} / ${P}`, `t = ${r.toPrecision(4)} s`],
@@ -346,6 +355,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{p}{v}",
         inputs: [
           { key: "p", label: "Momentum (p)", unit: "kg·m/s" },
           { key: "v", label: "Velocity (v)", unit: "m/s" },
@@ -355,6 +365,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "v", label: "Velocity (v)", unit: "m/s",
+        latex: "v = \\frac{p}{m}",
         inputs: [
           { key: "p", label: "Momentum (p)", unit: "kg·m/s" },
           { key: "m", label: "Mass (m)",     unit: "kg" },
@@ -375,6 +386,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "F", label: "Force (F)", unit: "N",
+        latex: "F = \\frac{J}{\\Delta t}",
         inputs: [
           { key: "J", label: "Impulse (J)",        unit: "N·s" },
           { key: "t", label: "Time interval (Δt)", unit: "s" },
@@ -384,6 +396,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "t", label: "Time interval (Δt)", unit: "s",
+        latex: "\\Delta t = \\frac{J}{F}",
         inputs: [
           { key: "J", label: "Impulse (J)", unit: "N·s" },
           { key: "F", label: "Force (F)",   unit: "N" },
@@ -409,6 +422,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "r", label: "Separation (r)", unit: "m",
+        latex: "r = \\sqrt{\\frac{Gm_1 m_2}{F}}",
         inputs: [
           { key: "F",  label: "Gravitational Force (F)", unit: "N" },
           { key: "m1", label: "Mass 1 (m₁)",             unit: "kg" },
@@ -432,6 +446,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "r", label: "Radius (r)", unit: "m",
+        latex: "r = \\frac{2GM}{v_e^2}",
         inputs: [
           { key: "ve", label: "Escape Velocity (vₑ)", unit: "m/s" },
           { key: "M",  label: "Mass of Body (M)",      unit: "kg" },
@@ -455,16 +470,18 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "V", label: "Volume (V)", unit: "m³",
+        latex: "V = \\frac{nRT}{P}",
         inputs: [
-          { key: "n", label: "Moles (n)",         unit: "mol" },
-          { key: "T", label: "Temperature (T)",   unit: "K" },
-          { key: "P", label: "Pressure (P)",      unit: "Pa" },
+          { key: "n", label: "Moles (n)",       unit: "mol" },
+          { key: "T", label: "Temperature (T)", unit: "K" },
+          { key: "P", label: "Pressure (P)",    unit: "Pa" },
         ],
         calculate: ({ n, T, P }) => n * R_gas * T / P,
         steps: ({ n, T, P }, r) => [`V = nRT/P`, `V = (${n})(8.314)(${T}) / ${P}`, `V = ${r.toPrecision(4)} m³`],
       },
       {
         key: "T", label: "Temperature (T)", unit: "K",
+        latex: "T = \\frac{PV}{nR}",
         inputs: [
           { key: "P", label: "Pressure (P)", unit: "Pa" },
           { key: "V", label: "Volume (V)",   unit: "m³" },
@@ -475,10 +492,11 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "n", label: "Moles (n)", unit: "mol",
+        latex: "n = \\frac{PV}{RT}",
         inputs: [
           { key: "P", label: "Pressure (P)",    unit: "Pa" },
           { key: "V", label: "Volume (V)",       unit: "m³" },
-          { key: "T", label: "Temperature (T)",  unit: "K" },
+          { key: "T", label: "Temperature (T)", unit: "K" },
         ],
         calculate: ({ P, V, T }) => P * V / (R_gas * T),
         steps: ({ P, V, T }, r) => [`n = PV/(RT)`, `n = (${P})(${V}) / (8.314 × ${T})`, `n = ${r.toPrecision(4)} mol`],
@@ -496,6 +514,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "Q", label: "Heat Added (Q)", unit: "J",
+        latex: "Q = \\Delta U + W",
         inputs: [
           { key: "dU", label: "Change in Internal Energy (ΔU)", unit: "J" },
           { key: "W",  label: "Work Done by System (W)",         unit: "J" },
@@ -505,6 +524,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "W", label: "Work Done by System (W)", unit: "J",
+        latex: "W = Q - \\Delta U",
         inputs: [
           { key: "Q",  label: "Heat Added (Q)",                   unit: "J" },
           { key: "dU", label: "Change in Internal Energy (ΔU)",   unit: "J" },
@@ -527,18 +547,20 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "f", label: "Frequency (f)", unit: "Hz",
+        latex: "f = \\frac{v}{\\lambda}",
         inputs: [
-          { key: "v",      label: "Wave Speed (v)",   unit: "m/s" },
-          { key: "lambda", label: "Wavelength (λ)",   unit: "m" },
+          { key: "v",      label: "Wave Speed (v)",  unit: "m/s" },
+          { key: "lambda", label: "Wavelength (λ)",  unit: "m" },
         ],
         calculate: ({ v, lambda }) => v / lambda,
         steps: ({ v, lambda }, r) => [`f = v/λ`, `f = ${v} / ${lambda}`, `f = ${r.toPrecision(4)} Hz`],
       },
       {
         key: "lambda", label: "Wavelength (λ)", unit: "m",
+        latex: "\\lambda = \\frac{v}{f}",
         inputs: [
-          { key: "v", label: "Wave Speed (v)",  unit: "m/s" },
-          { key: "f", label: "Frequency (f)",   unit: "Hz" },
+          { key: "v", label: "Wave Speed (v)", unit: "m/s" },
+          { key: "f", label: "Frequency (f)",  unit: "Hz" },
         ],
         calculate: ({ v, f }) => v / f,
         steps: ({ v, f }, r) => [`λ = v/f`, `λ = ${v} / ${f}`, `λ = ${r.toPrecision(4)} m`],
@@ -575,6 +597,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "f", label: "Focal Length (f)", unit: "m",
+        latex: "f = \\frac{1}{\\dfrac{1}{d_0} + \\dfrac{1}{d_i}}",
         inputs: [
           { key: "do", label: "Object Distance (d₀)", unit: "m" },
           { key: "di", label: "Image Distance (dᵢ)",  unit: "m" },
@@ -584,8 +607,9 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "do", label: "Object Distance (d₀)", unit: "m",
+        latex: "d_0 = \\frac{1}{\\dfrac{1}{f} - \\dfrac{1}{d_i}}",
         inputs: [
-          { key: "f",  label: "Focal Length (f)",   unit: "m" },
+          { key: "f",  label: "Focal Length (f)",    unit: "m" },
           { key: "di", label: "Image Distance (dᵢ)", unit: "m" },
         ],
         calculate: ({ f, di }) => 1 / (1 / f - 1 / di),
@@ -604,6 +628,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "I", label: "Current (I)", unit: "A",
+        latex: "I = \\frac{V}{R}",
         inputs: [
           { key: "V", label: "Voltage (V)",    unit: "V" },
           { key: "R", label: "Resistance (R)", unit: "Ω" },
@@ -613,9 +638,10 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "R", label: "Resistance (R)", unit: "Ω",
+        latex: "R = \\frac{V}{I}",
         inputs: [
-          { key: "V", label: "Voltage (V)",  unit: "V" },
-          { key: "I", label: "Current (I)",  unit: "A" },
+          { key: "V", label: "Voltage (V)", unit: "V" },
+          { key: "I", label: "Current (I)", unit: "A" },
         ],
         calculate: ({ V, I }) => V / I,
         steps: ({ V, I }, r) => [`R = V/I`, `R = ${V} / ${I}`, `R = ${r.toPrecision(4)} Ω`],
@@ -633,6 +659,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "I", label: "Current (I)", unit: "A",
+        latex: "I = \\frac{P}{V}",
         inputs: [
           { key: "P", label: "Power (P)",   unit: "W" },
           { key: "V", label: "Voltage (V)", unit: "V" },
@@ -642,6 +669,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "V", label: "Voltage (V)", unit: "V",
+        latex: "V = \\frac{P}{I}",
         inputs: [
           { key: "P", label: "Power (P)",   unit: "W" },
           { key: "I", label: "Current (I)", unit: "A" },
@@ -665,6 +693,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "r", label: "Separation (r)", unit: "m",
+        latex: "r = \\sqrt{\\frac{k_e q_1 q_2}{F}}",
         inputs: [
           { key: "F",  label: "Electrostatic Force (F)", unit: "N" },
           { key: "q1", label: "Charge q₁",               unit: "C" },
@@ -686,6 +715,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "F", label: "Force (F)", unit: "N",
+        latex: "F = Eq",
         inputs: [
           { key: "E", label: "Electric Field (E)", unit: "N/C" },
           { key: "q", label: "Test Charge (q)",    unit: "C" },
@@ -695,6 +725,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "q", label: "Test Charge (q)", unit: "C",
+        latex: "q = \\frac{F}{E}",
         inputs: [
           { key: "F", label: "Force (F)",          unit: "N" },
           { key: "E", label: "Electric Field (E)", unit: "N/C" },
@@ -716,6 +747,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "m", label: "Mass (m)", unit: "kg",
+        latex: "m = \\frac{E}{c^2}",
         inputs: [{ key: "E", label: "Energy (E)", unit: "J" }],
         calculate: ({ E }) => E / (c * c),
         steps: ({ E }, r) => [`m = E/c²`, `m = ${E} / (299,792,458)²`, `m = ${r.toExponential(4)} kg`],
@@ -734,6 +766,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "f", label: "Frequency (f)", unit: "Hz",
+        latex: "f = \\frac{E}{h}",
         inputs: [{ key: "E", label: "Photon Energy (E)", unit: "J" }],
         calculate: ({ E }) => E / h,
         steps: ({ E }, r) => [`f = E/h`, `f = ${E} / 6.626×10⁻³⁴`, `f = ${r.toExponential(4)} Hz`],
@@ -753,6 +786,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "v", label: "Velocity (v)", unit: "m/s",
+        latex: "v = \\frac{h}{m\\lambda}",
         inputs: [
           { key: "lambda", label: "Wavelength (λ)", unit: "m" },
           { key: "m",      label: "Mass (m)",        unit: "kg" },
@@ -786,6 +820,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "a", label: "Semi-major Axis (a)", unit: "m",
+        latex: "a = \\sqrt[3]{\\frac{GM\\,T^2}{4\\pi^2}}",
         inputs: [
           { key: "T", label: "Orbital Period (T)", unit: "s" },
           { key: "M", label: "Central Mass (M)",   unit: "kg" },
@@ -807,6 +842,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "M", label: "Mass (M)", unit: "kg",
+        latex: "M = \\frac{r_s c^2}{2G}",
         inputs: [{ key: "rs", label: "Schwarzschild Radius (rₛ)", unit: "m" }],
         calculate: ({ rs }) => rs * c * c / (2 * G),
         steps: ({ rs }, r) => [`M = rₛc²/(2G)`, `M = (${rs})(299,792,458)² / (2 × 6.674×10⁻¹¹)`, `M = ${r.toExponential(4)} kg`],
@@ -826,15 +862,17 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "L", label: "Luminosity (L)", unit: "W",
+        latex: "L = 4\\pi d^2 F",
         inputs: [
-          { key: "F", label: "Flux (F)",       unit: "W/m²" },
-          { key: "d", label: "Distance (d)",   unit: "m" },
+          { key: "F", label: "Flux (F)",      unit: "W/m²" },
+          { key: "d", label: "Distance (d)",  unit: "m" },
         ],
         calculate: ({ F, d }) => F * 4 * Math.PI * d * d,
         steps: ({ F, d }, r) => [`L = 4πd²F`, `L = 4π(${d})²(${F})`, `L = ${r.toExponential(4)} W`],
       },
       {
         key: "d", label: "Distance (d)", unit: "m",
+        latex: "d = \\sqrt{\\frac{L}{4\\pi F}}",
         inputs: [
           { key: "L", label: "Luminosity (L)", unit: "W" },
           { key: "F", label: "Flux (F)",        unit: "W/m²" },
@@ -857,6 +895,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "R", label: "Stellar Radius (R)", unit: "m",
+        latex: "R = \\sqrt{\\frac{L}{4\\pi\\sigma T^4}}",
         inputs: [
           { key: "L", label: "Luminosity (L)",          unit: "W" },
           { key: "T", label: "Surface Temperature (T)", unit: "K" },
@@ -866,8 +905,9 @@ export const CALCULATORS: Record<number, CalcConfig> = {
       },
       {
         key: "T", label: "Surface Temperature (T)", unit: "K",
+        latex: "T = \\left(\\frac{L}{4\\pi R^2 \\sigma}\\right)^{\\!1/4}",
         inputs: [
-          { key: "L", label: "Luminosity (L)",    unit: "W" },
+          { key: "L", label: "Luminosity (L)",     unit: "W" },
           { key: "R", label: "Stellar Radius (R)", unit: "m" },
         ],
         calculate: ({ L, R }) => Math.pow(L / (4 * Math.PI * R * R * sigma), 0.25),
@@ -888,6 +928,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "r", label: "Orbital Radius (r)", unit: "m",
+        latex: "r = \\frac{GM}{v^2}",
         inputs: [
           { key: "v", label: "Orbital Velocity (v)", unit: "m/s" },
           { key: "M", label: "Central Mass (M)",      unit: "kg" },
@@ -908,6 +949,7 @@ export const CALCULATORS: Record<number, CalcConfig> = {
     solveModes: [
       {
         key: "d", label: "Distance (d)", unit: "Mpc",
+        latex: "d = \\frac{v}{H_0}",
         inputs: [
           { key: "v",  label: "Recession Velocity (v)", unit: "km/s" },
           { key: "H0", label: "Hubble Constant (H₀)",   unit: "km/s/Mpc", default: "70" },

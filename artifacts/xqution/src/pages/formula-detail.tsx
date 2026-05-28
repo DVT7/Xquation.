@@ -27,23 +27,24 @@ import { cn } from "@/lib/utils";
 
 /* ─── Inline Calculator ──────────────────────────────────────────────────── */
 
-function FormulaCalc({ formulaId }: { formulaId: number }) {
+function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLatex?: string }) {
   const config = CALCULATORS[formulaId];
 
   // Build a unified modes list: index 0 = default, rest = solveModes
   const modes: Array<{
-    key: string; label: string; unit: string;
+    key: string; label: string; unit: string; latex?: string;
     inputs: typeof config extends undefined ? never : typeof config.inputs;
     calculate: (v: Record<string, number>) => number;
     steps: (v: Record<string, number>, r: number) => string[];
   }> = config ? [
-    { key: "__default__", label: config.outputLabel, unit: config.outputUnit, inputs: config.inputs, calculate: config.calculate, steps: config.steps },
+    { key: "__default__", label: config.outputLabel, unit: config.outputUnit, latex: formulaLatex, inputs: config.inputs, calculate: config.calculate, steps: config.steps },
     ...(config.solveModes ?? []).map((m: SolveMode) => ({
-      key: m.key, label: m.label, unit: m.unit, inputs: m.inputs, calculate: m.calculate, steps: m.steps,
+      key: m.key, label: m.label, unit: m.unit, latex: m.latex, inputs: m.inputs, calculate: m.calculate, steps: m.steps,
     })),
   ] : [];
 
   const [modeIdx, setModeIdx] = useState(0);
+  const [formulaKey, setFormulaKey] = useState(0);
   const activeMode = modes[modeIdx] ?? modes[0];
 
   const [inputs, setInputs] = useState<Record<string, string>>(
@@ -62,6 +63,7 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
   const switchMode = (idx: number) => {
     const m = modes[idx];
     setModeIdx(idx);
+    setFormulaKey(k => k + 1);
     setInputs(Object.fromEntries(m.inputs.map(f => [f.key, f.default ?? ""])));
     setResult(null);
     setSteps([]);
@@ -87,8 +89,19 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
     : Math.abs(n) > 1e6 || (Math.abs(n) < 1e-3 && n !== 0) ? n.toExponential(4)
     : n.toPrecision(5);
 
+  const displayLatex = activeMode.latex;
+
   return (
     <div className="space-y-5">
+      {displayLatex && (
+        <div
+          key={formulaKey}
+          className="flex justify-center py-4 px-6 bg-card/60 border border-border/40 rounded-xl animate-in fade-in zoom-in-95 duration-300"
+        >
+          <BlockMath math={displayLatex} />
+        </div>
+      )}
+
       {modes.length > 1 && (
         <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/40 rounded-lg">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Solve for</span>
@@ -489,7 +502,7 @@ export default function FormulaDetail() {
           <CardDescription>Enter known values to calculate the result with step-by-step working.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <FormulaCalc formulaId={id} />
+          <FormulaCalc formulaId={id} formulaLatex={formula.latex} />
         </CardContent>
       </Card>
 
