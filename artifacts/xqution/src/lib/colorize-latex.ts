@@ -93,10 +93,12 @@ const VAL_PAT = /\([~≈]?[\d.,×^⁻]+/;
 
 function symType(sym: string, desc: string, isFirst: boolean): 'answer' | 'variable' | 'constant' {
   if (isFirst) return 'answer';
-  const dl = desc.toLowerCase().trim();
-  if (VAR_DESC_RE.test(dl)) return 'variable';
+  // Known constants always win — check before VAR_DESC_RE so that e.g.
+  // "gravitational acceleration" (g) isn't overridden by matching "acceleration".
   if (KNOWN_CONST_SET.has(sym)) return 'constant';
   if (VAL_PAT.test(desc)) return 'constant';
+  const dl = desc.toLowerCase().trim();
+  if (VAR_DESC_RE.test(dl)) return 'variable';
   return 'variable';
 }
 
