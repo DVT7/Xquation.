@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { BlockMath, ColoredBlockMath } from "@/components/ui/math";
@@ -18,7 +19,7 @@ import {
   RotateCcw, ChevronDown, ChevronUp, Lightbulb, BookOpen,
   FlaskConical, Calculator, Atom,
 } from "lucide-react";
-import { CALCULATORS } from "@/lib/formula-calculators";
+import { CALCULATORS, type SolveMode } from "@/lib/formula-calculators";
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
 import { FORMULA_RELATED } from "@/lib/formula-related";
 import { FORMULA_PROBLEMS, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from "@/lib/formula-problems";
