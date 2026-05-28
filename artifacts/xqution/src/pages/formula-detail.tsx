@@ -29,8 +29,25 @@ import { cn } from "@/lib/utils";
 
 function FormulaCalc({ formulaId }: { formulaId: number }) {
   const config = CALCULATORS[formulaId];
+
+  // Build a unified modes list: index 0 = default, rest = solveModes
+  const modes: Array<{
+    key: string; label: string; unit: string;
+    inputs: typeof config extends undefined ? never : typeof config.inputs;
+    calculate: (v: Record<string, number>) => number;
+    steps: (v: Record<string, number>, r: number) => string[];
+  }> = config ? [
+    { key: "__default__", label: config.outputLabel, unit: config.outputUnit, inputs: config.inputs, calculate: config.calculate, steps: config.steps },
+    ...(config.solveModes ?? []).map((m: SolveMode) => ({
+      key: m.key, label: m.label, unit: m.unit, inputs: m.inputs, calculate: m.calculate, steps: m.steps,
+    })),
+  ] : [];
+
+  const [modeIdx, setModeIdx] = useState(0);
+  const activeMode = modes[modeIdx] ?? modes[0];
+
   const [inputs, setInputs] = useState<Record<string, string>>(
-    () => Object.fromEntries(config?.inputs.map(f => [f.key, f.default ?? ""]) ?? [])
+    () => Object.fromEntries(activeMode?.inputs.map(f => [f.key, f.default ?? ""]) ?? [])
   );
   const [result, setResult] = useState<number | null>(null);
   const [steps, setSteps] = useState<string[]>([]);
@@ -42,18 +59,26 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
     </p>
   );
 
+  const switchMode = (idx: number) => {
+    const m = modes[idx];
+    setModeIdx(idx);
+    setInputs(Object.fromEntries(m.inputs.map(f => [f.key, f.default ?? ""])));
+    setResult(null);
+    setSteps([]);
+  };
+
   const numeric = Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, parseFloat(v)]));
   const allFilled = Object.values(numeric).every(v => !isNaN(v));
 
   const calculate = () => {
     if (!allFilled) return;
-    const r = config.calculate(numeric);
+    const r = activeMode.calculate(numeric);
     setResult(r);
-    setSteps(config.steps(numeric, r));
+    setSteps(activeMode.steps(numeric, r));
   };
 
   const reset = () => {
-    setInputs(Object.fromEntries(config.inputs.map(f => [f.key, f.default ?? ""])));
+    setInputs(Object.fromEntries(activeMode.inputs.map(f => [f.key, f.default ?? ""])));
     setResult(null); setSteps([]);
   };
 
@@ -64,8 +89,26 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
 
   return (
     <div className="space-y-5">
+      {modes.length > 1 && (
+        <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/40 rounded-lg">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Solve for</span>
+          <Select value={String(modeIdx)} onValueChange={v => switchMode(Number(v))}>
+            <SelectTrigger className="h-8 text-sm font-mono border-primary/30 bg-card focus:ring-primary/50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {modes.map((m, i) => (
+                <SelectItem key={i} value={String(i)} className="font-mono text-sm">
+                  {m.label}{m.unit ? ` (${m.unit})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {config.inputs.map(field => (
+        {activeMode.inputs.map(field => (
           <div key={field.key}>
             <Label className="text-xs text-muted-foreground mb-1 block">
               {field.label}{field.unit ? <span className="text-primary/60 ml-1">({field.unit})</span> : ""}
@@ -73,7 +116,7 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
             <Input
               className="font-mono"
               placeholder="Enter value"
-              value={inputs[field.key]}
+              value={inputs[field.key] ?? ""}
               onChange={e => { setInputs(p => ({ ...p, [field.key]: e.target.value })); setResult(null); }}
             />
           </div>
@@ -90,13 +133,13 @@ function FormulaCalc({ formulaId }: { formulaId: number }) {
       {result !== null && (
         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-            <div className="text-xs text-muted-foreground mb-1 font-mono uppercase tracking-wider">{config.outputLabel}</div>
+            <div className="text-xs text-muted-foreground mb-1 font-mono uppercase tracking-wider">{activeMode.label}</div>
             <div className="flex items-center justify-between gap-2">
               <div className="text-2xl font-mono font-bold text-primary">
                 {fmt(result)}{" "}
-                <span className="text-base font-normal text-muted-foreground">{config.outputUnit}</span>
+                <span className="text-base font-normal text-muted-foreground">{activeMode.unit}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(`${result} ${config.outputUnit}`); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
+              <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(`${result} ${activeMode.unit}`); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
                 {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
