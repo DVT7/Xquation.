@@ -91,11 +91,23 @@ const VAR_DESC_RE =
 
 const VAL_PAT = /\([~≈]?[\d.,×^⁻]+/;
 
+// Some symbols in KNOWN_CONST_SET can also appear as ordinary variables in
+// certain formulas (e.g. 'h' = height in PE=mgh, but 'h' = Planck's constant
+// in E=hf). If the description matches the override pattern the symbol is
+// treated as a variable even though it is in KNOWN_CONST_SET.
+const CONTEXT_VAR_OVERRIDES: Record<string, RegExp> = {
+  h: /\b(height|altitude|depth)\b/i,
+};
+
 function symType(sym: string, desc: string, isFirst: boolean): 'answer' | 'variable' | 'constant' {
   if (isFirst) return 'answer';
-  // Known constants always win — check before VAR_DESC_RE so that e.g.
-  // "gravitational acceleration" (g) isn't overridden by matching "acceleration".
-  if (KNOWN_CONST_SET.has(sym)) return 'constant';
+  if (KNOWN_CONST_SET.has(sym)) {
+    // Allow a context override: if the description clearly names it a variable
+    // quantity (e.g. "height"), treat it as a variable for this formula.
+    const override = CONTEXT_VAR_OVERRIDES[sym];
+    if (override && override.test(desc)) return 'variable';
+    return 'constant';
+  }
   if (VAL_PAT.test(desc)) return 'constant';
   const dl = desc.toLowerCase().trim();
   if (VAR_DESC_RE.test(dl)) return 'variable';

@@ -41,22 +41,42 @@ const VALUE_PATTERN = /\([\d.,×^⁻]+\s*[^\)]*\)/;
 const VAR_DESC_RE =
   /\b(height|depth|altitude|displacement|distance|time|position|length|width|radius|angle|velocity|resistance|temperature|pressure|volume|mass|force|charge|current|frequency|wavelength|momentum|acceleration|period|luminosity|separation|moles|amplitude|density|index|indices|refractive|star|orbital|surface|central|initial|final|incident|refracted)\b/i;
 
+// Symbols that exist in KNOWN_CONSTANTS but can also appear as plain variables
+// in certain formulas (e.g. h = height in PE=mgh vs h = Planck's constant in E=hf).
+// If the description matches the override pattern the symbol is treated as a variable.
+const CONTEXT_VAR_OVERRIDES: Record<string, RegExp> = {
+  h: /\b(height|altitude|depth)\b/i,
+};
+
 function detectType(symbol: string, description: string, index: number): SymbolType {
   if (index === 0) return "answer";
-  // Known constants always win — check before VAR_DESC_RE so that e.g.
-  // "gravitational acceleration" (g) isn't overridden by the word "acceleration".
   const base = symbol.split(/[₀₁₂]/)[0];
-  if (KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base]) return "constant";
+  const isKnownConst = !!(KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base]);
+  if (isKnownConst) {
+    // Allow a description-based override: if the description clearly names this
+    // symbol as a variable quantity (e.g. "height"), treat it as a variable for
+    // this formula rather than the global physical constant.
+    const override = CONTEXT_VAR_OVERRIDES[symbol] ?? CONTEXT_VAR_OVERRIDES[base];
+    if (override && override.test(description)) return "variable";
+    return "constant";
+  }
   if (VALUE_PATTERN.test(description)) return "constant";
   const descLower = description.toLowerCase().trim();
   if (VAR_DESC_RE.test(descLower)) return "variable";
   return "variable";
 }
 
+function isConstantInContext(symbol: string, description: string): boolean {
+  const base = symbol.split(/[₀₁₂]/)[0];
+  if (!(KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base])) return false;
+  const override = CONTEXT_VAR_OVERRIDES[symbol] ?? CONTEXT_VAR_OVERRIDES[base];
+  if (override && override.test(description)) return false;
+  return true;
+}
+
 function getUnit(symbol: string, description: string): string {
   const base = symbol.split(/[₀₁₂]/)[0];
-  // Known constants always supply their unit regardless of description wording.
-  if (KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base])
+  if (isConstantInContext(symbol, description))
     return KNOWN_CONSTANTS[symbol]?.unit ?? KNOWN_CONSTANTS[base]?.unit ?? "";
   if (VAR_DESC_RE.test(description.toLowerCase().trim())) return "";
   return "";
@@ -64,8 +84,9 @@ function getUnit(symbol: string, description: string): string {
 
 function getValue(symbol: string, description: string): string | undefined {
   const base = symbol.split(/[₀₁₂]/)[0];
-  const known = KNOWN_CONSTANTS[symbol] ?? KNOWN_CONSTANTS[base];
-  if (known) return known.value;
+  if (isConstantInContext(symbol, description)) {
+    return KNOWN_CONSTANTS[symbol]?.value ?? KNOWN_CONSTANTS[base]?.value;
+  }
   if (VAR_DESC_RE.test(description.toLowerCase().trim())) return undefined;
   const match = description.match(/\(([\d.,×^⁻~]+[^)]*)\)/);
   return match?.[1];
