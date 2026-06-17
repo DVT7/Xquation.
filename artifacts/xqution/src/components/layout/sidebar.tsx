@@ -73,13 +73,12 @@ export function Sidebar() {
           </SheetContent>
         </Sheet>
       </div>
-
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 h-screen fixed top-0 left-0 flex-col border-r border-border bg-card/50 backdrop-blur z-40">
         <div className="h-16 flex items-center px-6 border-b border-border">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Telescope className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUTION</span>
+            <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUATION</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
