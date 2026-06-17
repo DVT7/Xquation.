@@ -55,7 +55,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
         <h1 className="text-4xl md:text-6xl font-black font-mono tracking-tighter mb-2">
           <span style={{ color: "#00D9FF" }}>X</span>
-          <span className="text-white/90">QUTION</span>
+          <span className="text-white/90">QUATION</span>
         </h1>
         <p className="text-base md:text-lg text-primary/80 font-mono tracking-widest mb-4 uppercase">
           Explore. Calculate. Understand.
@@ -75,7 +75,6 @@ export default function Home() {
           />
         </form>
       </section>
-
       {/* Stats row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
@@ -96,7 +95,6 @@ export default function Home() {
           </Card>
         ))}
       </section>
-
       {/* Expandable Domain Cards */}
       <section>
         <div className="flex items-center justify-between mb-6">
@@ -150,7 +148,6 @@ export default function Home() {
               })}
         </div>
       </section>
-
       {/* Featured Formulas */}
       <section>
         <h2 className="text-2xl font-bold font-mono tracking-tight mb-6 flex items-center gap-2">
