@@ -7,7 +7,7 @@ export default function About() {
       <div className="text-center space-y-6">
         <Telescope className="w-16 h-16 text-primary mx-auto" />
         <h1 className="text-4xl md:text-5xl font-black font-mono tracking-tighter">
-          About XQUTION
+          About XQUATION
         </h1>
         <p className="text-xl text-muted-foreground leading-relaxed">
           The precise, immersive reference tool for serious students and space enthusiasts.
@@ -16,7 +16,7 @@ export default function About() {
 
       <div className="space-y-8 text-foreground/80 leading-relaxed">
         <p className="text-lg">
-          XQution was built to solve a simple problem: the beauty of physics and astronomy shouldn't be trapped in clunky PDFs, ad-filled websites, or scattered notebooks. We wanted to create an environment that feels like a mission control terminal—where every constant, formula, and calculator you need is organized, pristine, and instantly accessible.
+          Xquation was built to solve a simple problem: the beauty of physics and astronomy shouldn't be trapped in clunky PDFs, ad-filled websites, or scattered notebooks. We wanted to create an environment that feels like a mission control terminal—where every constant, formula, and calculator you need is organized, pristine, and instantly accessible.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">

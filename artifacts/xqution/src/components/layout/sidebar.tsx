@@ -58,7 +58,7 @@ export function Sidebar() {
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/80 backdrop-blur-md flex items-center justify-between px-4 z-50">
         <Link href="/" className="flex items-center gap-2">
           <Telescope className="w-6 h-6 text-primary" />
-          <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUTION</span>
+          <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUATION</span>
         </Link>
         <Sheet>
           <SheetTrigger asChild>
