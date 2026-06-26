@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { BlockMath, ColoredBlockMath } from "@/components/ui/math";
+import { FormulaVisual } from "@/components/formula/formula-visual";
 import { SymbolCards } from "@/components/formula/symbol-cards";
 import {
   Star, Copy, Check, ChevronLeft, ChevronRight, ArrowUp,
@@ -483,7 +484,10 @@ export default function FormulaDetail() {
           {/* ── 3. Symbol Cards ────────────────────────────────────────── */}
           <SymbolCards variables={formula.variables} />
 
-          <p className="text-sm text-foreground/70 mt-6 leading-relaxed">{formula.description}</p>
+          <div className="mt-6 flex gap-6 items-start">
+            <FormulaVisual formulaId={id} />
+            <p className="text-sm text-foreground/70 leading-relaxed flex-1">{formula.description}</p>
+          </div>
           {formula.siUnits && (
             <div className="flex items-center gap-2 mt-3">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Result Unit:</span>
