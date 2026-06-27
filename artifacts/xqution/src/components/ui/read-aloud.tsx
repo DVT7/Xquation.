@@ -166,9 +166,13 @@ export function mathToSpeech(raw: string): string {
   s = s.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, "$1 sub $2");
   s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]/g, (c) => " sub " + "0123456789"["₀₁₂₃₄₅₆₇₈₉".indexOf(c)]);
 
-  // ── 8. Greek unicode + known constants → spoken (uses SYMBOL_DESCRIPTIONS) ──
+  // ── 8. Greek unicode → spoken (inline, uses SYMBOL_DESCRIPTIONS) ───────────
+  // Only replace NON-ASCII characters inline. Single ASCII letters (G, c, h, g, e…)
+  // must NOT be substituted mid-word — they only get their description when the
+  // entire selected text is just that symbol (handled by the early-return above).
   for (const [ch, spoken] of Object.entries(SYMBOL_DESCRIPTIONS)) {
-    if (ch.length === 1 || /^[A-Za-z][^a-z]/.test(ch)) {
+    const isAsciiLetter = /^[A-Za-z]+$/.test(ch);
+    if (!isAsciiLetter) {
       s = s.replace(new RegExp(ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), ` ${spoken} `);
     }
   }
