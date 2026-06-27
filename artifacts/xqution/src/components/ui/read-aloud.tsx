@@ -185,6 +185,7 @@ export function ReadAloudMenu() {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const lastContextTime = useRef<number>(0);
 
   // Keep speaking state in sync with speechSynthesis
   useEffect(() => {
@@ -196,6 +197,16 @@ export function ReadAloudMenu() {
 
   useEffect(() => {
     const onContext = (e: MouseEvent) => {
+      const now = Date.now();
+      const isDoubleRightClick = now - lastContextTime.current < 400;
+      lastContextTime.current = now;
+
+      // Double right-click → close our menu and let the native one through
+      if (isDoubleRightClick) {
+        setMenu(null);
+        return;
+      }
+
       const sel = window.getSelection()?.toString().trim();
       if (sel && sel.length > 0) {
         e.preventDefault();
