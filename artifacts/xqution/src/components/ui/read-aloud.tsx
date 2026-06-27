@@ -27,7 +27,7 @@ const SYMBOL_DESCRIPTIONS: Record<string, string> = {
   "c":  "c, the speed of light",
   "h":  "h, Planck's constant",
   "ℏ":  "h-bar, the reduced Planck's constant",
-  "σ":  "sigma, the Stefan-Boltzmann constant",
+  "σ":  "Stefan-Boltzmann constant, sigma",
   "g":  "g, the acceleration due to gravity",
   "e":  "e, the elementary charge",
   "kₑ": "k sub e, Coulomb's constant",
