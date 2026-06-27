@@ -138,10 +138,19 @@ export function mathToSpeech(raw: string): string {
     } else if (ch === "^") {
       out += isMathLeft(s, i) ? " to the power of " : " caret ";
     } else if (ch === "-" || ch === "−") {
-      // negative if at start or after operator/space, else minus
       const prevCh = s[i - 1];
-      const isNeg = !prevCh || /[\s+\-=(*\/^]/.test(prevCh);
-      out += isNeg ? " negative " : " minus ";
+      const nextCh = s[i + 1];
+      // Word hyphen: a letter sits directly on both sides with no spaces
+      // e.g. "velocity-position" → "velocity position" (not "minus")
+      if (prevCh && /[a-zA-Z]/.test(prevCh) && nextCh && /[a-zA-Z]/.test(nextCh)) {
+        out += " ";
+      } else if (prevCh && /[a-zA-Z0-9)\]]/.test(prevCh)) {
+        // Binary minus: comes after a number, variable, or closing bracket
+        out += " minus ";
+      } else {
+        // Unary negative: at the start or after an operator/space
+        out += " negative ";
+      }
     } else {
       out += ch;
     }
