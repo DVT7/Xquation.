@@ -29,7 +29,7 @@ const UNICODE_TO_LATEX: Record<string, string> = {
   'ε': '\\epsilon','ζ': '\\zeta', 'η': '\\eta',      'θ': '\\theta',
   'ι': '\\iota',  'κ': '\\kappa', 'λ': '\\lambda',   'μ': '\\mu',
   'ν': '\\nu',    'ξ': '\\xi',    'π': '\\pi',        'ρ': '\\rho',
-  'τ': '\\tau',   'υ': '\\upsilon', 'φ': '\\phi',      'χ': '\\chi',
+  'σ': '\\sigma', 'τ': '\\tau',   'υ': '\\upsilon', 'φ': '\\phi',      'χ': '\\chi',
   'ψ': '\\psi',   'ω': '\\omega',
   'Γ': '\\Gamma', 'Δ': '\\Delta', 'Θ': '\\Theta', 'Λ': '\\Lambda',
   'Ξ': '\\Xi',    'Π': '\\Pi',    'Σ': '\\Sigma', 'Υ': '\\Upsilon',
