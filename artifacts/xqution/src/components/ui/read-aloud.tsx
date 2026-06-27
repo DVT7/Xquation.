@@ -19,10 +19,64 @@ function isMathRight(s: string, i: number) {
   return ch !== undefined && MATH_TOKEN.test(ch);
 }
 
+// ── Symbol descriptions: used both for standalone reads and inline substitution ─
+// Each entry gives the spoken form when that symbol appears in any context.
+const SYMBOL_DESCRIPTIONS: Record<string, string> = {
+  // ── Physics constants ───────────────────────────────────────────────────────
+  "G":  "G, the gravitational constant",
+  "c":  "c, the speed of light",
+  "h":  "h, Planck's constant",
+  "ℏ":  "h-bar, the reduced Planck's constant",
+  "σ":  "sigma, the Stefan-Boltzmann constant",
+  "g":  "g, the acceleration due to gravity",
+  "e":  "e, the elementary charge",
+  "kₑ": "k sub e, Coulomb's constant",
+  "Nₐ": "N sub A, Avogadro's number",
+  "H₀": "H sub 0, the Hubble constant",
+  // ── Greek letters with physics context ──────────────────────────────────────
+  "π":  "pi, the mathematical constant",
+  "α":  "alpha",
+  "β":  "beta",
+  "γ":  "gamma",
+  "δ":  "delta",
+  "ε":  "epsilon",
+  "ζ":  "zeta",
+  "η":  "eta",
+  "θ":  "theta, the angle",
+  "ι":  "iota",
+  "κ":  "kappa",
+  "λ":  "lambda, wavelength",
+  "μ":  "mu, the coefficient of friction or micro prefix",
+  "ν":  "nu, frequency",
+  "ξ":  "xi",
+  "ρ":  "rho, density",
+  "τ":  "tau, torque or time constant",
+  "υ":  "upsilon",
+  "φ":  "phi, the angle or magnetic flux",
+  "χ":  "chi",
+  "ψ":  "psi",
+  "ω":  "omega, angular velocity",
+  // ── Uppercase Greek ──────────────────────────────────────────────────────────
+  "Δ":  "Delta, change in",
+  "Σ":  "Sigma, sum of",
+  "Ω":  "Omega",
+  "Λ":  "Lambda",
+  "Γ":  "Gamma",
+  "Θ":  "Theta",
+  "Ξ":  "Xi",
+  "Π":  "Pi",
+  "Υ":  "Upsilon",
+  "Φ":  "Phi",
+  "Ψ":  "Psi",
+};
+
 export function mathToSpeech(raw: string): string {
   const t = raw.trim();
 
-  // ── Standalone single-symbol literal readings ──────────────────────────────
+  // ── Check for a known physics/Greek symbol first (standalone OR expression) ──
+  if (SYMBOL_DESCRIPTIONS[t]) return SYMBOL_DESCRIPTIONS[t];
+
+  // ── Standalone punctuation / operator literal readings ─────────────────────
   const STANDALONE: Record<string, string> = {
     "*": "asterisk", "×": "multiplication symbol", "/": "slash", "^": "caret",
     "=": "equals sign", "+": "plus sign", "-": "dash", "−": "minus sign",
@@ -34,10 +88,7 @@ export function mathToSpeech(raw: string): string {
     ":": "colon", ";": "semicolon", "≈": "approximately-equals sign",
     "≤": "less-than-or-equal sign", "≥": "greater-than-or-equal sign",
     "≠": "not-equal sign", "√": "square-root sign", "∞": "infinity symbol",
-    "°": "degree symbol", "π": "pi", "σ": "sigma", "θ": "theta", "λ": "lambda",
-    "ω": "omega", "α": "alpha", "β": "beta", "Δ": "delta", "μ": "mu",
-    "ρ": "rho", "η": "eta", "φ": "phi", "ℏ": "h-bar", "²": "superscript 2",
-    "³": "superscript 3",
+    "°": "degree symbol", "²": "superscript 2", "³": "superscript 3",
   };
   if (STANDALONE[t]) return STANDALONE[t];
 
@@ -115,15 +166,11 @@ export function mathToSpeech(raw: string): string {
   s = s.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, "$1 sub $2");
   s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]/g, (c) => " sub " + "0123456789"["₀₁₂₃₄₅₆₇₈₉".indexOf(c)]);
 
-  // ── 8. Greek unicode → spoken ─────────────────────────────────────────────
-  const GREEK: Record<string, string> = {
-    "π": "pi", "σ": "sigma", "θ": "theta", "λ": "lambda", "ω": "omega",
-    "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "μ": "mu",
-    "ρ": "rho", "η": "eta", "φ": "phi", "ℏ": "h-bar", "Δ": "delta",
-    "Σ": "sigma", "Ω": "omega", "Λ": "lambda", "Γ": "gamma", "Θ": "theta",
-  };
-  for (const [ch, word] of Object.entries(GREEK)) {
-    s = s.replace(new RegExp(ch, "g"), ` ${word} `);
+  // ── 8. Greek unicode + known constants → spoken (uses SYMBOL_DESCRIPTIONS) ──
+  for (const [ch, spoken] of Object.entries(SYMBOL_DESCRIPTIONS)) {
+    if (ch.length === 1 || /^[A-Za-z][^a-z]/.test(ch)) {
+      s = s.replace(new RegExp(ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), ` ${spoken} `);
+    }
   }
 
   // ── 9. Context-aware operators ────────────────────────────────────────────
