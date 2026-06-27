@@ -3,6 +3,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ReadAloudMenu } from "@/components/ui/read-aloud";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Spinner } from "@/components/ui/spinner";
 import 'katex/dist/katex.min.css';
@@ -66,6 +67,7 @@ function App() {
           <Router />
         </WouterRouter>
         <Toaster />
+        <ReadAloudMenu />
       </TooltipProvider>
     </QueryClientProvider>
   );
