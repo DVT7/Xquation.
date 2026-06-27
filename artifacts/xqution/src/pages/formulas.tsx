@@ -142,7 +142,11 @@ export default function Formulas() {
 
                 <SymbolCards variables={formula.variables} />
 
-                <p className="text-sm text-foreground/80 mt-6 mb-4">{formula.description}</p>
+                <p className="text-sm text-foreground/80 mt-6 mb-4">
+                  {formula.description
+                    ? (formula.description.match(/^[^.!?]+[.!?]/)?.[0] ?? formula.description.slice(0, 120) + (formula.description.length > 120 ? '…' : ''))
+                    : null}
+                </p>
 
                 {formula.siUnits && (
                   <div className="flex items-center gap-2 mb-2">
