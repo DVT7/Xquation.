@@ -205,15 +205,15 @@ function SmartSearchBar() {
         {loading && <div className="absolute right-5 w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />}
       </div>
 
-      {/* dropdown */}
+      {/* dropdown — in-flow so it pushes page content down */}
       {showDropdown && (
         <div
           ref={listRef}
-          className="absolute left-0 right-0 top-full z-50 bg-card border border-primary/20 border-t-border/30 rounded-b-2xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto"
+          className="mt-3 bg-card border border-primary/20 rounded-2xl shadow-2xl overflow-hidden"
           style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,217,255,0.06)" }}
         >
           {suggestions.length === 0 && !loading && (
-            <div className="px-5 py-6 text-sm text-muted-foreground text-center">
+            <div className="px-6 py-8 text-sm text-muted-foreground text-center">
               No results for "<span className="text-foreground">{query}</span>"
               <br />
               <button
@@ -226,19 +226,20 @@ function SmartSearchBar() {
           )}
 
           {suggestions.length > 0 && (
-            <>
+            <div className="py-4">
               {/* "Similar results" label */}
-              <div className="px-4 pt-6 pb-2 text-[10px] font-semibold uppercase tracking-widest text-primary/50">
+              <div className="px-6 pt-2 pb-4 text-[10px] font-semibold uppercase tracking-widest text-primary/50">
                 Similar results
               </div>
+
               {(() => {
                 let idx = 0;
                 return Array.from(groups.entries()).map(([group, items]) => (
-                  <div key={group} className="mb-1">
-                    <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
+                  <div key={group} className="mb-4">
+                    <div className="px-6 pt-3 pb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
                       <GIcon g={group} />{group}
                     </div>
-                    <div className="space-y-0.5 px-2">
+                    <div className="space-y-1.5 px-3">
                       {items.map(item => {
                         const i = idx++;
                         const active = i === cursor;
@@ -249,7 +250,7 @@ function SmartSearchBar() {
                             onMouseDown={e => { e.preventDefault(); go(item.href); }}
                             onMouseEnter={() => setCursor(i)}
                             className={cn(
-                              "w-full text-left px-3 py-3 flex flex-col rounded-lg transition-colors border-l-2",
+                              "w-full text-left px-4 py-4 flex flex-col rounded-xl transition-colors border-l-[3px]",
                               active ? "bg-primary/10 border-primary" : "border-transparent hover:bg-muted/50"
                             )}
                           >
@@ -257,7 +258,7 @@ function SmartSearchBar() {
                               <Hi text={item.label} q={query} />
                             </span>
                             {item.description && (
-                              <span className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                              <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
                                 <Hi text={item.description} q={query} />
                               </span>
                             )}
@@ -268,15 +269,16 @@ function SmartSearchBar() {
                   </div>
                 ));
               })()}
-              <div className="border-t border-border/30 px-5 py-2.5">
+
+              <div className="border-t border-border/30 px-6 py-3 mt-2">
                 <button
                   onMouseDown={() => go(`/formulas?search=${encodeURIComponent(query)}`)}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
                 >
                   <Search className="w-3 h-3" /> Search all formulas for "<span className="font-mono">{query}</span>"
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
