@@ -6,7 +6,9 @@ import {
   ExchangeMobileAuthorizationCodeResponse,
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, favoritesTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
+import { SCHWARZSCHILD_ID } from "./favorites";
 import {
   clearSession,
   getOidcConfig,
@@ -171,6 +173,21 @@ router.get("/callback", async (req: Request, res: Response) => {
   const dbUser = await upsertUser(
     claims as unknown as Record<string, unknown>,
   );
+
+  /* — Easter egg: auto-favorite Schwarzschild Radius for new accounts — */
+  const existing = await db
+    .select()
+    .from(favoritesTable)
+    .where(and(eq(favoritesTable.userId, dbUser.id), eq(favoritesTable.itemId, SCHWARZSCHILD_ID)))
+    .limit(1);
+  if (existing.length === 0) {
+    await db.insert(favoritesTable).values({
+      userId: dbUser.id,
+      itemType: "formula",
+      itemId: SCHWARZSCHILD_ID,
+      itemName: "Schwarzschild Radius",
+    });
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const sessionData: SessionData = {

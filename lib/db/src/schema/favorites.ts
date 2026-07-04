@@ -1,9 +1,10 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const favoritesTable = pgTable("favorites", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }),
   itemType: text("item_type").notNull(),
   itemId: integer("item_id").notNull(),
   itemName: text("item_name").notNull(),

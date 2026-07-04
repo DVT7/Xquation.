@@ -13,7 +13,8 @@ router.get("/user/stats", async (req: Request, res: Response): Promise<void> => 
 
   const [favRow] = await db
     .select({ cnt: count() })
-    .from(favoritesTable);
+    .from(favoritesTable)
+    .where(eq(favoritesTable.userId, req.user.id));
 
   const [viewRow] = await db
     .select({ cnt: count() })
