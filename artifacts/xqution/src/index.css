@@ -60,11 +60,66 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ── Light mode (default) ─────────────────────────────────────────────── */
 :root {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(0,0,0,.08);
+  --badge-outline: rgba(0,0,0,.05);
 
   --opaque-button-border-intensity: 9;
+
+  --elevate-1: rgba(0,0,0,.03);
+  --elevate-2: rgba(0,0,0,.06);
+
+  --background: 220 33% 97%;
+  --foreground: 224 89% 10%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 224 89% 10%;
+  --card-border: 214 32% 88%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 89% 10%;
+  --popover-border: 214 32% 88%;
+
+  --primary: 189 100% 36%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 217 91% 50%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 210 40% 92%;
+  --muted-foreground: 215 16% 44%;
+
+  --accent: 271 91% 58%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 214 32% 88%;
+  --input: 214 32% 88%;
+  --ring: 189 100% 36%;
+
+  /* sidebar stays dark in both modes */
+  --sidebar: 225 79% 12%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 221 60% 22%;
+  --sidebar-primary: 189 100% 50%;
+  --sidebar-primary-foreground: 224 89% 8%;
+  --sidebar-accent: 221 60% 20%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 189 100% 50%;
+
+  --app-font-sans: 'Inter', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: 'Space Mono', 'Menlo', monospace;
+  --radius: 0.5rem;
+}
+
+/* ── Dark mode ────────────────────────────────────────────────────────── */
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
 
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
@@ -83,55 +138,6 @@
   --popover-border: 221 60% 24%;
 
   /* #00D9FF electric blue accent */
-  --primary: 189 100% 50%;
-  --primary-foreground: 224 89% 8%;
-
-  /* secondary blue */
-  --secondary: 217 91% 60%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 221 60% 20%;
-  --muted-foreground: 215 20% 65%;
-
-  --accent: 271 91% 65%;
-  --accent-foreground: 210 40% 98%;
-
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 221 60% 24%;
-  --input: 221 60% 24%;
-  --ring: 189 100% 50%;
-
-  /* #061235 sidebar */
-  --sidebar: 225 79% 12%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 221 60% 22%;
-  --sidebar-primary: 189 100% 50%;
-  --sidebar-primary-foreground: 224 89% 8%;
-  --sidebar-accent: 221 60% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 189 100% 50%;
-
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: 'Space Mono', 'Menlo', monospace;
-  --radius: 0.5rem;
-}
-
-/* Force dark mode */
-.dark {
-  --background: 224 89% 8%;
-  --foreground: 210 40% 98%;
-
-  --card: 221 79% 15%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 221 60% 24%;
-
-  --popover: 224 89% 11%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 221 60% 24%;
-
   --primary: 189 100% 50%;
   --primary-foreground: 224 89% 8%;
 

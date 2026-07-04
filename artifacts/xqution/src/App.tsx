@@ -1,11 +1,12 @@
-import { lazy, Suspense } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReadAloudMenu } from "@/components/ui/read-aloud";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Spinner } from "@/components/ui/spinner";
+import { AppSettingsProvider, useAppSettings } from "@/contexts/app-settings";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -30,6 +31,24 @@ const About = lazy(() => import("@/pages/about"));
 const Account = lazy(() => import("@/pages/account"));
 import NotFound from "@/pages/not-found";
 
+const ROUTE_LABELS: Record<string, string> = {
+  "/": "Home",
+  "/formulas": "Formulas",
+  "/constants": "Constants",
+  "/calculators": "Calculators",
+  "/converter": "Unit Converter",
+  "/astronomy-tools": "Astronomy Tools",
+  "/glossary": "Glossary",
+  "/favorites": "Favorites",
+  "/about": "About",
+};
+
+function getLabel(path: string): string {
+  if (ROUTE_LABELS[path]) return ROUTE_LABELS[path];
+  if (path.startsWith("/formulas/")) return "Formula Detail";
+  return "Page";
+}
+
 function LoadingFallback() {
   return (
     <div className="flex-1 flex items-center justify-center min-h-[50vh]">
@@ -38,9 +57,22 @@ function LoadingFallback() {
   );
 }
 
+function RouteTracker() {
+  const [location] = useLocation();
+  const { setLastVisited } = useAppSettings();
+
+  useEffect(() => {
+    if (location === "/account") return;
+    setLastVisited({ path: location, label: getLabel(location) });
+  }, [location]);
+
+  return null;
+}
+
 function Router() {
   return (
     <AppLayout>
+      <RouteTracker />
       <Suspense fallback={<LoadingFallback />}>
         <Switch>
           <Route path="/" component={Home} />
@@ -64,13 +96,15 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-        <ReadAloudMenu />
-      </TooltipProvider>
+      <AppSettingsProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+          <ReadAloudMenu />
+        </TooltipProvider>
+      </AppSettingsProvider>
     </QueryClientProvider>
   );
 }

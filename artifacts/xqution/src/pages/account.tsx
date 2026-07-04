@@ -1,12 +1,17 @@
 import { useAuth } from "@workspace/replit-auth-web";
 import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
+import { useAppSettings } from "@/contexts/app-settings";
+import { useLocation } from "wouter";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical } from "lucide-react";
+import {
+  User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
+  Sun, Moon, Volume2, ArrowRight, RotateCcw,
+} from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
   const f = firstName?.[0] ?? "";
@@ -19,10 +24,23 @@ function getDisplayName(firstName?: string | null, lastName?: string | null): st
   return parts.length > 0 ? parts.join(" ") : "Anonymous";
 }
 
+function shortVoiceName(voice: SpeechSynthesisVoice, idx: number): string {
+  const name = voice.name;
+  if (name.length <= 22) return name;
+  return `Voice ${idx + 1}`;
+}
+
 export default function Account() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { data: favorites } = useListFavorites();
   const { data: stats } = useGetUserStats();
+  const {
+    theme, setTheme,
+    voiceURI, setVoiceURI,
+    volume, setVolume,
+    lastVisited, availableVoices,
+  } = useAppSettings();
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (
@@ -52,7 +70,18 @@ export default function Account() {
           <LogIn className="w-4 h-4" />
           Log In
         </Button>
-        <div className="grid grid-cols-3 gap-4 w-full mt-4">
+
+        {/* Settings still accessible when logged out */}
+        <PreferencesCards
+          theme={theme} setTheme={setTheme}
+          voiceURI={voiceURI} setVoiceURI={setVoiceURI}
+          volume={volume} setVolume={setVolume}
+          availableVoices={availableVoices}
+          lastVisited={lastVisited}
+          onResume={() => lastVisited && navigate(lastVisited.path)}
+        />
+
+        <div className="grid grid-cols-3 gap-4 w-full mt-2">
           {[
             { icon: FlaskConical, label: "32 Formulas" },
             { icon: Star, label: "Save Favorites" },
@@ -72,6 +101,7 @@ export default function Account() {
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Account</h1>
 
+      {/* Profile */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-4">
           <CardTitle className="text-base text-muted-foreground font-medium">Profile</CardTitle>
@@ -121,6 +151,7 @@ export default function Account() {
         </CardContent>
       </Card>
 
+      {/* Activity */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-4">
           <CardTitle className="text-base text-muted-foreground font-medium">Activity</CardTitle>
@@ -143,6 +174,17 @@ export default function Account() {
         </CardContent>
       </Card>
 
+      {/* Preferences */}
+      <PreferencesCards
+        theme={theme} setTheme={setTheme}
+        voiceURI={voiceURI} setVoiceURI={setVoiceURI}
+        volume={volume} setVolume={setVolume}
+        availableVoices={availableVoices}
+        lastVisited={lastVisited}
+        onResume={() => lastVisited && navigate(lastVisited.path)}
+      />
+
+      {/* Session */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-4">
           <CardTitle className="text-base text-muted-foreground font-medium">Session</CardTitle>
@@ -159,5 +201,155 @@ export default function Account() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+interface PreferencesCardsProps {
+  theme: "dark" | "light";
+  setTheme: (t: "dark" | "light") => void;
+  voiceURI: string;
+  setVoiceURI: (uri: string) => void;
+  volume: number;
+  setVolume: (v: number) => void;
+  availableVoices: SpeechSynthesisVoice[];
+  lastVisited: { path: string; label: string } | null;
+  onResume: () => void;
+}
+
+function PreferencesCards({
+  theme, setTheme,
+  voiceURI, setVoiceURI,
+  volume, setVolume,
+  availableVoices,
+  lastVisited,
+  onResume,
+}: PreferencesCardsProps) {
+  return (
+    <>
+      {/* Appearance */}
+      <Card className="bg-card border-border w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base text-muted-foreground font-medium">Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                {theme === "dark" ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {theme === "dark" ? "Dark Mode" : "Light Mode"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {theme === "dark" ? "Easy on the eyes at night" : "Best for bright environments"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                theme === "dark" ? "bg-primary" : "bg-muted"
+              }`}
+              role="switch"
+              aria-checked={theme === "dark"}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  theme === "dark" ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Read Aloud */}
+      <Card className="bg-card border-border w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base text-muted-foreground font-medium">Read Aloud</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Voice picker */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Voice</p>
+            {availableVoices.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No voices available — your browser may not support speech synthesis.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-1.5">
+                {availableVoices.map((v, i) => {
+                  const selected = voiceURI === v.voiceURI || (!voiceURI && i === 0);
+                  return (
+                    <button
+                      key={v.voiceURI}
+                      onClick={() => setVoiceURI(v.voiceURI)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+                        selected
+                          ? "border-primary/60 bg-primary/10 text-foreground"
+                          : "border-border bg-background hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
+                      }`}
+                    >
+                      <Volume2 className={`w-4 h-4 shrink-0 ${selected ? "text-primary" : "text-muted-foreground"}`} />
+                      <span className="text-sm font-medium truncate">{shortVoiceName(v, i)}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{v.lang}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Volume slider */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Volume</p>
+              <span className="text-xs text-muted-foreground">{Math.round(volume * 100)}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={e => setVolume(parseFloat(e.target.value))}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-muted accent-primary"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pick up where you left off */}
+      {lastVisited && (
+        <Card className="bg-card border-border w-full">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base text-muted-foreground font-medium">Pick Up Where You Left Off</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{lastVisited.label}</p>
+                  <p className="text-xs text-muted-foreground truncate">{lastVisited.path}</p>
+                </div>
+              </div>
+              <Button
+                onClick={onResume}
+                size="sm"
+                className="shrink-0 gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+                variant="outline"
+              >
+                Continue
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Volume2, VolumeX, Square } from "lucide-react";
+import { useAppSettings } from "@/contexts/app-settings";
 
 // ── Smart math-to-speech converter ───────────────────────────────────────────
 //
@@ -167,9 +168,6 @@ export function mathToSpeech(raw: string): string {
   s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]/g, (c) => " sub " + "0123456789"["₀₁₂₃₄₅₆₇₈₉".indexOf(c)]);
 
   // ── 8. Greek unicode → spoken (inline, uses SYMBOL_DESCRIPTIONS) ───────────
-  // Only replace NON-ASCII characters inline. Single ASCII letters (G, c, h, g, e…)
-  // must NOT be substituted mid-word — they only get their description when the
-  // entire selected text is just that symbol (handled by the early-return above).
   for (const [ch, spoken] of Object.entries(SYMBOL_DESCRIPTIONS)) {
     const isAsciiLetter = /^[A-Za-z]+$/.test(ch);
     if (!isAsciiLetter) {
@@ -178,7 +176,6 @@ export function mathToSpeech(raw: string): string {
   }
 
   // ── 9. Context-aware operators ────────────────────────────────────────────
-  // Walk character-by-character for ambiguous symbols
   let out = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
@@ -191,15 +188,11 @@ export function mathToSpeech(raw: string): string {
     } else if (ch === "-" || ch === "−") {
       const prevCh = s[i - 1];
       const nextCh = s[i + 1];
-      // Word hyphen: a letter sits directly on both sides with no spaces
-      // e.g. "velocity-position" → "velocity position" (not "minus")
       if (prevCh && /[a-zA-Z]/.test(prevCh) && nextCh && /[a-zA-Z]/.test(nextCh)) {
         out += " ";
       } else if (prevCh && /[a-zA-Z0-9)\]]/.test(prevCh)) {
-        // Binary minus: comes after a number, variable, or closing bracket
         out += " minus ";
       } else {
-        // Unary negative: at the start or after an operator/space
         out += " negative ";
       }
     } else {
@@ -237,8 +230,8 @@ export function ReadAloudMenu() {
   const [speaking, setSpeaking] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastContextTime = useRef<number>(0);
+  const { voiceURI, volume, availableVoices } = useAppSettings();
 
-  // Keep speaking state in sync with speechSynthesis
   useEffect(() => {
     const tick = setInterval(() => {
       setSpeaking(window.speechSynthesis?.speaking ?? false);
@@ -252,7 +245,6 @@ export function ReadAloudMenu() {
       const isDoubleRightClick = now - lastContextTime.current < 400;
       lastContextTime.current = now;
 
-      // Double right-click → close our menu and let the native one through
       if (isDoubleRightClick) {
         setMenu(null);
         return;
@@ -261,7 +253,6 @@ export function ReadAloudMenu() {
       const sel = window.getSelection()?.toString().trim();
       if (sel && sel.length > 0) {
         e.preventDefault();
-        // Clamp so menu doesn't go off-screen
         const menuW = 200;
         const menuH = 90;
         const x = Math.min(e.clientX, window.innerWidth - menuW - 8);
@@ -301,6 +292,12 @@ export function ReadAloudMenu() {
     const spoken = mathToSpeech(menu.text);
     const utt = new SpeechSynthesisUtterance(spoken);
     utt.rate = 0.92;
+    utt.volume = volume;
+    if (voiceURI) {
+      const voice = availableVoices.find(v => v.voiceURI === voiceURI)
+        ?? window.speechSynthesis.getVoices().find(v => v.voiceURI === voiceURI);
+      if (voice) utt.voice = voice;
+    }
     utt.onend = () => setSpeaking(false);
     utt.onerror = () => setSpeaking(false);
     window.speechSynthesis.cancel();
@@ -316,7 +313,6 @@ export function ReadAloudMenu() {
 
   return (
     <>
-      {/* Floating "stop" pill while speaking */}
       {speaking && (
         <div className="fixed bottom-6 right-6 z-[9998] flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg text-sm font-mono animate-in fade-in slide-in-from-bottom-2 duration-200">
           <Volume2 className="w-4 h-4 animate-pulse" />
@@ -331,7 +327,6 @@ export function ReadAloudMenu() {
         </div>
       )}
 
-      {/* Context menu */}
       {menu &&
         createPortal(
           <div
@@ -339,7 +334,6 @@ export function ReadAloudMenu() {
             style={{ top: menu.y, left: menu.x }}
             className="fixed z-[9999] bg-card border border-border/70 rounded-xl shadow-2xl overflow-hidden py-1.5 min-w-[190px] animate-in fade-in zoom-in-95 duration-100"
           >
-            {/* Preview of what will be said */}
             <div className="px-3 py-1.5 mb-1 border-b border-border/50">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Will say:</p>
               <p className="text-xs text-foreground/80 font-mono leading-snug line-clamp-2">
