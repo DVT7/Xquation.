@@ -59,22 +59,54 @@ function scoreLocal(query: string, e: NavEntry): number {
   return s;
 }
 
-/* ─── highlight ───────────────────────────────────────────────────────────── */
+/* ─── highlight (manual scan — no regex split edge cases) ─────────────────── */
 
 function Hi({ text, q }: { text: string; q: string }) {
   if (!q.trim()) return <>{text}</>;
   const words = norm(q).split(" ").filter(w => w.length >= 2);
   if (!words.length) return <>{text}</>;
-  const re = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
-  const parts = text.split(re);
+
+  // Find every match region in the original text (case-insensitive, whole-word-ish)
+  const matches: Array<{ start: number; end: number }> = [];
+  const lower = text.toLowerCase();
+  for (const w of words) {
+    let pos = 0;
+    while ((pos = lower.indexOf(w, pos)) !== -1) {
+      matches.push({ start: pos, end: pos + w.length });
+      pos += 1; // allow overlapping
+    }
+  }
+  if (matches.length === 0) return <>{text}</>;
+
+  // Merge overlapping/adjacent regions
+  matches.sort((a, b) => a.start - b.start);
+  const merged: Array<{ start: number; end: number }> = [];
+  for (const m of matches) {
+    const last = merged[merged.length - 1];
+    if (last && m.start <= last.end) {
+      if (m.end > last.end) last.end = m.end;
+    } else {
+      merged.push({ start: m.start, end: m.end });
+    }
+  }
+
+  // Build segments
+  const segments: Array<{ text: string; mark: boolean }> = [];
+  let cursor = 0;
+  for (const m of merged) {
+    if (m.start > cursor) segments.push({ text: text.slice(cursor, m.start), mark: false });
+    segments.push({ text: text.slice(m.start, m.end), mark: true });
+    cursor = m.end;
+  }
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), mark: false });
+
   return (
     <>
-      {parts.map((part, i) => {
-        const isMatch = words.some(w => part.toLowerCase() === w);
-        return isMatch
-          ? <mark key={i} className="bg-primary/25 text-primary rounded-[2px] px-[1px] not-italic">{part}</mark>
-          : <span key={i}>{part}</span>;
-      })}
+      {segments.map((seg, i) =>
+        seg.mark
+          ? <mark key={i} className="bg-primary/25 text-primary rounded-[2px] px-[1px] not-italic">{seg.text}</mark>
+          : <span key={i}>{seg.text}</span>
+      )}
     </>
   );
 }
