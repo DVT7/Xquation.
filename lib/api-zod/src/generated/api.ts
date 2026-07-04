@@ -340,6 +340,23 @@ export const ExchangeMobileAuthorizationCodeResponse = zod.object({
 
 
 /**
+ * @summary Record that the authenticated user viewed a formula for 1+ minute
+ */
+export const RecordFormulaViewParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get activity stats for the authenticated user
+ */
+export const GetUserStatsResponse = zod.object({
+  "favoritesCount": zod.number(),
+  "formulasViewed": zod.number()
+})
+
+
+/**
  * @summary Delete a mobile session token
  */
 export const LogoutMobileSessionHeader = zod.object({

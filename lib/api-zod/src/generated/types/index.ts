@@ -30,3 +30,4 @@ export * from './mobileTokenExchangeSuccess';
 export * from './platformStats';
 export * from './problem';
 export * from './searchResults';
+export * from './userStats';

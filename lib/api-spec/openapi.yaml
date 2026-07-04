@@ -422,6 +422,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /formulas/{id}/view:
+    post:
+      tags: [formulas]
+      operationId: recordFormulaView
+      summary: Record that the authenticated user viewed a formula for 1+ minute
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: View recorded
+        '401':
+          description: Not authenticated
+
+  /user/stats:
+    get:
+      tags: [Auth]
+      operationId: getUserStats
+      summary: Get activity stats for the authenticated user
+      responses:
+        '200':
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStats'
+        '401':
+          description: Not authenticated
+
   /mobile-auth/logout:
     post:
       tags: [Auth]
@@ -533,6 +565,14 @@ components:
       properties:
         error:
           type: string
+    UserStats:
+      type: object
+      required: [favoritesCount, formulasViewed]
+      properties:
+        favoritesCount:
+          type: integer
+        formulasViewed:
+          type: integer
     HealthStatus:
       type: object
       properties:

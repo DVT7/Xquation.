@@ -48,6 +48,11 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export interface UserStats {
+  favoritesCount: number;
+  formulasViewed: number;
+}
+
 export interface HealthStatus {
   status: string;
 }

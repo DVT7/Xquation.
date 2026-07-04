@@ -2,9 +2,11 @@ import { useRoute, Link } from "wouter";
 import {
   useGetFormula, useListFormulas, useListConstants,
   useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey,
+  useRecordFormulaView,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -370,6 +372,21 @@ export default function FormulaDetail() {
   const removeFavorite = useRemoveFavorite();
   const queryClient = useQueryClient();
   const [latexCopied, setLatexCopied] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const recordView = useRecordFormulaView();
+  const viewFiredRef = useRef(false);
+
+  useEffect(() => {
+    viewFiredRef.current = false;
+    if (!isAuthenticated || !id) return;
+    const timer = setTimeout(() => {
+      if (!viewFiredRef.current) {
+        viewFiredRef.current = true;
+        recordView.mutate({ id });
+      }
+    }, 60_000);
+    return () => clearTimeout(timer);
+  }, [id, isAuthenticated]);
 
   const sortedAll = useMemo(() => allFormulas ?? [], [allFormulas]);
   const currentIdx = sortedAll.findIndex(f => f.id === id);

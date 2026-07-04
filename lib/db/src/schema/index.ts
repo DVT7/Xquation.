@@ -4,3 +4,4 @@ export * from "./problems";
 export * from "./glossary";
 export * from "./favorites";
 export * from "./auth";
+export * from "./views";

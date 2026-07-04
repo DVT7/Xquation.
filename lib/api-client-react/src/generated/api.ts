@@ -41,7 +41,8 @@ import type {
   MobileTokenExchangeSuccess,
   PlatformStats,
   Problem,
-  SearchResults
+  SearchResults,
+  UserStats
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1626,6 +1627,153 @@ export const useExchangeMobileAuthorizationCode = <TError = ErrorType<ErrorEnvel
       > => {
       return useMutation(getExchangeMobileAuthorizationCodeMutationOptions(options));
     }
+
+export const getRecordFormulaViewUrl = (id: number,) => {
+
+
+
+
+  return `/api/formulas/${id}/view`
+}
+
+/**
+ * @summary Record that the authenticated user viewed a formula for 1+ minute
+ */
+export const recordFormulaView = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRecordFormulaViewUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRecordFormulaViewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFormulaView>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordFormulaView>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['recordFormulaView'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordFormulaView>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  recordFormulaView(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordFormulaViewMutationResult = NonNullable<Awaited<ReturnType<typeof recordFormulaView>>>
+
+    export type RecordFormulaViewMutationError = ErrorType<void>
+
+    /**
+ * @summary Record that the authenticated user viewed a formula for 1+ minute
+ */
+export const useRecordFormulaView = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFormulaView>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordFormulaView>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRecordFormulaViewMutationOptions(options));
+    }
+
+export const getGetUserStatsUrl = () => {
+
+
+
+
+  return `/api/user/stats`
+}
+
+/**
+ * @summary Get activity stats for the authenticated user
+ */
+export const getUserStats = async ( options?: RequestInit): Promise<UserStats> => {
+
+  return customFetch<UserStats>(getGetUserStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserStatsQueryKey = () => {
+    return [
+    `/api/user/stats`
+    ] as const;
+    }
+
+
+export const getGetUserStatsQueryOptions = <TData = Awaited<ReturnType<typeof getUserStats>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserStats>>> = ({ signal }) => getUserStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUserStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserStats>>>
+export type GetUserStatsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get activity stats for the authenticated user
+ */
+
+export function useGetUserStats<TData = Awaited<ReturnType<typeof getUserStats>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUserStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getLogoutMobileSessionUrl = () => {
 

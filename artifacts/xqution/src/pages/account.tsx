@@ -1,4 +1,5 @@
 import { useAuth } from "@workspace/replit-auth-web";
+import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,8 @@ function getDisplayName(firstName?: string | null, lastName?: string | null): st
 
 export default function Account() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const { data: favorites } = useListFavorites();
+  const { data: stats } = useGetUserStats();
 
   if (isLoading) {
     return (
@@ -125,10 +128,8 @@ export default function Account() {
         <CardContent>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: Star, label: "Saved Favorites", value: "—" },
-              { icon: FlaskConical, label: "Formulas Viewed", value: "—" },
-              { icon: BookOpen, label: "Problems Solved", value: "—" },
-              { icon: Telescope, label: "Topics Explored", value: "—" },
+              { icon: Star, label: "Saved Favorites", value: favorites != null ? String(favorites.length) : "—" },
+              { icon: FlaskConical, label: "Formulas Viewed", value: stats != null ? String(stats.formulasViewed) : "—" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="p-4 rounded-lg bg-background border border-border flex flex-col gap-1">
                 <div className="flex items-center gap-2">
