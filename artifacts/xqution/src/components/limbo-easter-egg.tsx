@@ -108,6 +108,7 @@ export function LimboEasterEgg() {
   const [lockoutEnd, setLockoutEnd] = useState<number | null>(() => getLockout());
   const [timeLeft,   setTimeLeft]   = useState(0);
   const [isGlowing,  setIsGlowing]  = useState(false);
+  const [pickReady,  setPickReady]  = useState(false); // true once initial circle transition finishes
 
   // positions[i] = current screen position of x[i]
   const [positions, setPositions] = useState<XPos[]>(() => GRID.map(g => ({ ...g })));
@@ -218,31 +219,40 @@ export function LimboEasterEgg() {
     }, delay);
   };
 
-  /* ── pick phase: orbit circle ── */
+  /* ── pick phase: smooth fly-to-circle then orbit ── */
   useEffect(() => {
     if (phase !== "pick") return;
+    setPickReady(false);
 
-    // Compute orbit positions from current angle
-    const updateOrbit = () => {
-      orbitAngle.current += 0.006; // radians per frame ≈ ~1 RPM
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-      const R = Math.min(W, H) * 0.3;
-      const cx = W / 2; const cy = H / 2;
-      setPositions(
-        Array.from({ length: COUNT }, (_, i) => {
-          const angle = orbitAngle.current + (i / COUNT) * Math.PI * 2;
-          return {
-            x: ((cx + R * Math.cos(angle)) / W) * 100,
-            y: ((cy + R * Math.sin(angle)) / H) * 100,
-          };
-        })
-      );
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const R = Math.min(W, H) * 0.3;
+    const cx = W / 2; const cy = H / 2;
+
+    const circlePos = (angle: number, i: number): XPos => ({
+      x: ((cx + R * Math.cos(angle + (i / COUNT) * Math.PI * 2)) / W) * 100,
+      y: ((cy + R * Math.sin(angle + (i / COUNT) * Math.PI * 2)) / H) * 100,
+    });
+
+    // Step 1: push x's to their first circle positions — CSS transition handles the fly-in
+    orbitAngle.current = -Math.PI / 2; // start at top of circle
+    setPositions(Array.from({ length: COUNT }, (_, i) => circlePos(orbitAngle.current, i)));
+
+    // Step 2: after transition completes, start continuous orbit via RAF
+    const readyTimer = setTimeout(() => {
+      setPickReady(true);
+      const updateOrbit = () => {
+        orbitAngle.current += 0.005;
+        setPositions(Array.from({ length: COUNT }, (_, i) => circlePos(orbitAngle.current, i)));
+        orbitRafRef.current = requestAnimationFrame(updateOrbit);
+      };
       orbitRafRef.current = requestAnimationFrame(updateOrbit);
-    };
+    }, 850); // matches the CSS transition duration below
 
-    orbitRafRef.current = requestAnimationFrame(updateOrbit);
-    return () => cancelAnimationFrame(orbitRafRef.current);
+    return () => {
+      clearTimeout(readyTimer);
+      cancelAnimationFrame(orbitRafRef.current);
+    };
   }, [phase]);
 
   /* ── won: auto-close ── */
@@ -358,10 +368,12 @@ export function LimboEasterEgg() {
                 ? (colorOrder.current[i]?.hex ?? "#00D9FF")
                 : "#00D9FF";
               const pos     = positions[i] ?? { x: 50, y: 50 };
-              // swap transition only during dance phase
+              // dance: smooth swap; pick entry: fly to circle; pick orbit: no transition (RAF steps are tiny)
               const transition = phase === "dance"
                 ? "left 0.35s cubic-bezier(.4,0,.2,1), top 0.35s cubic-bezier(.4,0,.2,1)"
-                : "none";
+                : (phase === "pick" && !pickReady)
+                  ? "left 0.85s cubic-bezier(.4,0,.2,1), top 0.85s cubic-bezier(.4,0,.2,1)"
+                  : "none";
 
               return (
                 <button
