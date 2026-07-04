@@ -3,6 +3,7 @@ import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
 import { useAppSettings } from "@/contexts/app-settings";
 import { useLocalFormulaViews } from "@/hooks/use-local-views";
 import { useLocation, Link } from "wouter";
+import { useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
-  Sun, Moon, Volume2, ArrowRight, RotateCcw,
+  Sun, Moon, Volume2, ArrowRight, RotateCcw, MessageSquare, AlertCircle, Lightbulb, CheckCircle,
 } from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
@@ -175,6 +176,9 @@ export default function Account() {
         onResume={() => lastVisited && navigate(lastVisited.path)}
       />
 
+      {/* Feedback */}
+      <FeedbackCard />
+
       {/* Session */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-4">
@@ -192,6 +196,115 @@ export default function Account() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function FeedbackCard() {
+  const [type, setType] = useState<"suggestion" | "complaint" | null>(null);
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  const handleSubmit = async () => {
+    if (!type || message.trim().length < 5) return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type, message: message.trim() }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setStatus("success");
+      setMessage("");
+      setType(null);
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <Card className="bg-card border-border">
+        <CardContent className="py-8 flex flex-col items-center gap-3 text-center">
+          <CheckCircle className="w-10 h-10 text-green-500" />
+          <p className="font-semibold text-foreground">Thanks for your feedback!</p>
+          <p className="text-sm text-muted-foreground">We'll review it and use it to improve Xquation.</p>
+          <Button variant="ghost" size="sm" onClick={() => setStatus("idle")} className="mt-1 text-primary">
+            Send another
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base text-muted-foreground font-medium flex items-center gap-2">
+          <MessageSquare className="w-4 h-4" /> Feedback
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Type toggle */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setType("suggestion")}
+            className={`flex items-center gap-2 p-3 rounded-lg border text-left transition-colors ${
+              type === "suggestion"
+                ? "border-primary/60 bg-primary/10 text-foreground"
+                : "border-border bg-background hover:border-primary/30 text-muted-foreground"
+            }`}
+          >
+            <Lightbulb className={`w-4 h-4 shrink-0 ${type === "suggestion" ? "text-primary" : "text-muted-foreground"}`} />
+            <span className="text-sm font-medium">Suggestion</span>
+          </button>
+          <button
+            onClick={() => setType("complaint")}
+            className={`flex items-center gap-2 p-3 rounded-lg border text-left transition-colors ${
+              type === "complaint"
+                ? "border-destructive/60 bg-destructive/10 text-foreground"
+                : "border-border bg-background hover:border-destructive/30 text-muted-foreground"
+            }`}
+          >
+            <AlertCircle className={`w-4 h-4 shrink-0 ${type === "complaint" ? "text-destructive" : "text-muted-foreground"}`} />
+            <span className="text-sm font-medium">Complaint</span>
+          </button>
+        </div>
+
+        {/* Message */}
+        <div className="space-y-1.5">
+          <textarea
+            placeholder={
+              type === "suggestion"
+                ? "Share your idea or improvement..."
+                : type === "complaint"
+                ? "Describe the issue you encountered..."
+                : "Select a type above, then write your message..."
+            }
+            value={message}
+            onChange={e => { setMessage(e.target.value); if (status === "error") setStatus("idle"); }}
+            disabled={!type}
+            rows={4}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-40 disabled:cursor-not-allowed resize-none"
+          />
+          <p className="text-xs text-muted-foreground text-right">{message.length}/2000</p>
+        </div>
+
+        {status === "error" && (
+          <p className="text-xs text-destructive">Something went wrong — please try again.</p>
+        )}
+
+        <Button
+          onClick={handleSubmit}
+          disabled={!type || message.trim().length < 5 || status === "loading"}
+          className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+        >
+          {status === "loading" ? <Spinner className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+          {status === "loading" ? "Sending..." : "Send Feedback"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

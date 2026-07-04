@@ -10,6 +10,7 @@ import statsRouter from "./stats";
 import authRouter from "./auth";
 import viewsRouter from "./views";
 import userStatsRouter from "./userStats";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(glossaryRouter);
 router.use(favoritesRouter);
 router.use(searchRouter);
 router.use(statsRouter);
+router.use(feedbackRouter);
 
 export default router;
