@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { InlineMath } from "@/components/ui/math";
+import { useAppSettings } from "@/contexts/app-settings";
 
 type SymbolType = "answer" | "variable" | "constant" | "number";
 
@@ -13,7 +14,7 @@ interface SymbolCard {
 }
 
 const TYPE_COLORS: Record<SymbolType, { border: string; text: string; glow: string; label: string }> = {
-  answer:   { border: "border-emerald-400/40",   text: "text-emerald-400",         glow: "hover:shadow-[0_0_16px_rgba(52,211,153,0.2)]",   label: "Final Answer" },
+  answer:   { border: "border-white/40",   text: "text-white",         glow: "hover:shadow-[0_0_16px_rgba(255,255,255,0.2)]",   label: "Final Answer" },
   variable: { border: "border-[#00BFFF]/50", text: "text-[#00BFFF]",  glow: "hover:shadow-[0_0_16px_rgba(0,191,255,0.3)]",    label: "Variable" },
   constant: { border: "border-[#FFD700]/50", text: "text-[#FFD700]",  glow: "hover:shadow-[0_0_16px_rgba(255,215,0,0.3)]",    label: "Physical Constant" },
   number:   { border: "border-[#FF8C42]/50", text: "text-[#FF8C42]",  glow: "hover:shadow-[0_0_16px_rgba(255,140,66,0.3)]",   label: "Coefficient" },
@@ -141,7 +142,15 @@ interface SymbolCardsProps {
   onHover?: (symbol: string | null) => void;
 }
 
+const LIGHT_ANSWER = {
+  border: "border-emerald-500/40",
+  text: "text-emerald-600",
+  glow: "hover:shadow-[0_0_16px_rgba(16,185,129,0.2)]",
+  label: "Final Answer",
+};
+
 export function SymbolCards({ variables, highlightedSymbol, onHover }: SymbolCardsProps) {
+  const { theme } = useAppSettings();
   if (!variables) return null;
   const cards = parseVariables(variables);
   if (cards.length === 0) return null;
@@ -153,7 +162,10 @@ export function SymbolCards({ variables, highlightedSymbol, onHover }: SymbolCar
       </h4>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {cards.map((card) => {
-          const colors = TYPE_COLORS[card.type];
+          const baseColors = TYPE_COLORS[card.type];
+          const colors = (card.type === "answer" && theme === "light")
+            ? LIGHT_ANSWER
+            : baseColors;
           const isHighlighted = highlightedSymbol === card.symbol;
           return (
             <div
