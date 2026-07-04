@@ -1,13 +1,288 @@
 import { useGetStats, useListFeaturedFormulas, useListFormulaCategories, useListFormulas } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Search, Activity, BookOpen, Hash, ChevronDown, ChevronRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowRight, Search, Activity, BookOpen, Hash, ChevronDown, ChevronRight, FlaskConical, Calculator, BookA, FileQuestion, LayoutGrid } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { BlockMath } from "@/components/ui/math";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+
+/* ─── static nav destinations ────────────────────────────────────────────── */
+
+interface NavEntry {
+  id: string; label: string; description: string; href: string;
+  kind: "page" | "calculator"; tags?: string[];
+}
+
+const PAGES: NavEntry[] = [
+  { id:"pg-formulas",   label:"Formulas",          href:"/formulas",        kind:"page",       description:"Browse all physics formulas",           tags:["equation","physics","math"] },
+  { id:"pg-constants",  label:"Constants",          href:"/constants",       kind:"page",       description:"Physical constants reference",           tags:["reference","values"] },
+  { id:"pg-calcs",      label:"Calculators",        href:"/calculators",     kind:"page",       description:"Interactive physics calculators",         tags:["compute","solve","calculate"] },
+  { id:"pg-converter",  label:"Unit Converter",     href:"/converter",       kind:"page",       description:"Convert between physical units",          tags:["units","convert"] },
+  { id:"pg-glossary",   label:"Glossary",           href:"/glossary",        kind:"page",       description:"Physics and astronomy terms",             tags:["definitions","terms","words"] },
+  { id:"pg-problems",   label:"Practice Problems",  href:"/problems",        kind:"page",       description:"Test your knowledge",                    tags:["quiz","test","exercise"] },
+  { id:"pg-favorites",  label:"Favorites",          href:"/favorites",       kind:"page",       description:"Your saved content",                     tags:["saved","starred","bookmarks"] },
+  { id:"pg-astronomy",  label:"Astronomy Tools",    href:"/astronomy-tools", kind:"page",       description:"Planetary and orbital tools",            tags:["space","planet","star","telescope"] },
+  { id:"pg-donate",     label:"Donate",             href:"/donate",          kind:"page",       description:"Support Xquation",                       tags:["support","help"] },
+  { id:"pg-about",      label:"About",              href:"/about",           kind:"page",       description:"About Xquation" },
+];
+
+const CALCULATORS: NavEntry[] = [
+  { id:"calc-kin",  label:"Kinematic Displacement", href:"/calculators", kind:"calculator", description:"Displacement from velocity, time, and acceleration", tags:["kinematics","displacement","motion"] },
+  { id:"calc-ke",   label:"Kinetic Energy",          href:"/calculators", kind:"calculator", description:"Energy of a moving object — ½mv²",                  tags:["energy","mass","velocity"] },
+  { id:"calc-emc2", label:"Mass–Energy Equivalence", href:"/calculators", kind:"calculator", description:"Rest energy from mass — E=mc²",                     tags:["relativity","einstein","energy","mass"] },
+  { id:"calc-esc",  label:"Escape Velocity",         href:"/calculators", kind:"calculator", description:"Minimum speed to escape a gravitational body",       tags:["gravity","orbit","speed","velocity"] },
+  { id:"calc-orb",  label:"Orbital Period",          href:"/calculators", kind:"calculator", description:"Time for one complete circular orbit",              tags:["orbit","period","gravity","orbital","kepler"] },
+  { id:"calc-sch",  label:"Schwarzschild Radius",    href:"/calculators", kind:"calculator", description:"Event horizon radius of a black hole",              tags:["black hole","gravity","relativity"] },
+  { id:"calc-ohm",  label:"Ohm's Law",               href:"/calculators", kind:"calculator", description:"Voltage, current, and resistance relationship",     tags:["electricity","voltage","current","resistance"] },
+];
+
+const LOCAL_ENTRIES = [...PAGES, ...CALCULATORS];
+
+/* ─── fuzzy helpers ───────────────────────────────────────────────────────── */
+
+function norm(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function scoreLocal(query: string, e: NavEntry): number {
+  const words = norm(query).split(" ").filter(Boolean);
+  if (!words.length) return 0;
+  const blob = [e.label, e.description, ...(e.tags ?? [])].map(norm).join(" ");
+  let s = 0;
+  for (const w of words) {
+    if (blob.split(" ").includes(w)) s += 4;
+    else if (blob.includes(w)) s += 2;
+    else if (blob.includes(w.slice(0, Math.max(3, w.length - 1)))) s += 1;
+  }
+  return s;
+}
+
+/* ─── highlight ───────────────────────────────────────────────────────────── */
+
+function Hi({ text, q }: { text: string; q: string }) {
+  if (!q.trim()) return <>{text}</>;
+  const words = norm(q).split(" ").filter(w => w.length >= 2);
+  if (!words.length) return <>{text}</>;
+  const re = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+  const parts = text.split(re);
+  return <>{parts.map((p, i) => re.test(p) ? <mark key={i} className="bg-primary/25 text-primary rounded-[2px] px-[1px] not-italic">{p}</mark> : <span key={i}>{p}</span>)}</>;
+}
+
+/* ─── group icon ──────────────────────────────────────────────────────────── */
+
+function GIcon({ g }: { g: string }) {
+  const cls = "w-3 h-3 shrink-0 opacity-70";
+  if (g === "Formulas")    return <FlaskConical className={cls} />;
+  if (g === "Constants")   return <BookOpen className={cls} />;
+  if (g === "Calculators") return <Calculator className={cls} />;
+  if (g === "Glossary")    return <BookA className={cls} />;
+  if (g === "Problems")    return <FileQuestion className={cls} />;
+  return <LayoutGrid className={cls} />;
+}
+
+/* ─── types ───────────────────────────────────────────────────────────────── */
+
+interface Suggestion { id: string; label: string; description: string; href: string; group: string; }
+
+/* ─── SmartSearchBar ──────────────────────────────────────────────────────── */
+
+function SmartSearchBar() {
+  const [query, setQuery] = useState("");
+  const [apiHits, setApiHits] = useState<{ formulas: Array<{id:number;name:string;description:string;category:string}>; constants: Array<{id:number;name:string;symbol:string;description:string}>; glossary: Array<{id:number;term:string;definition:string}>; problems: Array<{id:number;question:string;topic:string}> } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [, navigate] = useLocation();
+
+  /* close on outside click */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  /* debounced API search */
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const q = query.trim();
+    if (q.length < 2) { setApiHits(null); setLoading(false); return; }
+    setLoading(true);
+    timerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        if (res.ok) setApiHits(await res.json());
+      } catch { /* ignore */ } finally { setLoading(false); }
+    }, 270);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [query]);
+
+  /* compute suggestions */
+  const suggestions = useMemo<Suggestion[]>(() => {
+    const q = query.trim();
+
+    const local = LOCAL_ENTRIES
+      .map(e => ({ e, s: scoreLocal(q, e) }))
+      .filter(x => q.length < 2 ? false : x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 5)
+      .map(({ e }) => ({ id: e.id, label: e.label, description: e.description, href: e.href, group: e.kind === "calculator" ? "Calculators" : "Pages" }));
+
+    if (!apiHits) return local;
+
+    const formulas = apiHits.formulas.slice(0, 4).map(f => ({ id:`f${f.id}`, label:f.name, description:f.description||f.category, href:`/formulas/${f.id}`, group:"Formulas" }));
+    const constants = apiHits.constants.slice(0, 2).map(c => ({ id:`c${c.id}`, label:`${c.name} (${c.symbol})`, description:c.description, href:"/constants", group:"Constants" }));
+    const glossary  = apiHits.glossary.slice(0, 2).map(g => ({ id:`g${g.id}`, label:g.term, description:g.definition.slice(0,80)+(g.definition.length>80?"…":""), href:"/glossary", group:"Glossary" }));
+    const problems  = apiHits.problems.slice(0, 1).map(p => ({ id:`p${p.id}`, label:p.topic, description:p.question.slice(0,70)+(p.question.length>70?"…":""), href:"/problems", group:"Problems" }));
+
+    const all = [...formulas, ...local, ...constants, ...glossary, ...problems];
+    const seen = new Set<string>();
+    return all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+  }, [query, apiHits]);
+
+  /* grouped */
+  const groups = useMemo(() => {
+    const m = new Map<string, Suggestion[]>();
+    for (const s of suggestions) { if (!m.has(s.group)) m.set(s.group, []); m.get(s.group)!.push(s); }
+    return m;
+  }, [suggestions]);
+
+  useEffect(() => { setCursor(0); }, [suggestions.length]);
+
+  /* scroll active into view */
+  useEffect(() => {
+    listRef.current?.querySelector(`[data-idx="${cursor}"]`)?.scrollIntoView({ block:"nearest" });
+  }, [cursor]);
+
+  const go = useCallback((href: string) => {
+    setOpen(false);
+    setQuery("");
+    navigate(href);
+  }, [navigate]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || !suggestions.length) {
+      if (e.key === "Enter" && query.trim()) {
+        go(`/formulas?search=${encodeURIComponent(query.trim())}`);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); setCursor(c => Math.min(c+1, suggestions.length-1)); }
+    if (e.key === "ArrowUp")   { e.preventDefault(); setCursor(c => Math.max(c-1, 0)); }
+    if (e.key === "Enter")     { e.preventDefault(); if (suggestions[cursor]) go(suggestions[cursor].href); }
+    if (e.key === "Escape")    { setOpen(false); }
+  };
+
+  const showDropdown = open && query.trim().length >= 2;
+
+  return (
+    <div ref={wrapRef} className="relative w-full max-w-xl mx-auto">
+      {/* input */}
+      <div className={cn("relative group flex items-center transition-all", showDropdown && "z-50")}>
+        <Search className="absolute left-4 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
+          placeholder="Search formulas, constants, topics…"
+          className={cn(
+            "w-full h-14 pl-12 pr-4 bg-background/50 border border-primary/20 text-base rounded-full",
+            "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50",
+            "shadow-[0_0_20px_rgba(0,217,255,0.1)] transition-all font-mono text-foreground placeholder:text-muted-foreground",
+            showDropdown && "rounded-b-none border-b-0"
+          )}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {loading && <div className="absolute right-5 w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />}
+      </div>
+
+      {/* dropdown */}
+      {showDropdown && (
+        <div
+          ref={listRef}
+          className="absolute left-0 right-0 top-full z-50 bg-card border border-primary/20 border-t-border/30 rounded-b-2xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto"
+          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,217,255,0.06)" }}
+        >
+          {suggestions.length === 0 && !loading && (
+            <div className="px-5 py-6 text-sm text-muted-foreground text-center">
+              No results for "<span className="text-foreground">{query}</span>"
+              <br />
+              <button
+                className="mt-3 text-xs text-primary hover:underline"
+                onClick={() => go(`/formulas?search=${encodeURIComponent(query)}`)}
+              >
+                Search all formulas →
+              </button>
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <>
+              {/* "Similar results" label */}
+              <div className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-primary/50">
+                Similar results
+              </div>
+              {(() => {
+                let idx = 0;
+                return Array.from(groups.entries()).map(([group, items]) => (
+                  <div key={group}>
+                    <div className="px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                      <GIcon g={group} />{group}
+                    </div>
+                    {items.map(item => {
+                      const i = idx++;
+                      const active = i === cursor;
+                      return (
+                        <button
+                          key={item.id}
+                          data-idx={i}
+                          onMouseDown={e => { e.preventDefault(); go(item.href); }}
+                          onMouseEnter={() => setCursor(i)}
+                          className={cn(
+                            "w-full text-left px-5 py-2.5 flex flex-col transition-colors border-l-2",
+                            active ? "bg-primary/10 border-primary" : "border-transparent hover:bg-muted/40"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-foreground leading-snug">
+                            <Hi text={item.label} q={query} />
+                          </span>
+                          {item.description && (
+                            <span className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                              <Hi text={item.description} q={query} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ));
+              })()}
+              <div className="border-t border-border/30 px-5 py-2.5">
+                <button
+                  onMouseDown={() => go(`/formulas?search=${encodeURIComponent(query)}`)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                >
+                  <Search className="w-3 h-3" /> Search all formulas for "<span className="font-mono">{query}</span>"
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── category expand ─────────────────────────────────────────────────────── */
 
 function CategoryFormulas({ category }: { category: string }) {
   const { data: formulas, isLoading } = useListFormulas({ category });
@@ -28,21 +303,14 @@ function CategoryFormulas({ category }: { category: string }) {
   );
 }
 
+/* ─── Home page ───────────────────────────────────────────────────────────── */
+
 export default function Home() {
-  const [search, setSearch] = useState("");
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading: statsLoading } = useGetStats();
   const { data: featured, isLoading: featuredLoading } = useListFeaturedFormulas();
   const { data: categories, isLoading: categoriesLoading } = useListFormulaCategories();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      setLocation(`/formulas?search=${encodeURIComponent(search)}`);
-    }
-  };
 
   const toggleCategory = (name: string) => {
     setExpandedCategory(prev => prev === name ? null : name);
@@ -64,37 +332,28 @@ export default function Home() {
           Physics, Mathematics, and Astronomy — all in one place.
         </p>
 
-        <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-auto group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            type="search"
-            placeholder="Search formulas, constants, topics..."
-            className="w-full h-14 pl-12 pr-4 bg-background/50 border-primary/20 text-lg rounded-full focus-visible:ring-primary/50 shadow-[0_0_20px_rgba(0,217,255,0.1)] transition-all font-mono"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </form>
+        <SmartSearchBar />
       </section>
+
       {/* Stats row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Formulas", value: stats?.formulaCount, icon: Hash, loading: statsLoading },
-          { label: "Constants", value: stats?.constantCount, icon: BookOpen, loading: statsLoading },
+          { label: "Formulas",   value: stats?.formulaCount,  icon: Hash,     loading: statsLoading },
+          { label: "Constants",  value: stats?.constantCount, icon: BookOpen, loading: statsLoading },
           { label: "Categories", value: stats?.categoryCount, icon: Activity, loading: statsLoading },
         ].map((stat, i) => (
           <Card key={i} className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
             <CardContent className="p-6 flex flex-col items-center justify-center text-center">
               <stat.icon className="w-6 h-6 text-primary mb-2 opacity-80" />
-              {stat.loading ? (
-                <Skeleton className="h-8 w-16 mb-1" />
-              ) : (
-                <div className="text-3xl font-bold font-mono text-foreground">{stat.value}</div>
-              )}
+              {stat.loading
+                ? <Skeleton className="h-8 w-16 mb-1" />
+                : <div className="text-3xl font-bold font-mono text-foreground">{stat.value}</div>}
               <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</div>
             </CardContent>
           </Card>
         ))}
       </section>
+
       {/* Expandable Domain Cards */}
       <section>
         <div className="flex items-center justify-between mb-6">
@@ -148,6 +407,7 @@ export default function Home() {
               })}
         </div>
       </section>
+
       {/* Featured Formulas */}
       <section>
         <h2 className="text-2xl font-bold font-mono tracking-tight mb-6 flex items-center gap-2">

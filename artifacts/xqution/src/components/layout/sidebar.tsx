@@ -11,8 +11,7 @@ import {
   Menu,
   Telescope,
   Heart,
-  UserCircle,
-  Search
+  UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -40,22 +39,8 @@ export function Sidebar() {
     return ((firstName?.[0] ?? "") + (lastName?.[0] ?? "")).toUpperCase() || "?";
   }
 
-  const openSearch = () => window.dispatchEvent(new CustomEvent("xqution:open-search"));
-
-  const SearchButton = () => (
-    <button
-      onClick={openSearch}
-      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-md bg-muted/40 border border-border/50 text-muted-foreground text-sm hover:bg-muted hover:border-primary/30 transition-colors mb-2"
-    >
-      <Search className="w-4 h-4 shrink-0" />
-      <span className="flex-1 text-left">Search…</span>
-      <kbd className="hidden sm:inline text-[10px] bg-background border border-border rounded px-1.5 py-0.5 font-mono leading-none opacity-60">⌘K</kbd>
-    </button>
-  );
-
   const NavLinks = ({ className }: { className?: string }) => (
     <nav className={cn("space-y-1 mt-6", className)}>
-      <SearchButton />
       {NAV_ITEMS.map((item) => {
         const isActive = location.startsWith(item.href);
         return (
