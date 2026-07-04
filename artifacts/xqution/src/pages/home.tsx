@@ -203,9 +203,13 @@ function SmartSearchBar() {
 
   const go = useCallback((href: string) => {
     setOpen(false);
+    const q = encodeURIComponent(query.trim());
+    // pass the "matching" query so destination page can glow the result
+    const sep = href.includes("?") ? "&" : "?";
+    const dest = `${href}${sep}match=${q}`;
+    navigate(dest);
     setQuery("");
-    navigate(href);
-  }, [navigate]);
+  }, [navigate, query]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open || !suggestions.length) {

@@ -167,3 +167,15 @@
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground;
   }
 }
+
+/* ── glow for smart-search "matching" ── */
+@keyframes match-glow {
+  0%   { box-shadow: 0 0 0 0px rgba(0, 217, 255, 0);   border-color: transparent; }
+  20%  { box-shadow: 0 0 24px 4px rgba(0, 217, 255, 0.35); border-color: rgba(0, 217, 255, 0.6); }
+  40%  { box-shadow: 0 0 32px 8px rgba(0, 217, 255, 0.25); border-color: rgba(0, 217, 255, 0.4); }
+  100% { box-shadow: 0 0 0 0px rgba(0, 217, 255, 0);   border-color: transparent; }
+}
+
+.match-glow {
+  animation: match-glow 3s ease-out forwards;
+}

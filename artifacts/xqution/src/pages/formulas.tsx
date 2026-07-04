@@ -1,10 +1,11 @@
 import { useListFormulas, useListFormulaCategories, useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey } from "@workspace/api-client-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Star, Filter, Copy, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ColoredBlockMath, InlineMath } from "@/components/ui/math";
+import { cn } from "@/lib/utils";
 import { SymbolCards } from "@/components/formula/symbol-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,12 @@ export default function Formulas() {
   const searchParams = new URLSearchParams(window.location.search);
   const initialSearch = searchParams.get("search") || "";
   const initialCategory = searchParams.get("category") || "all";
+  const matchQuery = searchParams.get("match") || "";
 
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [glowId, setGlowId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -29,6 +32,21 @@ export default function Formulas() {
     search: search || undefined,
     category: category !== "all" ? category : undefined
   });
+
+  /* glow the card that "matched" from smart search */
+  useEffect(() => {
+    if (!matchQuery || !formulas?.length) return;
+    const q = matchQuery.toLowerCase();
+    const hit = formulas.find(f =>
+      f.name.toLowerCase().includes(q) ||
+      f.description?.toLowerCase().includes(q) ||
+      f.category?.toLowerCase().includes(q)
+    );
+    if (hit) {
+      setGlowId(hit.id);
+      setTimeout(() => setGlowId(null), 3200);
+    }
+  }, [matchQuery, formulas]);
 
   const { data: categories } = useListFormulaCategories();
   const { data: favorites } = useListFavorites();
@@ -103,7 +121,7 @@ export default function Formulas() {
           </div>
         ) : (
           formulas?.map(formula => (
-            <Card key={formula.id} className="border-border/50 bg-card overflow-hidden">
+            <Card key={formula.id} className={cn("border-border/50 bg-card overflow-hidden", glowId === formula.id && "match-glow")}>
               <CardHeader className="bg-muted/20 border-b border-border/50 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>

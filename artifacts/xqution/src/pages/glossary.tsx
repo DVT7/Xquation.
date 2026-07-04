@@ -1,14 +1,30 @@
 import { useListGlossaryTerms } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Glossary() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const matchQuery = searchParams.get("match") || "";
+  const [glowId, setGlowId] = useState<number | null>(null);
+
   const [search, setSearch] = useState("");
   const { data: terms, isLoading } = useListGlossaryTerms({ search: search || undefined });
+
+  /* glow the card that "matched" from smart search */
+  useEffect(() => {
+    if (!matchQuery || !terms?.length) return;
+    const q = matchQuery.toLowerCase();
+    const hit = terms.find(t => t.term.toLowerCase().includes(q) || t.definition.toLowerCase().includes(q));
+    if (hit) {
+      setGlowId(hit.id);
+      setTimeout(() => setGlowId(null), 3200);
+    }
+  }, [matchQuery, terms]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -34,7 +50,7 @@ export default function Glossary() {
           <div className="col-span-full text-center py-12 text-muted-foreground">No terms found.</div>
         ) : (
           terms?.map(term => (
-            <Card key={term.id} className="border-border/50 bg-card hover:border-primary/30 transition-colors">
+            <Card key={term.id} className={cn("border-border/50 bg-card hover:border-primary/30 transition-colors", glowId === term.id && "match-glow")}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-3 gap-2">
                   <h3 className="text-xl font-bold font-mono text-primary">{term.term}</h3>

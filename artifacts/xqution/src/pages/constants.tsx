@@ -1,5 +1,5 @@
 import { useListConstants, useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey } from "@workspace/api-client-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Star, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,8 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Constants() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const matchQuery = searchParams.get("match") || "";
+  const [glowId, setGlowId] = useState<number | null>(null);
+
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
@@ -18,6 +23,21 @@ export default function Constants() {
   const { data: constants, isLoading } = useListConstants({
     search: search || undefined
   });
+
+  /* glow the card that "matched" from smart search */
+  useEffect(() => {
+    if (!matchQuery || !constants?.length) return;
+    const q = matchQuery.toLowerCase();
+    const hit = constants.find(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.symbol?.toLowerCase().includes(q) ||
+      c.description?.toLowerCase().includes(q)
+    );
+    if (hit) {
+      setGlowId(hit.id);
+      setTimeout(() => setGlowId(null), 3200);
+    }
+  }, [matchQuery, constants]);
 
   const { data: favorites } = useListFavorites();
   const addFavorite = useAddFavorite();
@@ -77,7 +97,7 @@ export default function Constants() {
           </div>
         ) : (
           constants?.map(constant => (
-            <Card key={constant.id} className="border-border/50 bg-card overflow-hidden flex flex-col hover:border-primary/50 transition-colors">
+            <Card key={constant.id} className={cn("border-border/50 bg-card overflow-hidden flex flex-col hover:border-primary/50 transition-colors", glowId === constant.id && "match-glow")}>
               <CardHeader className="bg-muted/20 border-b border-border/50 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>

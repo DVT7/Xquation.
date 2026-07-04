@@ -1,5 +1,5 @@
 import { useListProblems } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +10,31 @@ import { BlockMath } from "@/components/ui/math";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { LogIn, Telescope, FlaskConical } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 
 export default function Problems() {
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const searchParams = new URLSearchParams(window.location.search);
+  const matchQuery = searchParams.get("match") || "";
+  const [glowId, setGlowId] = useState<number | null>(null);
+
   const [search, setSearch] = useState("");
   const { data: problems, isLoading } = useListProblems({ search: search || undefined });
+
+  /* glow the card that "matched" from smart search */
+  useEffect(() => {
+    if (!matchQuery || !problems?.length) return;
+    const q = matchQuery.toLowerCase();
+    const hit = problems.find(p =>
+      p.topic.toLowerCase().includes(q) ||
+      p.question.toLowerCase().includes(q)
+    );
+    if (hit) {
+      setGlowId(hit.id);
+      setTimeout(() => setGlowId(null), 3200);
+    }
+  }, [matchQuery, problems]);
 
   if (authLoading) return null;
   if (!isAuthenticated) {
@@ -73,7 +92,7 @@ export default function Problems() {
           <div className="text-center py-12 text-muted-foreground">No problems found.</div>
         ) : (
           problems?.map(problem => (
-            <Card key={problem.id} className="border-border/50 bg-card overflow-hidden">
+            <Card key={problem.id} className={cn("border-border/50 bg-card overflow-hidden", glowId === problem.id && "match-glow")}>
               <CardHeader className="bg-muted/20 border-b border-border/50">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg">{problem.topic}</CardTitle>
