@@ -67,7 +67,16 @@ function Hi({ text, q }: { text: string; q: string }) {
   if (!words.length) return <>{text}</>;
   const re = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
   const parts = text.split(re);
-  return <>{parts.map((p, i) => re.test(p) ? <mark key={i} className="bg-primary/25 text-primary rounded-[2px] px-[1px] not-italic">{p}</mark> : <span key={i}>{p}</span>)}</>;
+  return (
+    <>
+      {parts.map((part, i) => {
+        const isMatch = words.some(w => part.toLowerCase() === w);
+        return isMatch
+          ? <mark key={i} className="bg-primary/25 text-primary rounded-[2px] px-[1px] not-italic">{part}</mark>
+          : <span key={i}>{part}</span>;
+      })}
+    </>
+  );
 }
 
 /* ─── group icon ──────────────────────────────────────────────────────────── */
