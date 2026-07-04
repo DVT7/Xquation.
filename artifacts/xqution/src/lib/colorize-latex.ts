@@ -115,12 +115,14 @@ function symType(sym: string, desc: string, isFirst: boolean): 'answer' | 'varia
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  answer:   '#FFFFFF',
   variable: '#00BFFF',
   constant: '#FFD700',
 };
+const DEFAULT_ANSWER = '#FFFFFF';
+const LIGHT_ANSWER   = '#059669'; // emerald-600
 
-function buildColorMap(variables: string): Record<string, string> {
+function buildColorMap(variables: string, answerColor?: string): Record<string, string> {
+  const ans = answerColor ?? DEFAULT_ANSWER;
   if (!variables) return {};
   const map: Record<string, string> = {};
   const parts = variables.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
@@ -143,7 +145,7 @@ function buildColorMap(variables: string): Record<string, string> {
       if (!s) continue;
       const type  = symType(s, desc, isFirst);
       isFirst = false;
-      const color = TYPE_COLORS[type];
+      const color = type === 'answer' ? ans : TYPE_COLORS[type];
 
       for (const key of symToLatexKeys(s)) {
         if (!map[key]) map[key] = color;
@@ -321,9 +323,9 @@ function colorizeWithMap(
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function colorizeLatex(latex: string, variables?: string | null): string {
+export function colorizeLatex(latex: string, variables?: string | null, answerColor?: string): string {
   if (!variables) return latex;
-  const colorMap = buildColorMap(variables);
+  const colorMap = buildColorMap(variables, answerColor);
   // Inject always-constant commands (e.g. \pi) that may not appear in variables
   for (const [cmd, color] of Object.entries(ALWAYS_CONST_COMMANDS)) {
     if (!colorMap[cmd]) colorMap[cmd] = color;

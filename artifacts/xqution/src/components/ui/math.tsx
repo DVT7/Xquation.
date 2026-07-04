@@ -1,5 +1,6 @@
 import katex from "katex";
 import { colorizeLatex } from "@/lib/colorize-latex";
+import { useAppSettings } from "@/contexts/app-settings";
 
 // ── Unicode → LaTeX converter ─────────────────────────────────────────────────
 // Converts common Unicode math characters to LaTeX equivalents so plain-text
@@ -102,13 +103,16 @@ export function BlockMath({ math, className }: MathProps) {
   );
 }
 
+const LIGHT_ANSWER_COLOR = '#059669'; // emerald-600
+
 export function ColoredBlockMath({ math, variables, className }: ColoredMathProps) {
-  const coloredMath = colorizeLatex(math, variables);
+  const { theme } = useAppSettings();
+  const answerColor = theme === 'light' ? LIGHT_ANSWER_COLOR : undefined;
+  const coloredMath = colorizeLatex(math, variables, answerColor);
   let html = "";
   try {
     html = katex.renderToString(coloredMath, { displayMode: true, throwOnError: false, trust: true, strict: false });
   } catch {
-    // Fall back to uncolored if colorization breaks KaTeX
     try {
       html = katex.renderToString(math, { displayMode: true, throwOnError: false });
     } catch {
