@@ -282,11 +282,11 @@ export function LimboEasterEgg() {
               {phase === "dance" ? (dancing ? "🕺 Do the limbo!" : "Watch closely...") : "Pick the X"}
             </p>
 
-            {/* 2×4 grid of X's */}
+            {/* 4×2 grid of ×'s (4 rows, 2 cols) */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 88px)",
-              gridTemplateRows: "repeat(2, 88px)",
+              gridTemplateColumns: "repeat(2, 88px)",
+              gridTemplateRows: "repeat(4, 88px)",
               gap: 16,
             }}>
               {Array.from({ length: 8 }).map((_, i) => {
@@ -301,56 +301,32 @@ export function LimboEasterEgg() {
                     disabled={phase === "dance"}
                     style={{
                       width: 88, height: 88,
-                      background: phase === "pick" ? `${color}18` : "#081B45",
-                      border: `2px solid ${color}`,
-                      borderRadius: 12,
+                      background: "transparent",
+                      border: "none",
                       cursor: phase === "pick" ? "pointer" : "default",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "border-color 0.3s, background 0.3s",
+                      padding: 0,
                       animation: isGlow
                         ? "glow-pulse 0.6s ease-in-out infinite"
                         : isDance
                         ? `limbo-dance 0.9s ease-in-out infinite`
                         : "none",
-                      animationDelay: isDance ? `${(i % 4) * 0.05}s` : "0s",
+                      animationDelay: isDance ? `${(i % 2) * 0.06}s` : "0s",
                     }}
                   >
                     <span style={{
-                      fontSize: 40, fontWeight: 900, lineHeight: 1,
+                      fontSize: 56, fontWeight: 900, lineHeight: 1,
                       color: isGlow ? "#00ff88" : color,
-                      fontFamily: "monospace",
+                      fontFamily: "Georgia, serif",
                       transition: "color 0.3s",
+                      textShadow: isGlow ? "0 0 16px #00ff88" : phase === "pick" ? `0 0 12px ${color}88` : "none",
                     }}>
-                      ✕
+                      ×
                     </span>
                   </button>
                 );
               })}
             </div>
-
-            {phase === "pick" && (
-              <p style={{ color: "#00D9FF", fontSize: 12, marginTop: 24, opacity: 0.6 }}>
-                Remember which one glowed green?
-              </p>
-            )}
-
-            {/* colour legend during pick */}
-            {phase === "pick" && (
-              <div style={{
-                display: "flex", flexWrap: "wrap", gap: 8,
-                justifyContent: "center", marginTop: 16, maxWidth: 380,
-              }}>
-                {colorOrder.current.map((c, i) => (
-                  <span key={i} style={{
-                    fontSize: 11, padding: "2px 8px",
-                    borderRadius: 99, background: `${c.hex}22`,
-                    border: `1px solid ${c.hex}`, color: c.hex,
-                  }}>
-                    {c.label}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
