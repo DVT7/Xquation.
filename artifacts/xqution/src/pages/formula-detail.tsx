@@ -1,4 +1,4 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetFormula, useListFormulas, useListConstants,
   useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey,
@@ -7,6 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useAppSettings } from "@/contexts/app-settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -375,6 +376,7 @@ export default function FormulaDetail() {
   const { isAuthenticated } = useAuth();
   const recordView = useRecordFormulaView();
   const viewFiredRef = useRef(false);
+  const { setLastVisited } = useAppSettings();
 
   useEffect(() => {
     viewFiredRef.current = false;
@@ -387,6 +389,26 @@ export default function FormulaDetail() {
     }, 60_000);
     return () => clearTimeout(timer);
   }, [id, isAuthenticated]);
+
+  // Track formula name for "pick up where you left off" + page title
+  useEffect(() => {
+    if (!formula) return;
+    const label = formula.name;
+    setLastVisited({ path: `/formulas/${id}`, label });
+    document.title = `${label} — Formula Page | Xquation`;
+    // SEO meta description
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = `Learn about the ${label} formula on Xquation. Includes LaTeX, visualizations, worked examples, and practice problems.`;
+    return () => {
+      document.title = "Xquation";
+      if (meta) meta.content = "Explore physics and astronomy formulas, constants, calculators, and more on Xquation.";
+    };
+  }, [formula, id]);
 
   const sortedAll = useMemo(() => allFormulas ?? [], [allFormulas]);
   const currentIdx = sortedAll.findIndex(f => f.id === id);

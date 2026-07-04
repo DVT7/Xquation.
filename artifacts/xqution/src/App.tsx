@@ -59,12 +59,21 @@ function LoadingFallback() {
 
 function RouteTracker() {
   const [location] = useLocation();
-  const { setLastVisited } = useAppSettings();
+  const { setLastVisited, lastVisited } = useAppSettings();
 
   useEffect(() => {
     if (location === "/account") return;
+    // Formula-detail sets its own label via name, so skip here
+    if (location.startsWith("/formulas/") && location !== "/formulas") return;
     setLastVisited({ path: location, label: getLabel(location) });
   }, [location]);
+
+  // Keep page title in sync (formula-detail sets its own, so skip those)
+  useEffect(() => {
+    if (location.startsWith("/formulas/") && location !== "/formulas") return;
+    const title = lastVisited?.label ?? getLabel(location);
+    document.title = title ? `${title} | Xquation` : "Xquation";
+  }, [location, lastVisited]);
 
   return null;
 }
