@@ -13,7 +13,7 @@ interface SymbolCard {
 }
 
 const TYPE_COLORS: Record<SymbolType, { border: string; text: string; glow: string; label: string }> = {
-  answer:   { border: "border-white/40",   text: "text-white",         glow: "hover:shadow-[0_0_16px_rgba(255,255,255,0.2)]",   label: "Final Answer" },
+  answer:   { border: "border-emerald-400/40",   text: "text-emerald-400",         glow: "hover:shadow-[0_0_16px_rgba(52,211,153,0.2)]",   label: "Final Answer" },
   variable: { border: "border-[#00BFFF]/50", text: "text-[#00BFFF]",  glow: "hover:shadow-[0_0_16px_rgba(0,191,255,0.3)]",    label: "Variable" },
   constant: { border: "border-[#FFD700]/50", text: "text-[#FFD700]",  glow: "hover:shadow-[0_0_16px_rgba(255,215,0,0.3)]",    label: "Physical Constant" },
   number:   { border: "border-[#FF8C42]/50", text: "text-[#FF8C42]",  glow: "hover:shadow-[0_0_16px_rgba(255,140,66,0.3)]",   label: "Coefficient" },
