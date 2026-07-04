@@ -228,7 +228,7 @@ function SmartSearchBar() {
           {suggestions.length > 0 && (
             <>
               {/* "Similar results" label */}
-              <div className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-primary/50">
+              <div className="px-4 pt-6 pb-2 text-[10px] font-semibold uppercase tracking-widest text-primary/50">
                 Similar results
               </div>
               {(() => {
