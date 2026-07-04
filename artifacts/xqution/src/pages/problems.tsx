@@ -7,10 +7,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BlockMath } from "@/components/ui/math";
+import { useAuth } from "@workspace/replit-auth-web";
+import { Button } from "@/components/ui/button";
+import { LogIn, Telescope, FlaskConical } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Problems() {
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   const [search, setSearch] = useState("");
   const { data: problems, isLoading } = useListProblems({ search: search || undefined });
+
+  if (authLoading) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <Telescope className="w-10 h-10 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to practice</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Log in to test your knowledge with step-by-step solutions.
+          </p>
+        </div>
+        <Button onClick={login} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-8" size="lg">
+          <LogIn className="w-4 h-4" />
+          Log In
+        </Button>
+        <div className="flex gap-4 justify-center">
+          <Link href="/formulas" className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-mono text-sm">
+            <FlaskConical className="w-4 h-4" /> Browse Formulas
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const diffColors: Record<string, string> = {
     easy: "bg-green-500/10 text-green-500 hover:bg-green-500/20",

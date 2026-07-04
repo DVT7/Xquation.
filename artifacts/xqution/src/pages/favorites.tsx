@@ -2,18 +2,49 @@ import { useListFavorites, useRemoveFavorite, getListFavoritesQueryKey } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Star, ArrowRight, FlaskConical, BookOpen } from "lucide-react";
+import { Star, ArrowRight, FlaskConical, BookOpen, LogIn, Telescope } from "lucide-react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@workspace/replit-auth-web";
 
 export default function Favorites() {
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   const { data: favorites, isLoading } = useListFavorites();
   const removeFavorite = useRemoveFavorite();
   const queryClient = useQueryClient();
   const [removing, setRemoving] = useState<number | null>(null);
+
+  if (authLoading) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <Telescope className="w-10 h-10 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to save favorites</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Create an account to save formulas and constants for quick access.
+          </p>
+        </div>
+        <Button onClick={login} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-8" size="lg">
+          <LogIn className="w-4 h-4" />
+          Log In
+        </Button>
+        <div className="flex gap-4 justify-center">
+          <Link href="/formulas" className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-mono text-sm">
+            <FlaskConical className="w-4 h-4" /> Browse Formulas
+          </Link>
+          <Link href="/constants" className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-mono text-sm">
+            <BookOpen className="w-4 h-4" /> Browse Constants
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleRemove = (id: number) => {
     setRemoving(id);

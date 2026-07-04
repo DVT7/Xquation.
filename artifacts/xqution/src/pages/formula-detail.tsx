@@ -8,7 +8,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useAppSettings } from "@/contexts/app-settings";
-import { useLocalFormulaViews } from "@/hooks/use-local-views";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -378,18 +377,14 @@ export default function FormulaDetail() {
   const recordView = useRecordFormulaView();
   const viewFiredRef = useRef(false);
   const { setLastVisited } = useAppSettings();
-  const localViews = useLocalFormulaViews();
 
   useEffect(() => {
     viewFiredRef.current = false;
-    if (!id) return;
+    if (!isAuthenticated || !id) return;
     const timer = setTimeout(() => {
-      if (viewFiredRef.current) return;
-      viewFiredRef.current = true;
-      if (isAuthenticated) {
+      if (!viewFiredRef.current) {
+        viewFiredRef.current = true;
         recordView.mutate({ id });
-      } else {
-        localViews.add(id);
       }
     }, 60_000);
     return () => clearTimeout(timer);

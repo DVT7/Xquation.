@@ -35,7 +35,6 @@ export default function Account() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { data: favorites } = useListFavorites();
   const { data: stats } = useGetUserStats({ query: { enabled: isAuthenticated, queryKey: ["/api/user/stats"] } });
-  const localViews = useLocalFormulaViews();
   const {
     theme, setTheme,
     voiceURI, setVoiceURI,
@@ -72,16 +71,6 @@ export default function Account() {
           <LogIn className="w-4 h-4" />
           Log In
         </Button>
-
-        {/* Settings still accessible when logged out */}
-        <PreferencesCards
-          theme={theme} setTheme={setTheme}
-          voiceURI={voiceURI} setVoiceURI={setVoiceURI}
-          volume={volume} setVolume={setVolume}
-          availableVoices={availableVoices}
-          lastVisited={lastVisited}
-          onResume={() => lastVisited && navigate(lastVisited.path)}
-        />
 
         <div className="grid grid-cols-3 gap-4 w-full mt-2">
           {[
@@ -162,7 +151,7 @@ export default function Account() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: Star, label: "Saved Favorites", value: favorites != null ? String(favorites.length) : "—" },
-              { icon: FlaskConical, label: "Formulas Viewed", value: isAuthenticated ? (stats != null ? String(stats.formulasViewed) : "—") : String(localViews.count) },
+              { icon: FlaskConical, label: "Formulas Viewed", value: stats != null ? String(stats.formulasViewed) : "—" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="p-4 rounded-lg bg-background border border-border flex flex-col gap-1">
                 <div className="flex items-center gap-2">
