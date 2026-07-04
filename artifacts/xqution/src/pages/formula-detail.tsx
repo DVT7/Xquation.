@@ -21,7 +21,7 @@ import { SymbolCards } from "@/components/formula/symbol-cards";
 import {
   Star, Copy, Check, ChevronLeft, ChevronRight, ArrowUp,
   RotateCcw, ChevronDown, ChevronUp, Lightbulb, BookOpen,
-  FlaskConical, Calculator, Atom,
+  FlaskConical, Calculator, Atom, LogIn,
 } from "lucide-react";
 import { CALCULATORS, type SolveMode } from "@/lib/formula-calculators";
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
@@ -373,7 +373,7 @@ export default function FormulaDetail() {
   const removeFavorite = useRemoveFavorite();
   const queryClient = useQueryClient();
   const [latexCopied, setLatexCopied] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const recordView = useRecordFormulaView();
   const viewFiredRef = useRef(false);
   const { setLastVisited } = useAppSettings();
@@ -431,7 +431,7 @@ export default function FormulaDetail() {
   };
 
   const related = FORMULA_RELATED[id];
-  const problems = FORMULA_PROBLEMS[id] ?? [];
+  const problems = [...(FORMULA_PROBLEMS[id] ?? [])].sort((a, b) => a.difficulty - b.difficulty);
 
   const relatedConstantObjs = useMemo(
     () => (allConstants ?? []).filter(c => related?.constantIds.includes(c.id)),
@@ -675,18 +675,40 @@ export default function FormulaDetail() {
               <h2 className="text-xl font-bold font-mono flex items-center gap-2">
                 <FlaskConical className="w-5 h-5 text-primary" /> Practice Problems
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">{problems.length} problems — click a problem to reveal its hint and solution.</p>
+              <p className="text-sm text-muted-foreground mt-1">{problems.length} problems — ordered easiest to hardest.</p>
             </div>
           </div>
-          <div className="mb-4">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Difficulty Scale</p>
-            <DifficultyLegend />
-          </div>
-          <div className="space-y-3">
-            {problems.map((p, i) => (
-              <ProblemCard key={i} problem={p} index={i} />
-            ))}
-          </div>
+          {!isAuthenticated ? (
+            <div className="flex flex-col items-center gap-4 py-10 px-6 border border-dashed border-border rounded-xl bg-background/40 text-center">
+              <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <FlaskConical className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground mb-1">Sign in to access practice problems</p>
+                <p className="text-sm text-muted-foreground">Create a free account to unlock {problems.length} problems with hints and step-by-step solutions.</p>
+              </div>
+              <Button
+                onClick={login}
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-6"
+                size="sm"
+              >
+                <LogIn className="w-4 h-4" />
+                Log In
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Difficulty Scale</p>
+                <DifficultyLegend />
+              </div>
+              <div className="space-y-3">
+                {problems.map((p, i) => (
+                  <ProblemCard key={i} problem={p} index={i} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
