@@ -234,35 +234,37 @@ function SmartSearchBar() {
               {(() => {
                 let idx = 0;
                 return Array.from(groups.entries()).map(([group, items]) => (
-                  <div key={group}>
-                    <div className="px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                  <div key={group} className="mb-1">
+                    <div className="px-5 pt-3 pb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
                       <GIcon g={group} />{group}
                     </div>
-                    {items.map(item => {
-                      const i = idx++;
-                      const active = i === cursor;
-                      return (
-                        <button
-                          key={item.id}
-                          data-idx={i}
-                          onMouseDown={e => { e.preventDefault(); go(item.href); }}
-                          onMouseEnter={() => setCursor(i)}
-                          className={cn(
-                            "w-full text-left px-5 py-2.5 flex flex-col transition-colors border-l-2",
-                            active ? "bg-primary/10 border-primary" : "border-transparent hover:bg-muted/40"
-                          )}
-                        >
-                          <span className="text-sm font-medium text-foreground leading-snug">
-                            <Hi text={item.label} q={query} />
-                          </span>
-                          {item.description && (
-                            <span className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                              <Hi text={item.description} q={query} />
+                    <div className="space-y-0.5 px-2">
+                      {items.map(item => {
+                        const i = idx++;
+                        const active = i === cursor;
+                        return (
+                          <button
+                            key={item.id}
+                            data-idx={i}
+                            onMouseDown={e => { e.preventDefault(); go(item.href); }}
+                            onMouseEnter={() => setCursor(i)}
+                            className={cn(
+                              "w-full text-left px-3 py-3 flex flex-col rounded-lg transition-colors border-l-2",
+                              active ? "bg-primary/10 border-primary" : "border-transparent hover:bg-muted/50"
+                            )}
+                          >
+                            <span className="text-sm font-medium text-foreground leading-snug">
+                              <Hi text={item.label} q={query} />
                             </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                            {item.description && (
+                              <span className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                <Hi text={item.description} q={query} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 ));
               })()}
