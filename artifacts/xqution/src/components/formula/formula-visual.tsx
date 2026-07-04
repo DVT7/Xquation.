@@ -1427,37 +1427,116 @@ function V31() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Formula 32 — Hubble's Law  (expanding universe)
 // ═══════════════════════════════════════════════════════════════════════════════
+type HubbleGalaxy = { angle: number; d: number; tilt: number };
+const H32_MAX = 112;
+const H32_N   = 14;
+
+function mkHubble(): HubbleGalaxy[] {
+  return Array.from({ length: H32_N }, (_, i) => ({
+    angle: (i / H32_N) * 2 * Math.PI + (Math.random() - 0.5) * 0.8,
+    d:     12 + Math.random() * (H32_MAX - 12),
+    tilt:  Math.random() * 180,
+  }));
+}
+
 function V32() {
-  const [H0, setH0] = useState(70);  // km/s/Mpc
+  const [H0, setH0] = useState(70);
+  const H0Ref  = useRef(H0);
+  useEffect(() => { H0Ref.current = H0; }, [H0]);
+
+  const galRef  = useRef<HubbleGalaxy[]>(mkHubble());
+  const rafRef  = useRef<number>(0);
+  const lastRef = useRef<number>(0);
+
+  type GDot = { x: number; y: number; d: number; angle: number; tilt: number };
+  const [dots, setDots] = useState<GDot[]>(() =>
+    galRef.current.map(g => ({
+      x: 140 + g.d * Math.cos(g.angle),
+      y:  78 + g.d * Math.sin(g.angle),
+      d: g.d, angle: g.angle, tilt: g.tilt,
+    }))
+  );
+
+  useEffect(() => {
+    function loop(now: number) {
+      const dt = Math.min((now - lastRef.current) / 1000, 0.05);
+      lastRef.current = now;
+      // Expansion: dd/dt = k * H0 * d  (faster H0 = faster expansion)
+      const k = H0Ref.current / 70 * 0.22;
+      galRef.current = galRef.current.map(g => {
+        let d = g.d + k * g.d * dt;
+        if (d > H32_MAX) d = 6 + Math.random() * 14;   // respawn near centre
+        return { ...g, d };
+      });
+      setDots(galRef.current.map(g => ({
+        x: 140 + g.d * Math.cos(g.angle),
+        y:  78 + g.d * Math.sin(g.angle),
+        d: g.d, angle: g.angle, tilt: g.tilt,
+      })));
+      rafRef.current = requestAnimationFrame(loop);
+    }
+    lastRef.current = performance.now();
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
   const W = 280; const H = 155; const cx = 140; const cy = 78;
-  const galaxies = [
-    [60, 50], [180, 45], [50, 100], [200, 110], [90, 130], [175, 130],
-    [70, 78], [200, 78]
-  ];
+
+  // Static background stars (golden-ratio spread)
+  const stars = Array.from({ length: 30 }, (_, i) => ({
+    x: ((i * 137.508) % (W - 10)) + 5,
+    y: ((i * 89.442)  % (H - 10)) + 5,
+    r: i % 5 === 0 ? 1.2 : 0.6,
+  }));
+
   return (
     <Wrap result={`v = H₀ × d`}>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }}>
-        {/* Milky Way at center */}
-        <circle cx={cx} cy={cy} r={7} fill={CON} />
-        <text x={cx + 10} y={cy + 3} fill={CON} fontSize={7}>MW</text>
-        {/* Galaxies with recession arrows */}
-        {galaxies.map(([gx, gy], i) => {
-          const dx = gx - cx; const dy = gy - cy;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          const v = H0 * d / 30;
-          const arrowScale = v / 15;
-          const ex = gx + dx * arrowScale * 0.4;
-          const ey = gy + dy * arrowScale * 0.4;
+        <defs>
+          <marker id="harrow" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto">
+            <path d="M0,0 L4,2 L0,4 Z" fill={ACC} />
+          </marker>
+        </defs>
+
+        {/* Background stars */}
+        {stars.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={0.25} />
+        ))}
+
+        {/* Distance rings (guides) */}
+        {[35, 70, H32_MAX].map(r => (
+          <circle key={r} cx={cx} cy={cy} r={r} fill="none"
+            stroke={CON} strokeWidth={0.4} strokeDasharray="3 4" opacity={0.15} />
+        ))}
+
+        {/* Galaxies */}
+        {dots.map((p, i) => {
+          const fade   = Math.min(1, (p.d - 6) / 30);  // fade in near centre
+          // Arrow length ∝ v = H0 × d
+          const vNorm  = Math.min(22, (H0Ref.current / 70) * p.d * 0.18);
+          const ax = p.x + Math.cos(p.angle) * vNorm;
+          const ay = p.y + Math.sin(p.angle) * vNorm;
           return (
-            <g key={i}>
-              <ellipse cx={gx} cy={gy} rx={6} ry={3} transform={`rotate(${Math.atan2(dy, dx) * 57},${gx},${gy})`}
-                fill="rgba(0,191,255,0.4)" stroke={VAR} strokeWidth={1} />
-              <line x1={gx} y1={gy} x2={ex} y2={ey} stroke={ACC} strokeWidth={1} strokeOpacity={0.7} />
+            <g key={i} opacity={0.25 + fade * 0.75}>
+              <ellipse cx={p.x} cy={p.y} rx={5} ry={2.2}
+                transform={`rotate(${p.tilt},${p.x},${p.y})`}
+                fill="rgba(0,191,255,0.35)" stroke={VAR} strokeWidth={0.8} />
+              {p.d > 18 && (
+                <line x1={p.x} y1={p.y} x2={ax} y2={ay}
+                  stroke={ACC} strokeWidth={0.9} opacity={0.65}
+                  markerEnd="url(#harrow)" />
+              )}
             </g>
           );
         })}
-        <text x={W / 2} y={H - 4} fill={CON} fontSize={8} textAnchor="middle">
-          H₀ = {H0} km/s/Mpc
+
+        {/* Milky Way observer */}
+        <circle cx={cx} cy={cy} r={6} fill={CON} opacity={0.95} />
+        <circle cx={cx} cy={cy} r={9} fill="none" stroke={CON} strokeWidth={0.6} opacity={0.35} />
+        <text x={cx} y={cy + 19} fill={CON} fontSize={6} textAnchor="middle">MW</text>
+
+        <text x={W / 2} y={H - 3} fill={CON} fontSize={8} textAnchor="middle">
+          H₀ = {H0} km/s/Mpc — farther galaxies recede faster
         </text>
       </svg>
       <Controls>
