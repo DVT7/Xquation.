@@ -637,31 +637,74 @@ function V13() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Formula 14 — PV = nRT  (gas container with animated molecules)
 // ═══════════════════════════════════════════════════════════════════════════════
+type GasMolecule = { x: number; y: number; dx: number; dy: number };
+
+// Container inner bounds (SVG coords)
+const G14_CX = 52, G14_CY = 27, G14_CW = 136, G14_CH = 96, G14_R = 4;
+const G14_N = 12;
+
+function initMolecules(): GasMolecule[] {
+  return Array.from({ length: G14_N }, () => {
+    const angle = Math.random() * 2 * Math.PI;
+    return {
+      x: G14_CX + G14_R + Math.random() * (G14_CW - 2 * G14_R),
+      y: G14_CY + G14_R + Math.random() * (G14_CH - 2 * G14_R),
+      dx: Math.cos(angle),
+      dy: Math.sin(angle),
+    };
+  });
+}
+
 function V14() {
   const [T, setT] = useState(300);
   const [V, setV] = useState(1);
   const n = 1; const R = 8.314;
   const P = n * R * T / V;
-  const W = 280; const H = 150;
-  const molSpeed = Math.max(0.3, 3 / (T / 100));
+
   const tempColor = T < 200 ? "#4488ff" : T < 400 ? "#00D9FF" : T < 600 ? "#ffaa00" : "#ff4444";
-  const molecules = [[70,60],[90,100],[110,70],[130,90],[80,80],[120,55],[100,110],[95,75]];
+
+  const molsRef    = useRef<GasMolecule[]>(initMolecules());
+  const rafRef     = useRef<number>(0);
+  const lastRef    = useRef<number>(0);
+  const TRef       = useRef(T);
+  const [dots, setDots] = useState<{ x: number; y: number }[]>(
+    molsRef.current.map(({ x, y }) => ({ x, y }))
+  );
+
+  useEffect(() => { TRef.current = T; }, [T]);
+
+  useEffect(() => {
+    function loop(now: number) {
+      const dt = Math.min((now - lastRef.current) / 1000, 0.05);
+      lastRef.current = now;
+      // Speed: kinetic theory — v ∝ √T; 80 px/s at 300 K
+      const speed = Math.sqrt(TRef.current / 300) * 80;
+      molsRef.current = molsRef.current.map(({ x, y, dx, dy }) => {
+        x += dx * speed * dt;
+        y += dy * speed * dt;
+        if (x < G14_CX + G14_R)               { x = G14_CX + G14_R;                      dx =  Math.abs(dx); }
+        if (x > G14_CX + G14_CW - G14_R)      { x = G14_CX + G14_CW - G14_R;             dx = -Math.abs(dx); }
+        if (y < G14_CY + G14_R)               { y = G14_CY + G14_R;                      dy =  Math.abs(dy); }
+        if (y > G14_CY + G14_CH - G14_R)      { y = G14_CY + G14_CH - G14_R;             dy = -Math.abs(dy); }
+        return { x, y, dx, dy };
+      });
+      setDots(molsRef.current.map(({ x, y }) => ({ x, y })));
+      rafRef.current = requestAnimationFrame(loop);
+    }
+    lastRef.current = performance.now();
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const W = 280; const H = 150;
   return (
     <Wrap result={`P = ${P.toFixed(0)} Pa`}>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }}>
         {/* Container */}
         <rect x={50} y={25} width={140} height={100} fill="rgba(0,191,255,0.05)"
           stroke={ACC} strokeWidth={2} rx={4} />
-        <style>{`
-          @keyframes mol14a { 0%{transform:translate(0,0)} 25%{transform:translate(18px,12px)}
-            50%{transform:translate(-8px,20px)} 75%{transform:translate(12px,-8px)} 100%{transform:translate(0,0)} }
-          @keyframes mol14b { 0%{transform:translate(0,0)} 30%{transform:translate(-15px,10px)}
-            60%{transform:translate(12px,-15px)} 80%{transform:translate(-8px,8px)} 100%{transform:translate(0,0)} }
-        `}</style>
-        {molecules.map((pos, i) => (
-          <circle key={i} cx={pos[0]} cy={pos[1]} r={4} fill={tempColor} opacity={0.85}
-            style={{ animation: `${i % 2 === 0 ? 'mol14a' : 'mol14b'} ${molSpeed}s linear infinite`,
-              animationDelay: `${i * 0.2}s` }} />
+        {dots.map((d, i) => (
+          <circle key={i} cx={d.x} cy={d.y} r={G14_R} fill={tempColor} opacity={0.85} />
         ))}
         {/* Pressure gauge */}
         <rect x={210} y={30} width={18} height={90} fill={GR} rx={3} />
