@@ -7,6 +7,7 @@ import { ReadAloudMenu } from "@/components/ui/read-aloud";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Spinner } from "@/components/ui/spinner";
 import { AppSettingsProvider, useAppSettings } from "@/contexts/app-settings";
+import { LimboEasterEgg } from "@/components/limbo-easter-egg";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -117,6 +118,7 @@ function App() {
           </WouterRouter>
           <Toaster />
           <ReadAloudMenu />
+          <LimboEasterEgg />
         </TooltipProvider>
       </AppSettingsProvider>
     </QueryClientProvider>

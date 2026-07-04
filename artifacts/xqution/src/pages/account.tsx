@@ -382,9 +382,10 @@ function OwnerFeedbackInbox() {
     setLoading(true);
     try {
       const res = await fetch("/api/feedback", { credentials: "include" });
-      const data = await res.json() as { feedback: FeedbackRow[] };
-      setFeedbacks(data.feedback);
-    } finally {
+      if (!res.ok) return;
+      const data = await res.json() as { feedback?: FeedbackRow[] };
+      setFeedbacks(data.feedback ?? []);
+    } catch { /* ignore */ } finally {
       setLoading(false);
     }
   };
