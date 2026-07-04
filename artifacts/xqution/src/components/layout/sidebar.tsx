@@ -10,7 +10,7 @@ import {
   Info,
   Menu,
   Telescope,
-  Stars,
+  Heart,
   UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { href: "/constants", label: "Constants", icon: BookOpen },
   { href: "/calculators", label: "Calculators", icon: Calculator },
   { href: "/converter", label: "Unit Converter", icon: ArrowRightLeft },
-  { href: "/astronomy-tools", label: "Astronomy Tools", icon: Stars },
+  { href: "/donate", label: "Donate", icon: Heart },
   { href: "/glossary", label: "Glossary", icon: BookA },
   { href: "/favorites", label: "Favorites", icon: Star },
   { href: "/about", label: "About", icon: Info },

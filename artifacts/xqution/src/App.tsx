@@ -29,6 +29,7 @@ const Glossary = lazy(() => import("@/pages/glossary"));
 const Favorites = lazy(() => import("@/pages/favorites"));
 const Problems = lazy(() => import("@/pages/problems"));
 const About = lazy(() => import("@/pages/about"));
+const Donate = lazy(() => import("@/pages/donate"));
 const Account = lazy(() => import("@/pages/account"));
 import NotFound from "@/pages/not-found";
 
@@ -97,6 +98,7 @@ function Router() {
           <Route path="/favorites" component={Favorites} />
           <Route path="/problems" component={Problems} />
           <Route path="/about" component={About} />
+          <Route path="/donate" component={Donate} />
           <Route path="/account" component={Account} />
           <Route component={NotFound} />
         </Switch>
