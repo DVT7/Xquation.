@@ -10,12 +10,15 @@ import {
   Info,
   Menu,
   Telescope,
-  Stars
+  Stars,
+  UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@workspace/replit-auth-web";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const NAV_ITEMS = [
   { href: "/formulas", label: "Formulas", icon: FlaskConical },
@@ -30,6 +33,11 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+
+  function getInitials(firstName?: string | null, lastName?: string | null) {
+    return ((firstName?.[0] ?? "") + (lastName?.[0] ?? "")).toUpperCase() || "?";
+  }
 
   const NavLinks = ({ className }: { className?: string }) => (
     <nav className={cn("space-y-1 mt-6", className)}>
@@ -52,6 +60,32 @@ export function Sidebar() {
     </nav>
   );
 
+  const AccountButton = () => {
+    const isActive = location.startsWith("/account");
+    return (
+      <Link href="/account" className="block">
+        <div className={cn(
+          "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm gap-3",
+          isActive
+            ? "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}>
+          {isAuthenticated && user ? (
+            <Avatar className="w-5 h-5 shrink-0">
+              <AvatarImage src={user.profileImageUrl ?? undefined} />
+              <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                {getInitials(user.firstName, user.lastName)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <UserCircle className={cn("w-5 h-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+          )}
+          <span>Account</span>
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <>
       {/* Mobile Topbar & Sheet */}
@@ -67,9 +101,12 @@ export function Sidebar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 bg-background/95 backdrop-blur border-border p-0 pt-16">
-             <div className="px-4">
+            <div className="px-4 flex flex-col h-full pb-6">
               <NavLinks />
-             </div>
+              <div className="mt-auto pt-4 border-t border-border">
+                <AccountButton />
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
@@ -83,6 +120,9 @@ export function Sidebar() {
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <NavLinks />
+        </div>
+        <div className="px-4 pb-4 border-t border-border pt-4">
+          <AccountButton />
         </div>
       </div>
     </>

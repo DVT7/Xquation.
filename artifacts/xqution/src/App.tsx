@@ -27,6 +27,7 @@ const AstronomyTools = lazy(() => import("@/pages/astronomy-tools"));
 const Glossary = lazy(() => import("@/pages/glossary"));
 const Favorites = lazy(() => import("@/pages/favorites"));
 const About = lazy(() => import("@/pages/about"));
+const Account = lazy(() => import("@/pages/account"));
 import NotFound from "@/pages/not-found";
 
 function LoadingFallback() {
@@ -52,6 +53,7 @@ function Router() {
           <Route path="/glossary" component={Glossary} />
           <Route path="/favorites" component={Favorites} />
           <Route path="/about" component={About} />
+          <Route path="/account" component={Account} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
