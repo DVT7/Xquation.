@@ -180,6 +180,7 @@ router.get("/callback", async (req: Request, res: Response) => {
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       profileImageUrl: dbUser.profileImageUrl,
+      role: dbUser.role,
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,

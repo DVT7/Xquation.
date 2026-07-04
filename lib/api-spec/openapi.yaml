@@ -484,6 +484,8 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
     AuthUserEnvelope:
       type: object
       required: [user]

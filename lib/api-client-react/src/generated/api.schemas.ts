@@ -15,6 +15,7 @@ export interface AuthUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  role?: string;
 }
 
 export interface AuthUserEnvelope {
