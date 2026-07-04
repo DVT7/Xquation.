@@ -3,7 +3,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical } from "lucide-react";
 
@@ -85,9 +84,6 @@ export default function Account() {
               <p className="text-lg font-semibold text-foreground truncate">
                 {getDisplayName(user?.firstName, user?.lastName)}
               </p>
-              <Badge variant="outline" className="mt-1 text-xs border-primary/30 text-primary">
-                Student
-              </Badge>
             </div>
           </div>
 
