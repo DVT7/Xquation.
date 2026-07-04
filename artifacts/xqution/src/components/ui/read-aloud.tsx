@@ -95,6 +95,9 @@ export function mathToSpeech(raw: string): string {
 
   let s = t;
 
+  // ── 0. Brand name → phonetic pronunciation ──────────────────────────────
+  s = s.replace(/\bxquation\b/gi, "x kvay zhn");
+
   // ── 1. Strip LaTeX formatting commands ────────────────────────────────────
   s = s.replace(/\\textcolor\{[^}]+\}\{([^}]+)\}/g, "$1");
   s = s.replace(/\\text\{([^}]+)\}/g, "$1");

@@ -284,7 +284,15 @@ function PreferencesCards({
                   return (
                     <button
                       key={v.voiceURI}
-                      onClick={() => setVoiceURI(v.voiceURI)}
+                      onClick={() => {
+                        setVoiceURI(v.voiceURI);
+                        const sample = new SpeechSynthesisUtterance("Hello, welcome to xquation");
+                        sample.voice = v;
+                        sample.volume = volume;
+                        sample.rate = 0.92;
+                        window.speechSynthesis.cancel();
+                        window.speechSynthesis.speak(sample);
+                      }}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
                         selected
                           ? "border-primary/60 bg-primary/10 text-foreground"
