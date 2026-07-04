@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Spinner } from "@/components/ui/spinner";
 import { AppSettingsProvider, useAppSettings } from "@/contexts/app-settings";
 import { LimboEasterEgg } from "@/components/limbo-easter-egg";
+import { SmartSearch } from "@/components/smart-search";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -119,6 +120,7 @@ function App() {
           <Toaster />
           <ReadAloudMenu />
           <LimboEasterEgg />
+          <SmartSearch />
         </TooltipProvider>
       </AppSettingsProvider>
     </QueryClientProvider>
