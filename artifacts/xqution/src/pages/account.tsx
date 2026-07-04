@@ -3,7 +3,7 @@ import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
 import { useAppSettings } from "@/contexts/app-settings";
 import { useLocalFormulaViews } from "@/hooks/use-local-views";
 import { useLocation, Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
   Sun, Moon, Volume2, ArrowRight, RotateCcw, MessageSquare, AlertCircle, Lightbulb, CheckCircle,
+  Reply, ChevronDown, ChevronUp, Clock, Send,
 } from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
@@ -176,6 +177,9 @@ export default function Account() {
         onResume={() => lastVisited && navigate(lastVisited.path)}
       />
 
+      {/* Owner Inbox */}
+      {user?.role === "owner" && <OwnerFeedbackInbox />}
+
       {/* Feedback */}
       <FeedbackCard />
 
@@ -199,25 +203,45 @@ export default function Account() {
   );
 }
 
+const COMPLAINT_FEATURES = [
+  "Formulas", "Constants", "Calculators", "Unit Converter",
+  "Read Aloud", "Practice Problems", "Favorites", "Glossary",
+  "Donate", "Account", "Other",
+];
+
 function FeedbackCard() {
   const [type, setType] = useState<"suggestion" | "complaint" | null>(null);
+  const [feature, setFeature] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
+  const handleTypeChange = (t: "suggestion" | "complaint") => {
+    setType(t);
+    setFeature(null);
+    if (status === "error") setStatus("idle");
+  };
+
+  const canSubmit = type === "suggestion"
+    ? message.trim().length >= 5
+    : type === "complaint"
+    ? !!feature && message.trim().length >= 5
+    : false;
+
   const handleSubmit = async () => {
-    if (!type || message.trim().length < 5) return;
+    if (!canSubmit || status === "loading") return;
     setStatus("loading");
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ type, message: message.trim() }),
+        body: JSON.stringify({ type, feature: type === "complaint" ? feature : undefined, message: message.trim() }),
       });
       if (!res.ok) throw new Error("Failed");
       setStatus("success");
       setMessage("");
       setType(null);
+      setFeature(null);
     } catch {
       setStatus("error");
     }
@@ -249,7 +273,7 @@ function FeedbackCard() {
         {/* Type toggle */}
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => setType("suggestion")}
+            onClick={() => handleTypeChange("suggestion")}
             className={`flex items-center gap-2 p-3 rounded-lg border text-left transition-colors ${
               type === "suggestion"
                 ? "border-primary/60 bg-primary/10 text-foreground"
@@ -260,7 +284,7 @@ function FeedbackCard() {
             <span className="text-sm font-medium">Suggestion</span>
           </button>
           <button
-            onClick={() => setType("complaint")}
+            onClick={() => handleTypeChange("complaint")}
             className={`flex items-center gap-2 p-3 rounded-lg border text-left transition-colors ${
               type === "complaint"
                 ? "border-destructive/60 bg-destructive/10 text-foreground"
@@ -272,6 +296,28 @@ function FeedbackCard() {
           </button>
         </div>
 
+        {/* Feature picker — complaint only */}
+        {type === "complaint" && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium">Where did you encounter the issue?</p>
+            <div className="flex flex-wrap gap-1.5">
+              {COMPLAINT_FEATURES.map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFeature(f === feature ? null : f)}
+                  className={`px-2.5 py-1 rounded-full border text-xs font-medium transition-colors ${
+                    feature === f
+                      ? "border-destructive/60 bg-destructive/10 text-destructive"
+                      : "border-border bg-background text-muted-foreground hover:border-destructive/30"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Message */}
         <div className="space-y-1.5">
           <textarea
@@ -279,12 +325,14 @@ function FeedbackCard() {
               type === "suggestion"
                 ? "Share your idea or improvement..."
                 : type === "complaint"
-                ? "Describe the issue you encountered..."
+                ? feature
+                  ? `Describe the issue in ${feature}...`
+                  : "Pick a feature above, then describe the issue..."
                 : "Select a type above, then write your message..."
             }
             value={message}
             onChange={e => { setMessage(e.target.value); if (status === "error") setStatus("idle"); }}
-            disabled={!type}
+            disabled={!type || (type === "complaint" && !feature)}
             rows={4}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-40 disabled:cursor-not-allowed resize-none"
           />
@@ -297,12 +345,166 @@ function FeedbackCard() {
 
         <Button
           onClick={handleSubmit}
-          disabled={!type || message.trim().length < 5 || status === "loading"}
+          disabled={!canSubmit || status === "loading"}
           className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
         >
           {status === "loading" ? <Spinner className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
           {status === "loading" ? "Sending..." : "Send Feedback"}
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+type FeedbackRow = {
+  id: number;
+  type: string;
+  feature: string | null;
+  message: string;
+  userId: string | null;
+  userName: string | null;
+  ownerReply: string | null;
+  ownerRepliedAt: string | null;
+  createdAt: string;
+};
+
+function OwnerFeedbackInbox() {
+  const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [replyDraft, setReplyDraft] = useState<Record<number, string>>({});
+  const [replyStatus, setReplyStatus] = useState<Record<number, "idle" | "loading" | "done" | "error">>({});
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/feedback", { credentials: "include" });
+      const data = await res.json() as { feedback: FeedbackRow[] };
+      setFeedbacks(data.feedback);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void load(); }, []);
+
+  const sendReply = async (id: number) => {
+    const text = replyDraft[id]?.trim();
+    if (!text) return;
+    setReplyStatus(s => ({ ...s, [id]: "loading" }));
+    try {
+      const res = await fetch(`/api/feedback/${id}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reply: text }),
+      });
+      if (!res.ok) throw new Error();
+      setReplyStatus(s => ({ ...s, [id]: "done" }));
+      setReplyDraft(d => ({ ...d, [id]: "" }));
+      await load();
+    } catch {
+      setReplyStatus(s => ({ ...s, [id]: "error" }));
+    }
+  };
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <Card className="bg-card border-border border-primary/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-medium flex items-center justify-between">
+          <span className="flex items-center gap-2 text-primary">
+            <MessageSquare className="w-4 h-4" /> Feedback Inbox
+          </span>
+          <Badge variant="outline" className="text-xs border-primary/30 text-primary">Owner</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {loading ? (
+          <div className="flex justify-center py-6"><Spinner className="w-5 h-5 text-primary" /></div>
+        ) : feedbacks.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">No feedback yet.</p>
+        ) : (
+          feedbacks.map(fb => {
+            const isOpen = expandedId === fb.id;
+            const rStatus = replyStatus[fb.id] ?? "idle";
+            return (
+              <div key={fb.id} className={`rounded-lg border transition-colors ${
+                fb.type === "complaint" ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/5"
+              }`}>
+                {/* Header row */}
+                <button
+                  className="w-full flex items-start gap-3 p-3 text-left"
+                  onClick={() => setExpandedId(isOpen ? null : fb.id)}
+                >
+                  <div className="mt-0.5 shrink-0">
+                    {fb.type === "complaint"
+                      ? <AlertCircle className="w-4 h-4 text-destructive" />
+                      : <Lightbulb className="w-4 h-4 text-primary" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-foreground">{fb.userName ?? "Anonymous"}</span>
+                      {fb.feature && (
+                        <Badge variant="outline" className="text-xs border-destructive/30 text-destructive">{fb.feature}</Badge>
+                      )}
+                      {fb.ownerReply && (
+                        <Badge variant="outline" className="text-xs border-green-500/40 text-green-500">Replied</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />{formatDate(fb.createdAt)}
+                    </p>
+                    {!isOpen && (
+                      <p className="text-sm text-muted-foreground mt-1 truncate">{fb.message}</p>
+                    )}
+                  </div>
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}
+                </button>
+
+                {/* Expanded body */}
+                {isOpen && (
+                  <div className="px-3 pb-3 space-y-3 border-t border-border/40 pt-3">
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{fb.message}</p>
+
+                    {fb.ownerReply && (
+                      <div className="rounded-md bg-background border border-green-500/20 p-3">
+                        <p className="text-xs text-green-500 font-medium mb-1 flex items-center gap-1">
+                          <Reply className="w-3 h-3" /> Your reply
+                        </p>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{fb.ownerReply}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <textarea
+                        placeholder={fb.ownerReply ? "Update reply..." : "Write a reply..."}
+                        value={replyDraft[fb.id] ?? ""}
+                        onChange={e => setReplyDraft(d => ({ ...d, [fb.id]: e.target.value }))}
+                        rows={2}
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => sendReply(fb.id)}
+                          disabled={!replyDraft[fb.id]?.trim() || rStatus === "loading"}
+                          className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                        >
+                          {rStatus === "loading" ? <Spinner className="w-3 h-3" /> : <Send className="w-3 h-3" />}
+                          {fb.ownerReply ? "Update Reply" : "Send Reply"}
+                        </Button>
+                        {rStatus === "error" && <span className="text-xs text-destructive">Failed — try again.</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </CardContent>
     </Card>
   );
