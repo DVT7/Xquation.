@@ -177,8 +177,11 @@ export default function Account() {
         onResume={() => lastVisited && navigate(lastVisited.path)}
       />
 
-      {/* Owner Inbox */}
+      {/* Owner Inbox — only the owner sees this */}
       {user?.role === "owner" && <OwnerFeedbackInbox />}
+
+      {/* Replies from owner — visible to regular users */}
+      {user?.role !== "owner" && <UserRepliesSection />}
 
       {/* Feedback */}
       <FeedbackCard />
@@ -400,9 +403,9 @@ function OwnerFeedbackInbox() {
         body: JSON.stringify({ reply: text }),
       });
       if (!res.ok) throw new Error();
-      setReplyStatus(s => ({ ...s, [id]: "done" }));
-      setReplyDraft(d => ({ ...d, [id]: "" }));
-      await load();
+      // Remove from inbox immediately — owner only sees unreplied items
+      setFeedbacks(prev => prev.filter(f => f.id !== id));
+      setExpandedId(null);
     } catch {
       setReplyStatus(s => ({ ...s, [id]: "error" }));
     }
@@ -505,6 +508,82 @@ function OwnerFeedbackInbox() {
             );
           })
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UserRepliesSection() {
+  const [replies, setReplies] = useState<FeedbackRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/feedback/mine", { credentials: "include" })
+      .then(r => r.json() as Promise<{ replies: FeedbackRow[] }>)
+      .then(d => setReplies(d.replies))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const dismiss = async (id: number) => {
+    await fetch(`/api/feedback/${id}/dismiss`, { method: "POST", credentials: "include" });
+    setReplies(prev => prev.filter(r => r.id !== id));
+  };
+
+  if (loading || replies.length === 0) return null;
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <Card className="bg-card border-border border-green-500/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-medium flex items-center gap-2 text-green-500">
+          <Reply className="w-4 h-4" /> Replies from Xquation
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {replies.map(fb => (
+          <div key={fb.id} className="rounded-lg border border-green-500/20 bg-green-500/5 p-3 space-y-3">
+            {/* Original message */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                {fb.type === "complaint"
+                  ? <><AlertCircle className="w-3 h-3 text-destructive" /> Your complaint{fb.feature ? ` — ${fb.feature}` : ""}</>
+                  : <><Lightbulb className="w-3 h-3 text-primary" /> Your suggestion</>
+                }
+                <span className="ml-auto flex items-center gap-1 text-muted-foreground">
+                  <Clock className="w-3 h-3" />{formatDate(fb.createdAt)}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{fb.message}</p>
+            </div>
+
+            <Separator className="bg-green-500/10" />
+
+            {/* Owner reply */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-green-500 flex items-center gap-1">
+                <Reply className="w-3 h-3" /> Xquation replied
+                {fb.ownerRepliedAt && (
+                  <span className="ml-auto text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />{formatDate(fb.ownerRepliedAt)}
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{fb.ownerReply}</p>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => dismiss(fb.id)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground h-7"
+            >
+              Got it — dismiss
+            </Button>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

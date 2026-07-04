@@ -1,4 +1,4 @@
-import { pgTable, text, serial, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 
 export const feedbackTable = pgTable("feedback", {
   id: serial("id").primaryKey(),
@@ -9,6 +9,10 @@ export const feedbackTable = pgTable("feedback", {
   userName: text("user_name"),
   ownerReply: text("owner_reply"),
   ownerRepliedAt: timestamp("owner_replied_at", { withTimezone: true }),
+  // Tracks how many times the user has viewed the owner's reply without counter-replying.
+  // After 5 visits it is auto-dismissed from the user's view.
+  userViewCount: integer("user_view_count").notNull().default(0),
+  userDismissed: boolean("user_dismissed").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
