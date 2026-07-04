@@ -57,15 +57,19 @@ function getSafeReturnTo(value: unknown): string {
   return value;
 }
 
+const OWNER_EMAILS = new Set(["nakka.thirums@gmail.com"]);
+
 async function upsertUser(claims: Record<string, unknown>) {
+  const email = (claims.email as string) || null;
   const userData = {
     id: claims.sub as string,
-    email: (claims.email as string) || null,
+    email,
     firstName: (claims.first_name as string) || null,
     lastName: (claims.last_name as string) || null,
     profileImageUrl: (claims.profile_image_url || claims.picture) as
       | string
       | null,
+    role: email && OWNER_EMAILS.has(email) ? "owner" : "user",
   };
 
   const [user] = await db
