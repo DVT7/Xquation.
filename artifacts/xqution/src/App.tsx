@@ -27,6 +27,7 @@ const Converter = lazy(() => import("@/pages/converter"));
 const AstronomyTools = lazy(() => import("@/pages/astronomy-tools"));
 const Glossary = lazy(() => import("@/pages/glossary"));
 const Favorites = lazy(() => import("@/pages/favorites"));
+const Problems = lazy(() => import("@/pages/problems"));
 const About = lazy(() => import("@/pages/about"));
 const Account = lazy(() => import("@/pages/account"));
 import NotFound from "@/pages/not-found";
@@ -40,6 +41,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/astronomy-tools": "Astronomy Tools",
   "/glossary": "Glossary",
   "/favorites": "Favorites",
+  "/problems": "Practice Problems",
   "/about": "About",
 };
 
@@ -93,6 +95,7 @@ function Router() {
           <Route path="/astronomy-tools" component={AstronomyTools} />
           <Route path="/glossary" component={Glossary} />
           <Route path="/favorites" component={Favorites} />
+          <Route path="/problems" component={Problems} />
           <Route path="/about" component={About} />
           <Route path="/account" component={Account} />
           <Route component={NotFound} />

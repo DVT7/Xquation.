@@ -1,7 +1,8 @@
 import { useAuth } from "@workspace/replit-auth-web";
 import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
 import { useAppSettings } from "@/contexts/app-settings";
-import { useLocation } from "wouter";
+import { useLocalFormulaViews } from "@/hooks/use-local-views";
+import { useLocation, Link } from "wouter";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +34,8 @@ function shortVoiceName(voice: SpeechSynthesisVoice, idx: number): string {
 export default function Account() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { data: favorites } = useListFavorites();
-  const { data: stats } = useGetUserStats();
+  const { data: stats } = useGetUserStats({ query: { enabled: isAuthenticated, queryKey: ["/api/user/stats"] } });
+  const localViews = useLocalFormulaViews();
   const {
     theme, setTheme,
     voiceURI, setVoiceURI,
@@ -83,14 +85,14 @@ export default function Account() {
 
         <div className="grid grid-cols-3 gap-4 w-full mt-2">
           {[
-            { icon: FlaskConical, label: "32 Formulas" },
-            { icon: Star, label: "Save Favorites" },
-            { icon: BookOpen, label: "Practice Problems" },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-border">
+            { icon: FlaskConical, label: "32 Formulas", href: "/formulas" },
+            { icon: Star, label: "Save Favorites", href: "/favorites" },
+            { icon: BookOpen, label: "Practice Problems", href: "/problems" },
+          ].map(({ icon: Icon, label, href }) => (
+            <Link key={label} href={href} className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-border hover:border-primary/30 transition-colors">
               <Icon className="w-5 h-5 text-primary" />
               <span className="text-xs text-muted-foreground font-medium">{label}</span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -160,7 +162,7 @@ export default function Account() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: Star, label: "Saved Favorites", value: favorites != null ? String(favorites.length) : "—" },
-              { icon: FlaskConical, label: "Formulas Viewed", value: stats != null ? String(stats.formulasViewed) : "—" },
+              { icon: FlaskConical, label: "Formulas Viewed", value: isAuthenticated ? (stats != null ? String(stats.formulasViewed) : "—") : String(localViews.count) },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="p-4 rounded-lg bg-background border border-border flex flex-col gap-1">
                 <div className="flex items-center gap-2">

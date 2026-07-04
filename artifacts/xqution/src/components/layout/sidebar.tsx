@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/astronomy-tools", label: "Astronomy Tools", icon: Stars },
   { href: "/glossary", label: "Glossary", icon: BookA },
   { href: "/favorites", label: "Favorites", icon: Star },
+  { href: "/problems", label: "Practice Problems", icon: BookOpen },
   { href: "/about", label: "About", icon: Info },
 ];
 
