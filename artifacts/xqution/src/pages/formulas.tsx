@@ -1,7 +1,7 @@
 import { useListFormulas, useListFormulaCategories, useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey } from "@workspace/api-client-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Filter, Copy, Check } from "lucide-react";
+import { Search, Star, Filter, Copy, Check, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ColoredBlockMath, InlineMath } from "@/components/ui/math";
@@ -13,6 +13,38 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLocation, Link } from "wouter";
+
+/* ─── stop words ─────────────────────────────────────────────────────────── */
+const STOP = new Set([
+  "the","a","an","is","are","was","were","be","been","it","its","this","that",
+  "in","of","on","at","by","for","to","and","or","as","from","with","also",
+  "can","has","have","had","not","so","all","when","where","which","how",
+  "such","into","these","those","than","then","between","through",
+]);
+
+/* ─── ClickableText ──────────────────────────────────────────────────────── */
+function ClickableText({ text, onWordClick }: { text: string; onWordClick: (w: string) => void }) {
+  const tokens = text.split(/(\s+)/);
+  return (
+    <>
+      {tokens.map((tok, i) => {
+        const clean = tok.replace(/[^a-zA-Z0-9]/g, "");
+        const isClickable = clean.length > 3 && !STOP.has(clean.toLowerCase());
+        if (!isClickable) return <span key={i}>{tok}</span>;
+        return (
+          <span
+            key={i}
+            onClick={() => onWordClick(clean)}
+            className="cursor-pointer hover:text-primary hover:underline decoration-dotted underline-offset-2 transition-colors"
+            title={`Search "${clean}"`}
+          >
+            {tok}
+          </span>
+        );
+      })}
+    </>
+  );
+}
 
 export default function Formulas() {
   const [location] = useLocation();
@@ -81,6 +113,10 @@ export default function Formulas() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleWordClick = useCallback((word: string) => {
+    setSearch(word);
+  }, []);
+
   return (
     <div className="space-y-8 pb-12">
       <div>
@@ -92,11 +128,20 @@ export default function Formulas() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search formulas..." 
-            className="pl-9 font-mono"
+            placeholder="Search formulas… or click any word in a card" 
+            className="pl-9 pr-9 font-mono"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-full sm:w-[200px] font-mono">
@@ -162,7 +207,10 @@ export default function Formulas() {
 
                 <p className="text-sm text-foreground/80 mt-6 mb-4">
                   {formula.description
-                    ? (formula.description.match(/^[^.!?]+[.!?]/)?.[0] ?? formula.description.slice(0, 120) + (formula.description.length > 120 ? '…' : ''))
+                    ? <ClickableText
+                        text={formula.description.match(/^[^.!?]+[.!?]/)?.[0] ?? formula.description.slice(0, 120) + (formula.description.length > 120 ? "…" : "")}
+                        onWordClick={handleWordClick}
+                      />
                     : null}
                 </p>
 
