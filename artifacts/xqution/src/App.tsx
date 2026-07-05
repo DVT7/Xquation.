@@ -33,6 +33,7 @@ const Problems = lazy(() => import("@/pages/problems"));
 const About = lazy(() => import("@/pages/about"));
 const Donate = lazy(() => import("@/pages/donate"));
 const Account = lazy(() => import("@/pages/account"));
+const OwnerDashboard = lazy(() => import("@/pages/owner-dashboard"));
 import NotFound from "@/pages/not-found";
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -102,6 +103,7 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/donate" component={Donate} />
           <Route path="/account" component={Account} />
+          <Route path="/owner-dashboard" component={OwnerDashboard} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

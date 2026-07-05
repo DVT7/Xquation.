@@ -387,3 +387,183 @@ export const ListFeaturedFormulasResponseItem = zod.object({
 export const ListFeaturedFormulasResponse = zod.array(ListFeaturedFormulasResponseItem)
 
 
+/**
+ * @summary Get owner dashboard analytics
+ */
+export const GetOwnerAnalyticsResponse = zod.object({
+  "totalUsers": zod.number(),
+  "newUsersToday": zod.number(),
+  "totalViews": zod.number(),
+  "totalFavorites": zod.number(),
+  "totalSearches": zod.number(),
+  "activeSessionsToday": zod.number(),
+  "onlineUsers": zod.number(),
+  "topViewed": zod.array(zod.object({
+  "formulaId": zod.number(),
+  "views": zod.number()
+})),
+  "topFavorited": zod.array(zod.object({
+  "itemId": zod.number(),
+  "favorites": zod.number()
+})),
+  "topSearches": zod.array(zod.object({
+  "query": zod.string(),
+  "count": zod.number()
+})),
+  "feedback": zod.object({
+  "total": zod.number(),
+  "open": zod.number(),
+  "replied": zod.number()
+})
+})
+
+
+/**
+ * @summary List enriched users
+ */
+export const ListOwnerUsersQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "role": zod.coerce.string().optional()
+})
+
+export const ListOwnerUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "profileImageUrl": zod.string().nullish(),
+  "role": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "favoritesCount": zod.number(),
+  "formulasViewed": zod.number(),
+  "isBanned": zod.boolean(),
+  "banReason": zod.string().nullish(),
+  "banExpiresAt": zod.string().nullish(),
+  "isOnline": zod.boolean(),
+  "lastActive": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Change a user's role
+ */
+export const ChangeUserRoleParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ChangeUserRoleBody = zod.object({
+  "role": zod.enum(['user', 'owner'])
+})
+
+
+/**
+ * @summary Ban a user
+ */
+export const BanUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const BanUserBody = zod.object({
+  "reason": zod.string(),
+  "durationMinutes": zod.number().optional()
+})
+
+
+/**
+ * @summary Unban a user
+ */
+export const UnbanUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary List all announcements
+ */
+export const ListAnnouncementsResponse = zod.object({
+  "announcements": zod.array(zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "scope": zod.string(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "icon": zod.string().nullish(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "isPinned": zod.boolean(),
+  "isDraft": zod.boolean(),
+  "expiresAt": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create an announcement
+ */
+export const CreateAnnouncementBody = zod.object({
+  "title": zod.string(),
+  "message": zod.string(),
+  "type": zod.string().optional(),
+  "scope": zod.string().optional(),
+  "icon": zod.string().optional(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  "isPinned": zod.boolean().optional(),
+  "expiresAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Delete an announcement
+ */
+export const DeleteAnnouncementParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all feedback
+ */
+export const ListOwnerFeedbackResponse = zod.object({
+  "feedback": zod.array(zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "message": zod.string(),
+  "userId": zod.string().nullish(),
+  "userName": zod.string().nullish(),
+  "ownerReply": zod.string().nullish(),
+  "ownerRepliedAt": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Reply to feedback
+ */
+export const ReplyToFeedbackParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReplyToFeedbackBody = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
+ * @summary List admin action log
+ */
+export const ListAdminActionsResponse = zod.object({
+  "actions": zod.array(zod.object({
+  "id": zod.number(),
+  "actorId": zod.string(),
+  "action": zod.string(),
+  "targetType": zod.string(),
+  "targetId": zod.string(),
+  "details": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+

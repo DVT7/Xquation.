@@ -6,3 +6,4 @@ export * from "./favorites";
 export * from "./auth";
 export * from "./views";
 export * from "./feedback";
+export * from "./owner";

@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
   Sun, Moon, Volume2, ArrowRight, RotateCcw, MessageSquare, AlertCircle, Lightbulb, CheckCircle,
-  Reply, ChevronDown, ChevronUp, Clock, Send,
+  Reply, ChevronDown, ChevronUp, Clock, Send, Crown,
 } from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
@@ -114,6 +114,13 @@ export default function Account() {
               <Badge variant="outline" className="mt-1 text-xs border-primary/30 text-primary">
                 {(user?.role ?? "user") === "owner" ? "Owner" : "Student"}
               </Badge>
+              {user?.role === "owner" && (
+                <Link href="/owner-dashboard">
+                  <Badge className="mt-1 text-xs bg-primary/10 text-primary border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors ml-1">
+                    <Crown className="w-3 h-3 mr-1" /> Dashboard
+                  </Badge>
+                </Link>
+              )}
             </div>
           </div>
 

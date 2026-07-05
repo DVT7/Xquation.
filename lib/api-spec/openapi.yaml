@@ -25,6 +25,8 @@ tags:
     description: Site statistics
   - name: Auth
     description: Browser and mobile authentication endpoints.
+  - name: owner
+    description: Owner dashboard and platform management
 
 paths:
   /healthz:
@@ -484,6 +486,245 @@ paths:
                 items:
                   $ref: "#/components/schemas/Formula"
 
+  /owner/analytics:
+    get:
+      operationId: getOwnerAnalytics
+      tags: [owner]
+      summary: Get owner dashboard analytics
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerAnalytics"
+        "403":
+          description: Forbidden
+        "401":
+          description: Unauthorized
+
+  /owner/users:
+    get:
+      operationId: listOwnerUsers
+      tags: [owner]
+      summary: List enriched users
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerUserList"
+        "403":
+          description: Forbidden
+
+  /owner/users/{id}/role:
+    patch:
+      operationId: changeUserRole
+      tags: [owner]
+      summary: Change a user's role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [user, owner]
+      responses:
+        "200":
+          description: Role updated
+        "403":
+          description: Forbidden
+
+  /owner/users/{id}/ban:
+    post:
+      operationId: banUser
+      tags: [owner]
+      summary: Ban a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                durationMinutes:
+                  type: integer
+      responses:
+        "200":
+          description: User banned
+        "403":
+          description: Forbidden
+
+  /owner/users/{id}/unban:
+    post:
+      operationId: unbanUser
+      tags: [owner]
+      summary: Unban a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User unbanned
+        "403":
+          description: Forbidden
+
+  /owner/announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [owner]
+      summary: List all announcements
+      responses:
+        "200":
+          description: Announcement list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerAnnouncementList"
+    post:
+      operationId: createAnnouncement
+      tags: [owner]
+      summary: Create an announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, message]
+              properties:
+                title:
+                  type: string
+                message:
+                  type: string
+                type:
+                  type: string
+                scope:
+                  type: string
+                icon:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+                isPinned:
+                  type: boolean
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        "201":
+          description: Created
+        "403":
+          description: Forbidden
+
+  /owner/announcements/{id}:
+    delete:
+      operationId: deleteAnnouncement
+      tags: [owner]
+      summary: Delete an announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Forbidden
+
+  /owner/feedback:
+    get:
+      operationId: listOwnerFeedback
+      tags: [owner]
+      summary: List all feedback
+      responses:
+        "200":
+          description: Feedback list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerFeedbackList"
+        "403":
+          description: Forbidden
+
+  /owner/feedback/{id}/reply:
+    post:
+      operationId: replyToFeedback
+      tags: [owner]
+      summary: Reply to feedback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reply]
+              properties:
+                reply:
+                  type: string
+      responses:
+        "200":
+          description: Reply sent
+        "403":
+          description: Forbidden
+
+  /owner/admin-actions:
+    get:
+      operationId: listAdminActions
+      tags: [owner]
+      summary: List admin action log
+      responses:
+        "200":
+          description: Admin actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminActionList"
+        "403":
+          description: Forbidden
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -729,3 +970,203 @@ components:
           type: integer
         categoryCount:
           type: integer
+
+    OwnerAnalytics:
+      type: object
+      required: [totalUsers, newUsersToday, totalViews, totalFavorites, totalSearches, activeSessionsToday, onlineUsers, topViewed, topFavorited, topSearches, feedback]
+      properties:
+        totalUsers:
+          type: integer
+        newUsersToday:
+          type: integer
+        totalViews:
+          type: integer
+        totalFavorites:
+          type: integer
+        totalSearches:
+          type: integer
+        activeSessionsToday:
+          type: integer
+        onlineUsers:
+          type: integer
+        topViewed:
+          type: array
+          items:
+            type: object
+            required: [formulaId, views]
+            properties:
+              formulaId:
+                type: integer
+              views:
+                type: integer
+        topFavorited:
+          type: array
+          items:
+            type: object
+            required: [itemId, favorites]
+            properties:
+              itemId:
+                type: integer
+              favorites:
+                type: integer
+        topSearches:
+          type: array
+          items:
+            type: object
+            required: [query, count]
+            properties:
+              query:
+                type: string
+              count:
+                type: integer
+        feedback:
+          type: object
+          required: [total, open, replied]
+          properties:
+            total:
+              type: integer
+            open:
+              type: integer
+            replied:
+              type: integer
+
+    OwnerUserList:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerEnrichedUser"
+
+    OwnerEnrichedUser:
+      type: object
+      required: [id, role, createdAt, favoritesCount, formulasViewed, isBanned, isOnline]
+      properties:
+        id:
+          type: string
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+        profileImageUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        favoritesCount:
+          type: integer
+        formulasViewed:
+          type: integer
+        isBanned:
+          type: boolean
+        banReason:
+          type: ["string", "null"]
+        banExpiresAt:
+          type: ["string", "null"]
+        isOnline:
+          type: boolean
+        lastActive:
+          type: ["string", "null"]
+
+    OwnerAnnouncementList:
+      type: object
+      required: [announcements]
+      properties:
+        announcements:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerAnnouncement"
+
+    OwnerAnnouncement:
+      type: object
+      required: [id, type, scope, title, message, priority, isPinned, isDraft, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        scope:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        icon:
+          type: ["string", "null"]
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+        isPinned:
+          type: boolean
+        isDraft:
+          type: boolean
+        expiresAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    OwnerFeedbackList:
+      type: object
+      required: [feedback]
+      properties:
+        feedback:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerFeedback"
+
+    OwnerFeedback:
+      type: object
+      required: [id, type, message, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        userId:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        ownerReply:
+          type: ["string", "null"]
+        ownerRepliedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminActionList:
+      type: object
+      required: [actions]
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminAction"
+
+    AdminAction:
+      type: object
+      required: [id, actorId, action, targetType, targetId, createdAt]
+      properties:
+        id:
+          type: integer
+        actorId:
+          type: string
+        action:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+        details:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time

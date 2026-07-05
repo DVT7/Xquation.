@@ -141,6 +141,133 @@ export interface PlatformStats {
   categoryCount: number;
 }
 
+export type OwnerAnalyticsTopViewedItem = {
+  formulaId: number;
+  views: number;
+};
+
+export type OwnerAnalyticsTopFavoritedItem = {
+  itemId: number;
+  favorites: number;
+};
+
+export type OwnerAnalyticsTopSearchesItem = {
+  query: string;
+  count: number;
+};
+
+export type OwnerAnalyticsFeedback = {
+  total: number;
+  open: number;
+  replied: number;
+};
+
+export interface OwnerAnalytics {
+  totalUsers: number;
+  newUsersToday: number;
+  totalViews: number;
+  totalFavorites: number;
+  totalSearches: number;
+  activeSessionsToday: number;
+  onlineUsers: number;
+  topViewed: OwnerAnalyticsTopViewedItem[];
+  topFavorited: OwnerAnalyticsTopFavoritedItem[];
+  topSearches: OwnerAnalyticsTopSearchesItem[];
+  feedback: OwnerAnalyticsFeedback;
+}
+
+export interface OwnerEnrichedUser {
+  id: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  /** @nullable */
+  profileImageUrl?: string | null;
+  role: string;
+  createdAt: string;
+  favoritesCount: number;
+  formulasViewed: number;
+  isBanned: boolean;
+  /** @nullable */
+  banReason?: string | null;
+  /** @nullable */
+  banExpiresAt?: string | null;
+  isOnline: boolean;
+  /** @nullable */
+  lastActive?: string | null;
+}
+
+export interface OwnerUserList {
+  users: OwnerEnrichedUser[];
+}
+
+export type OwnerAnnouncementPriority = typeof OwnerAnnouncementPriority[keyof typeof OwnerAnnouncementPriority];
+
+
+export const OwnerAnnouncementPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export interface OwnerAnnouncement {
+  id: number;
+  type: string;
+  scope: string;
+  title: string;
+  message: string;
+  /** @nullable */
+  icon?: string | null;
+  priority: OwnerAnnouncementPriority;
+  isPinned: boolean;
+  isDraft: boolean;
+  /** @nullable */
+  expiresAt?: string | null;
+  createdAt: string;
+}
+
+export interface OwnerAnnouncementList {
+  announcements: OwnerAnnouncement[];
+}
+
+export interface OwnerFeedback {
+  id: number;
+  type: string;
+  message: string;
+  /** @nullable */
+  userId?: string | null;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  ownerReply?: string | null;
+  /** @nullable */
+  ownerRepliedAt?: string | null;
+  createdAt: string;
+}
+
+export interface OwnerFeedbackList {
+  feedback: OwnerFeedback[];
+}
+
+export interface AdminAction {
+  id: number;
+  actorId: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  /** @nullable */
+  details?: string | null;
+  createdAt: string;
+}
+
+export interface AdminActionList {
+  actions: AdminAction[];
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
@@ -180,5 +307,52 @@ export type HandleBrowserLoginCallbackParams = {
 code?: string;
 state?: string;
 iss?: string;
+};
+
+export type ListOwnerUsersParams = {
+search?: string;
+role?: string;
+};
+
+export type ChangeUserRoleBodyRole = typeof ChangeUserRoleBodyRole[keyof typeof ChangeUserRoleBodyRole];
+
+
+export const ChangeUserRoleBodyRole = {
+  user: 'user',
+  owner: 'owner',
+} as const;
+
+export type ChangeUserRoleBody = {
+  role: ChangeUserRoleBodyRole;
+};
+
+export type BanUserBody = {
+  reason: string;
+  durationMinutes?: number;
+};
+
+export type CreateAnnouncementBodyPriority = typeof CreateAnnouncementBodyPriority[keyof typeof CreateAnnouncementBodyPriority];
+
+
+export const CreateAnnouncementBodyPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export type CreateAnnouncementBody = {
+  title: string;
+  message: string;
+  type?: string;
+  scope?: string;
+  icon?: string;
+  priority?: CreateAnnouncementBodyPriority;
+  isPinned?: boolean;
+  expiresAt?: string;
+};
+
+export type ReplyToFeedbackBody = {
+  reply: string;
 };
 
