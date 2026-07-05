@@ -231,8 +231,12 @@ interface MenuState {
 export function ReadAloudMenu() {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  const [words, setWords] = useState<string[]>([]);
+  const [highlightIdx, setHighlightIdx] = useState<number>(-1);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastContextTime = useRef<number>(0);
+  const spokenWordCountRef = useRef(0);
+  const spokenTotalWordsRef = useRef(1);
   const { voiceURI, volume, availableVoices } = useAppSettings();
 
   useEffect(() => {
@@ -293,6 +297,14 @@ export function ReadAloudMenu() {
   const speak = () => {
     if (!menu) return;
     const spoken = mathToSpeech(menu.text);
+    const origWords = menu.text.trim().split(/\s+/).filter(Boolean);
+    const spokenWords = spoken.trim().split(/\s+/).filter(Boolean);
+
+    setWords(origWords);
+    setHighlightIdx(-1);
+    spokenWordCountRef.current = 0;
+    spokenTotalWordsRef.current = Math.max(spokenWords.length, 1);
+
     const utt = new SpeechSynthesisUtterance(spoken);
     utt.rate = 0.92;
     utt.volume = volume;
@@ -301,8 +313,24 @@ export function ReadAloudMenu() {
         ?? window.speechSynthesis.getVoices().find(v => v.voiceURI === voiceURI);
       if (voice) utt.voice = voice;
     }
-    utt.onend = () => setSpeaking(false);
-    utt.onerror = () => setSpeaking(false);
+    utt.onboundary = (e) => {
+      if (e.name !== "word") return;
+      const spokenIdx = spokenWordCountRef.current;
+      const origIdx = Math.min(
+        origWords.length - 1,
+        Math.floor((spokenIdx * origWords.length) / spokenTotalWordsRef.current)
+      );
+      setHighlightIdx(origIdx);
+      spokenWordCountRef.current++;
+    };
+    utt.onend = () => {
+      setSpeaking(false);
+      setHighlightIdx(-1);
+    };
+    utt.onerror = () => {
+      setSpeaking(false);
+      setHighlightIdx(-1);
+    };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utt);
     setSpeaking(true);
@@ -312,20 +340,35 @@ export function ReadAloudMenu() {
   const stop = () => {
     window.speechSynthesis?.cancel();
     setSpeaking(false);
+    setHighlightIdx(-1);
+    setWords([]);
   };
 
   return (
     <>
       {speaking && (
-        <div className="fixed bottom-6 right-6 z-[9998] flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg text-sm font-mono animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <Volume2 className="w-4 h-4 animate-pulse" />
-          <span>Reading aloud…</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9998] flex items-center gap-3 bg-card border border-border/70 text-foreground px-4 py-2.5 rounded-2xl shadow-2xl text-sm font-mono animate-in fade-in slide-in-from-bottom-2 duration-200 max-w-[92vw] sm:max-w-[620px]">
+          <Volume2 className="w-4 h-4 text-primary shrink-0 animate-pulse" />
+          <p className="flex-1 overflow-y-auto max-h-24 leading-relaxed">
+            {words.map((w, i) => (
+              <span
+                key={i}
+                className={
+                  i === highlightIdx
+                    ? "bg-sky-400 text-white dark:text-black rounded px-1 transition-colors duration-150"
+                    : "text-foreground/70 transition-colors duration-150"
+                }
+              >
+                {w}{" "}
+              </span>
+            ))}
+          </p>
           <button
             onClick={stop}
-            className="ml-1 hover:opacity-70 transition-opacity"
+            className="shrink-0 hover:opacity-70 transition-opacity"
             aria-label="Stop reading"
           >
-            <Square className="w-3.5 h-3.5 fill-current" />
+            <Square className="w-3.5 h-3.5 fill-current text-red-400" />
           </button>
         </div>
       )}
