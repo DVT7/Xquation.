@@ -220,7 +220,11 @@ export function mathToSpeech(raw: string): string {
   return s.trim();
 }
 
-// ── ReadAloudMenu component ───────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 interface MenuState {
   x: number;
@@ -228,16 +232,21 @@ interface MenuState {
   text: string;
 }
 
+// ── ReadAloudMenu component ───────────────────────────────────────────────────
+
 export function ReadAloudMenu() {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [speaking, setSpeaking] = useState(false);
-  const [words, setWords] = useState<string[]>([]);
-  const [highlightIdx, setHighlightIdx] = useState<number>(-1);
   const menuRef = useRef<HTMLDivElement>(null);
   const lastContextTime = useRef<number>(0);
-  const spokenWordCountRef = useRef(0);
-  const spokenTotalWordsRef = useRef(1);
   const { voiceURI, volume, availableVoices } = useAppSettings();
+
+  // Karaoke DOM-injection refs
+  const restoreRef = useRef<(() => void) | null>(null);
+  const spansRef = useRef<HTMLSpanElement[]>([]);
+  const activeIdxRef = useRef<number>(-1);
+  const spokenCountRef = useRef(0);
+  const totalSpokenRef = useRef(1);
 
   useEffect(() => {
     const tick = setInterval(() => {
@@ -279,8 +288,7 @@ export function ReadAloudMenu() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMenu(null);
-        window.speechSynthesis?.cancel();
-        setSpeaking(false);
+        stop();
       }
     };
 
@@ -294,43 +302,123 @@ export function ReadAloudMenu() {
     };
   }, []);
 
+  // Ensure cleanup if component unmounts while speaking
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+      cleanupDOM();
+    };
+  }, []);
+
+  const cleanupDOM = () => {
+    if (activeIdxRef.current >= 0 && spansRef.current[activeIdxRef.current]) {
+      spansRef.current[activeIdxRef.current].className = "ra-word text-foreground/70";
+    }
+    if (restoreRef.current) {
+      restoreRef.current();
+      restoreRef.current = null;
+    }
+    spansRef.current = [];
+    activeIdxRef.current = -1;
+  };
+
   const speak = () => {
     if (!menu) return;
-    const spoken = mathToSpeech(menu.text);
-    const origWords = menu.text.trim().split(/\s+/).filter(Boolean);
-    const spokenWords = spoken.trim().split(/\s+/).filter(Boolean);
 
-    setWords(origWords);
-    setHighlightIdx(-1);
-    spokenWordCountRef.current = 0;
-    spokenTotalWordsRef.current = Math.max(spokenWords.length, 1);
+    // 1. Grab the live selection range
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+
+    // 2. Find the paragraph / text container to highlight inside
+    let container: Node = range.commonAncestorContainer;
+    if (container.nodeType === Node.TEXT_NODE) {
+      container = (container as Text).parentElement!;
+    }
+    let element = container as HTMLElement;
+    while (
+      element &&
+      element !== document.body &&
+      !/^(P|DIV|SPAN|LI|H[1-6]|BLOCKQUOTE|TD|TH)$/.test(element.tagName)
+    ) {
+      element = element.parentElement!;
+    }
+    if (!element || element === document.body) {
+      element =
+        range.startContainer.nodeType === Node.TEXT_NODE
+          ? ((range.startContainer as Text).parentElement as HTMLElement)
+          : (range.startContainer as HTMLElement);
+    }
+
+    // 3. Snapshot original HTML and inject per-word spans
+    const originalHTML = element.innerHTML;
+    const text = element.textContent || "";
+    const tokens = text.split(/(\s+)/);
+    let wordIdx = 0;
+    const html = tokens
+      .map((token) => {
+        if (/^\s+$/.test(token)) return token;
+        return `<span class="ra-word text-foreground/70" data-idx="${wordIdx++}">${escapeHtml(token)}</span>`;
+      })
+      .join("");
+
+    element.innerHTML = html;
+    const spans = Array.from(
+      element.querySelectorAll("span.ra-word")
+    ) as HTMLSpanElement[];
+
+    restoreRef.current = () => {
+      element.innerHTML = originalHTML;
+    };
+    spansRef.current = spans;
+
+    // 4. Start speech
+    const spoken = mathToSpeech(menu.text);
+    const spokenWords = spoken.trim().split(/\s+/).filter(Boolean);
+    spokenCountRef.current = 0;
+    totalSpokenRef.current = Math.max(spokenWords.length, 1);
+    activeIdxRef.current = -1;
 
     const utt = new SpeechSynthesisUtterance(spoken);
     utt.rate = 0.92;
     utt.volume = volume;
     if (voiceURI) {
-      const voice = availableVoices.find(v => v.voiceURI === voiceURI)
-        ?? window.speechSynthesis.getVoices().find(v => v.voiceURI === voiceURI);
+      const voice =
+        availableVoices.find((v) => v.voiceURI === voiceURI) ??
+        window.speechSynthesis.getVoices().find((v) => v.voiceURI === voiceURI);
       if (voice) utt.voice = voice;
     }
+
     utt.onboundary = (e) => {
       if (e.name !== "word") return;
-      const spokenIdx = spokenWordCountRef.current;
-      const origIdx = Math.min(
-        origWords.length - 1,
-        Math.floor((spokenIdx * origWords.length) / spokenTotalWordsRef.current)
+      const spokenIdx = spokenCountRef.current;
+      const newIdx = Math.min(
+        spans.length - 1,
+        Math.floor((spokenIdx * spans.length) / totalSpokenRef.current)
       );
-      setHighlightIdx(origIdx);
-      spokenWordCountRef.current++;
+
+      // Un-highlight previous
+      if (activeIdxRef.current >= 0 && spans[activeIdxRef.current]) {
+        spans[activeIdxRef.current].className = "ra-word text-foreground/70";
+      }
+      // Highlight current word
+      if (spans[newIdx]) {
+        spans[newIdx].className =
+          "ra-word bg-sky-400 text-white dark:text-black rounded px-1 transition-colors duration-100";
+      }
+      activeIdxRef.current = newIdx;
+      spokenCountRef.current++;
     };
+
     utt.onend = () => {
       setSpeaking(false);
-      setHighlightIdx(-1);
+      cleanupDOM();
     };
     utt.onerror = () => {
       setSpeaking(false);
-      setHighlightIdx(-1);
+      cleanupDOM();
     };
+
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utt);
     setSpeaking(true);
@@ -340,29 +428,16 @@ export function ReadAloudMenu() {
   const stop = () => {
     window.speechSynthesis?.cancel();
     setSpeaking(false);
-    setHighlightIdx(-1);
-    setWords([]);
+    cleanupDOM();
   };
 
   return (
     <>
+      {/* Status pill — no word list, just indicator */}
       {speaking && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9998] flex items-center gap-3 bg-card border border-border/70 text-foreground px-4 py-2.5 rounded-2xl shadow-2xl text-sm font-mono animate-in fade-in slide-in-from-bottom-2 duration-200 max-w-[92vw] sm:max-w-[620px]">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9998] flex items-center gap-3 bg-card border border-border/70 text-foreground px-4 py-2.5 rounded-2xl shadow-2xl text-sm font-mono animate-in fade-in slide-in-from-bottom-2 duration-200">
           <Volume2 className="w-4 h-4 text-primary shrink-0 animate-pulse" />
-          <p className="flex-1 overflow-y-auto max-h-24 leading-relaxed">
-            {words.map((w, i) => (
-              <span
-                key={i}
-                className={
-                  i === highlightIdx
-                    ? "bg-sky-400 text-white dark:text-black rounded px-1 transition-colors duration-150"
-                    : "text-foreground/70 transition-colors duration-150"
-                }
-              >
-                {w}{" "}
-              </span>
-            ))}
-          </p>
+          <span>Reading aloud…</span>
           <button
             onClick={stop}
             className="shrink-0 hover:opacity-70 transition-opacity"
@@ -373,6 +448,7 @@ export function ReadAloudMenu() {
         </div>
       )}
 
+      {/* Context menu */}
       {menu &&
         createPortal(
           <div
@@ -381,9 +457,11 @@ export function ReadAloudMenu() {
             className="fixed z-[9999] bg-card border border-border/70 rounded-xl shadow-2xl overflow-hidden py-1.5 min-w-[190px] animate-in fade-in zoom-in-95 duration-100"
           >
             <div className="px-3 py-1.5 mb-1 border-b border-border/50">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Will say:</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
+                Will say:
+              </p>
               <p className="text-xs text-foreground/80 font-mono leading-snug line-clamp-2">
-                "{mathToSpeech(menu.text)}"
+                &ldquo;{mathToSpeech(menu.text)}&rdquo;
               </p>
             </div>
 
