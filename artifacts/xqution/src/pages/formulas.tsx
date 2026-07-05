@@ -113,9 +113,10 @@ export default function Formulas() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const [, navigate] = useLocation();
   const handleWordClick = useCallback((word: string) => {
-    setSearch(word);
-  }, []);
+    navigate(`/glossary?search=${encodeURIComponent(word)}&match=${encodeURIComponent(word)}`);
+  }, [navigate]);
 
   return (
     <div className="space-y-8 pb-12">

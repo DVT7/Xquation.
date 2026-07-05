@@ -1,5 +1,5 @@
 import { useListGlossaryTerms } from "@workspace/api-client-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,20 +10,29 @@ import { cn } from "@/lib/utils";
 export default function Glossary() {
   const searchParams = new URLSearchParams(window.location.search);
   const matchQuery = searchParams.get("match") || "";
-  const [glowId, setGlowId] = useState<number | null>(null);
+  const initialSearch = searchParams.get("search") || "";
 
-  const [search, setSearch] = useState("");
+  const [glowId, setGlowId] = useState<number | null>(null);
+  const [search, setSearch] = useState(initialSearch);
+  const cardRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
   const { data: terms, isLoading } = useListGlossaryTerms({ search: search || undefined });
 
-  /* glow the card that "matched" from smart search */
+  /* glow + scroll to the card that matched */
   useEffect(() => {
     if (!matchQuery || !terms?.length) return;
     const q = matchQuery.toLowerCase();
     const hit = terms.find(t => t.term.toLowerCase().includes(q) || t.definition.toLowerCase().includes(q));
-    if (hit) {
-      setGlowId(hit.id);
-      setTimeout(() => setGlowId(null), 3200);
-    }
+    if (!hit) return;
+
+    setGlowId(hit.id);
+    setTimeout(() => setGlowId(null), 3500);
+
+    // Scroll after a short tick so the card has rendered
+    setTimeout(() => {
+      const el = cardRefs.current[hit.id];
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
   }, [matchQuery, terms]);
 
   return (
@@ -50,15 +59,17 @@ export default function Glossary() {
           <div className="col-span-full text-center py-12 text-muted-foreground">No terms found.</div>
         ) : (
           terms?.map(term => (
-            <Card key={term.id} className={cn("border-border/50 bg-card hover:border-primary/30 transition-colors", glowId === term.id && "match-glow")}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-3 gap-2">
-                  <h3 className="text-xl font-bold font-mono text-primary">{term.term}</h3>
-                  {term.category && <Badge variant="outline" className="text-[10px] font-mono whitespace-nowrap">{term.category}</Badge>}
-                </div>
-                <p className="text-sm text-foreground/80 leading-relaxed">{term.definition}</p>
-              </CardContent>
-            </Card>
+            <div key={term.id} ref={el => { cardRefs.current[term.id] = el; }}>
+              <Card className={cn("border-border/50 bg-card hover:border-primary/30 transition-colors", glowId === term.id && "match-glow")}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3 gap-2">
+                    <h3 className="text-xl font-bold font-mono text-primary">{term.term}</h3>
+                    {term.category && <Badge variant="outline" className="text-[10px] font-mono whitespace-nowrap">{term.category}</Badge>}
+                  </div>
+                  <p className="text-sm text-foreground/80 leading-relaxed">{term.definition}</p>
+                </CardContent>
+              </Card>
+            </div>
           ))
         )}
       </div>
