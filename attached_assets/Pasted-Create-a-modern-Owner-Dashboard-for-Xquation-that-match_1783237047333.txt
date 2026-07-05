@@ -1,0 +1,191 @@
+Create a modern "Owner Dashboard" for Xquation that matches the website's dark navy blue and cyan theme. The dashboard should only be accessible when the owner clicks the 👑 Owner badge on their profile.
+
+The dashboard should have a professional, glassmorphism-inspired design with smooth animations and be fully responsive for desktop, tablet, and mobile devices.
+
+══════════════════════════════
+📊 Analytics
+══════════════════════════════
+
+Display the following live statistics:
+
+• Total Registered Users
+• Active Users Today
+• Total Formula Views
+• Most Viewed Formulas (Top 5)
+• Most Favorited Formulas (Top 5)
+• Most Searched Terms
+• Average Session Duration
+• New Users Today
+• Returning Users
+• Website Uptime
+• Online Users (Live)
+• Total Favorites
+• Total Searches
+
+══════════════════════════════
+🌍 Interactive World Map
+══════════════════════════════
+
+Replace the visitor list with a fully interactive world map.
+
+Features:
+• Every country should be individually clickable.
+• Hovering over a country highlights it.
+• Clicking a country zooms slightly or highlights it with a cyan glow.
+• Display a side panel showing:
+  - Country Name
+  - Total Registered Users
+  - Active Users
+  - Total Sessions
+  - Percentage of Total Users
+  - Last Active Time
+• Countries with more users should appear with a stronger highlight intensity.
+• Include a legend showing user density.
+• Add a search box to quickly find a country.
+• Include "Reset View" to return to the full map.
+
+══════════════════════════════
+📢 Announcement Center
+══════════════════════════════
+
+Allow the owner to create announcements.
+
+Announcement types:
+
+🌍 Global Announcement
+• Sent to every user.
+• Can optionally pin to the homepage.
+• Optional expiration date.
+• Can include title, message, icon, and priority.
+
+👤 Private Announcement
+• Send to a specific user.
+• Send to selected users.
+• Send to users with a specific role.
+• Include title and message.
+• Mark as unread until viewed.
+
+Include:
+• Announcement history
+• Edit announcements
+• Delete announcements
+• Scheduled announcements
+• Draft announcements
+
+══════════════════════════════
+👥 User Management
+══════════════════════════════
+
+Provide a searchable user management page.
+
+For each user display:
+• Profile Picture
+• Username
+• Email
+• Join Date
+• Last Active
+• Status (Online / Offline)
+• Role
+• Total Favorites
+• Formulas Viewed
+
+Owner actions:
+
+• View Profile
+• Edit User
+• Promote/Demote Roles
+• Reset Password
+• Send Private Announcement
+• Warn User
+
+Ban System:
+• Permanent Ban
+• Temporary Ban
+
+Temporary ban durations:
+• 1 Hour
+• 12 Hours
+• 24 Hours
+• 3 Days
+• 7 Days
+• 14 Days
+• 30 Days
+• Custom Duration
+
+Require a ban reason before confirming.
+
+Display:
+• Ban expiration countdown
+• Ban history
+• Previous warnings
+• Ability to unban users
+
+══════════════════════════════
+📝 Content Management
+══════════════════════════════
+
+Allow the owner to:
+• Add formulas
+• Edit formulas
+• Delete formulas
+• Manage constants
+• Upload diagrams
+• Manage categories
+• Publish drafts
+• Preview pages before publishing
+
+══════════════════════════════
+🐞 Feedback Center
+══════════════════════════════
+
+Users can submit:
+• Bug Reports
+• Feature Requests
+• Suggestions
+
+Owner can:
+• Reply
+• Mark as Fixed
+• Mark as In Progress
+• Close Reports
+• Sort by priority
+
+══════════════════════════════
+📈 Charts
+══════════════════════════════
+
+Include interactive charts for:
+• User Growth
+• Daily Active Users
+• Formula Views
+• Search Activity
+• Favorites Over Time
+
+══════════════════════════════
+⚡ Quick Actions
+══════════════════════════════
+
+Provide quick-access buttons for:
+• Add Formula
+• Add Constant
+• Send Announcement
+• Manage Users
+• View Reports
+• Website Settings
+• Backup Database
+
+══════════════════════════════
+🎨 Design
+══════════════════════════════
+
+Use:
+• Dark navy background
+• Cyan accent colors
+• Rounded cards
+• Glassmorphism effects
+• Smooth transitions
+• Animated counters
+• Modern icons
+• Consistent Xquation branding
+
+The final dashboard should feel like a professional analytics and administration panel used by a large educational platform, while remaining clean, intuitive, and visually impressive.
