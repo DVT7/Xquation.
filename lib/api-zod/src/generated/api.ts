@@ -286,7 +286,12 @@ export const GetCurrentAuthUserResponse = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
   "role": zod.string().optional()
-}),zod.null()])
+}),zod.null()]),
+  "ban": zod.union([zod.object({
+  "reason": zod.string(),
+  "isPermanent": zod.boolean(),
+  "expiresAt": zod.string().nullable()
+}),zod.null()]).optional()
 })
 
 

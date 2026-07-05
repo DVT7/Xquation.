@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import type { AuthUser } from "@workspace/api-client-react";
+import type { AuthUser, BanInfo } from "@workspace/api-client-react";
 
-export type { AuthUser };
+export type { AuthUser, BanInfo };
 
 interface AuthState {
   user: AuthUser | null;
+  ban: BanInfo | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: () => void;
@@ -13,6 +14,7 @@ interface AuthState {
 
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [ban, setBan] = useState<BanInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -21,17 +23,19 @@ export function useAuth(): AuthState {
     fetch("/api/auth/user", { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ user: AuthUser | null }>;
+        return res.json() as Promise<{ user: AuthUser | null; ban?: BanInfo | null }>;
       })
       .then((data) => {
         if (!cancelled) {
           setUser(data.user ?? null);
+          setBan(data.ban ?? null);
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setUser(null);
+          setBan(null);
           setIsLoading(false);
         }
       });
@@ -52,6 +56,7 @@ export function useAuth(): AuthState {
 
   return {
     user,
+    ban,
     isLoading,
     isAuthenticated: !!user,
     login,

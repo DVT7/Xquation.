@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAuth } from "@workspace/replit-auth-web";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReadAloudMenu } from "@/components/ui/read-aloud";
@@ -9,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AppSettingsProvider, useAppSettings } from "@/contexts/app-settings";
 import { LimboEasterEgg } from "@/components/limbo-easter-egg";
 import { SmartSearch } from "@/components/smart-search";
+import { BannedScreen } from "@/components/banned-screen";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -111,20 +113,31 @@ function Router() {
   );
 }
 
+function AppGate() {
+  const { ban, isLoading } = useAuth();
+
+  if (isLoading) return null;
+  if (ban) return <BannedScreen ban={ban} />;
+
+  return (
+    <AppSettingsProvider>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+        <ReadAloudMenu />
+        <LimboEasterEgg />
+        <SmartSearch />
+      </TooltipProvider>
+    </AppSettingsProvider>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppSettingsProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-          <ReadAloudMenu />
-          <LimboEasterEgg />
-          <SmartSearch />
-        </TooltipProvider>
-      </AppSettingsProvider>
+      <AppGate />
     </QueryClientProvider>
   );
 }

@@ -1,0 +1,1 @@
+- [Orval barrel export collisions](orval-barrel-collisions.md) — after every `api-spec codegen` run, check for duplicate `*Body` type/schema re-exports between generated/types and generated/api in @workspace/api-zod.

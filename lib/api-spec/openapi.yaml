@@ -767,6 +767,20 @@ components:
           oneOf:
             - $ref: '#/components/schemas/AuthUser'
             - type: 'null'
+        ban:
+          oneOf:
+            - $ref: '#/components/schemas/BanInfo'
+            - type: 'null'
+    BanInfo:
+      type: object
+      required: [reason, isPermanent, expiresAt]
+      properties:
+        reason:
+          type: string
+        isPermanent:
+          type: boolean
+        expiresAt:
+          type: ["string", "null"]
     MobileTokenExchangeRequest:
       type: object
       required: [code, code_verifier, redirect_uri, state]

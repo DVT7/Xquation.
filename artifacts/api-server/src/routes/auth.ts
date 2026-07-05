@@ -6,7 +6,7 @@ import {
   ExchangeMobileAuthorizationCodeResponse,
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
-import { db, usersTable, favoritesTable } from "@workspace/db";
+import { db, usersTable, favoritesTable, userBansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { SCHWARZSCHILD_ID } from "./favorites";
 import {
@@ -88,10 +88,32 @@ async function upsertUser(claims: Record<string, unknown>) {
   return user;
 }
 
-router.get("/auth/user", (req: Request, res: Response) => {
+router.get("/auth/user", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    res.json(GetCurrentAuthUserResponse.parse({ user: null, ban: null }));
+    return;
+  }
+
+  const [ban] = await db
+    .select()
+    .from(userBansTable)
+    .where(eq(userBansTable.userId, req.user!.id));
+
+  const isBanned =
+    !!ban &&
+    !ban.unbannedAt &&
+    (ban.isPermanent || !ban.expiresAt || ban.expiresAt > new Date());
+
   res.json(
     GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
+      user: req.user,
+      ban: isBanned
+        ? {
+            reason: ban.reason,
+            isPermanent: ban.isPermanent,
+            expiresAt: ban.expiresAt ? ban.expiresAt.toISOString() : null,
+          }
+        : null,
     }),
   );
 });

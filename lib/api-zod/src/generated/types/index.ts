@@ -6,14 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-// Excluded from barrel to avoid name collisions with zod schemas in api.ts:
-// banUserBody, changeUserRoleBody, createAnnouncementBody, replyToFeedbackBody
-
 export * from './adminAction';
 export * from './adminActionList';
 export * from './authorizationSessionHeaderParameter';
 export * from './authUser';
 export * from './authUserEnvelope';
+export * from './banInfo';
 export * from './beginBrowserLoginParams';
 export * from './categoryCount';
 export * from './changeUserRoleBodyRole';

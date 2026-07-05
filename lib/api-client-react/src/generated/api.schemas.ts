@@ -18,8 +18,16 @@ export interface AuthUser {
   role?: string;
 }
 
+export interface BanInfo {
+  reason: string;
+  isPermanent: boolean;
+  /** @nullable */
+  expiresAt: string | null;
+}
+
 export interface AuthUserEnvelope {
   user: AuthUser | null;
+  ban?: BanInfo | null;
 }
 
 export interface MobileTokenExchangeRequest {
