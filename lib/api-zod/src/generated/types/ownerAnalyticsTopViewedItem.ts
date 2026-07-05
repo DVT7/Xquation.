@@ -8,5 +8,6 @@
 
 export type OwnerAnalyticsTopViewedItem = {
   formulaId: number;
+  formulaName: string;
   views: number;
 };

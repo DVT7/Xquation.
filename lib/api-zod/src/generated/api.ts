@@ -405,10 +405,12 @@ export const GetOwnerAnalyticsResponse = zod.object({
   "onlineUsers": zod.number(),
   "topViewed": zod.array(zod.object({
   "formulaId": zod.number(),
+  "formulaName": zod.string(),
   "views": zod.number()
 })),
   "topFavorited": zod.array(zod.object({
   "itemId": zod.number(),
+  "itemName": zod.string(),
   "favorites": zod.number()
 })),
   "topSearches": zod.array(zod.object({

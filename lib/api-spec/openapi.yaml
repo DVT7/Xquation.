@@ -1007,20 +1007,24 @@ components:
           type: array
           items:
             type: object
-            required: [formulaId, views]
+            required: [formulaId, formulaName, views]
             properties:
               formulaId:
                 type: integer
+              formulaName:
+                type: string
               views:
                 type: integer
         topFavorited:
           type: array
           items:
             type: object
-            required: [itemId, favorites]
+            required: [itemId, itemName, favorites]
             properties:
               itemId:
                 type: integer
+              itemName:
+                type: string
               favorites:
                 type: integer
         topSearches:

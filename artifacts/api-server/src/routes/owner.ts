@@ -4,6 +4,7 @@ import {
   usersTable,
   favoritesTable,
   formulaViewsTable,
+  formulasTable,
   searchQueriesTable,
   announcementsTable,
   userBansTable,
@@ -49,17 +50,20 @@ router.get("/owner/analytics", async (req: Request, res: Response): Promise<void
   const topViewed = await db
     .select({
       formulaId: formulaViewsTable.formulaId,
+      formulaName: formulasTable.name,
       views: sql<number>`count(*)::int`,
     })
     .from(formulaViewsTable)
-    .groupBy(formulaViewsTable.formulaId)
+    .innerJoin(formulasTable, eq(formulaViewsTable.formulaId, formulasTable.id))
+    .groupBy(formulaViewsTable.formulaId, formulasTable.name)
     .orderBy(sql`count(*) desc`)
     .limit(5);
 
-  // Top 5 most favorited formulas
+  // Top 5 most favorited items
   const topFavorited = await db
     .select({
       itemId: favoritesTable.itemId,
+      itemName: sql<string>`max(${favoritesTable.itemName})`,
       favorites: sql<number>`count(*)::int`,
     })
     .from(favoritesTable)

@@ -8,5 +8,6 @@
 
 export type OwnerAnalyticsTopFavoritedItem = {
   itemId: number;
+  itemName: string;
   favorites: number;
 };

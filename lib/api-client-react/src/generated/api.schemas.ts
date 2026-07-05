@@ -151,11 +151,13 @@ export interface PlatformStats {
 
 export type OwnerAnalyticsTopViewedItem = {
   formulaId: number;
+  formulaName: string;
   views: number;
 };
 
 export type OwnerAnalyticsTopFavoritedItem = {
   itemId: number;
+  itemName: string;
   favorites: number;
 };
 

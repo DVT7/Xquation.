@@ -184,9 +184,9 @@ export default function OwnerDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <TopListCard title="Top Viewed Formulas" icon={Eye} iconColor="text-primary"
-                  items={analytics?.topViewed?.map(v => ({ label: `Formula #${v.formulaId}`, value: `${v.views} views`, color: "border-primary/20 text-primary" })) ?? []} />
+                  items={analytics?.topViewed?.map(v => ({ label: v.formulaName ?? `Formula #${v.formulaId}`, value: `${v.views} views`, color: "border-primary/20 text-primary" })) ?? []} />
                 <TopListCard title="Top Favorited" icon={Heart} iconColor="text-pink-400"
-                  items={analytics?.topFavorited?.map(v => ({ label: `Item #${v.itemId}`, value: `${v.favorites} favs`, color: "border-pink-400/20 text-pink-400" })) ?? []} />
+                  items={analytics?.topFavorited?.map(v => ({ label: v.itemName ?? `Item #${v.itemId}`, value: `${v.favorites} favs`, color: "border-pink-400/20 text-pink-400" })) ?? []} />
                 <TopListCard title="Top Searches" icon={Search} iconColor="text-yellow-400"
                   items={analytics?.topSearches?.map(v => ({ label: v.query, value: `${v.count}`, color: "border-yellow-400/20 text-yellow-400" })) ?? []} />
               </div>
