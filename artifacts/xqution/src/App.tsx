@@ -11,6 +11,7 @@ import { AppSettingsProvider, useAppSettings } from "@/contexts/app-settings";
 import { LimboEasterEgg } from "@/components/limbo-easter-egg";
 import { SmartSearch } from "@/components/smart-search";
 import { BannedScreen } from "@/components/banned-screen";
+import { AnnouncementToasts } from "@/components/announcement-toasts";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -129,6 +130,7 @@ function AppGate() {
         <ReadAloudMenu />
         <LimboEasterEgg />
         <SmartSearch />
+        <AnnouncementToasts />
       </TooltipProvider>
     </AppSettingsProvider>
   );

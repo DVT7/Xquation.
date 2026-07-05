@@ -487,6 +487,26 @@ export const UnbanUserParams = zod.object({
 
 
 /**
+ * @summary Get active public global announcements
+ */
+export const ListPublicAnnouncementsResponse = zod.object({
+  "announcements": zod.array(zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "scope": zod.string(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "icon": zod.string().nullish(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "isPinned": zod.boolean(),
+  "isDraft": zod.boolean(),
+  "expiresAt": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
  * @summary List all announcements
  */
 export const ListAnnouncementsResponse = zod.object({

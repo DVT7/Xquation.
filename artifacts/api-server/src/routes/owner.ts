@@ -13,7 +13,7 @@ import {
   feedbackTable,
 } from "@workspace/db";
 import {
-  eq, sql, desc, count, gte, isNull,
+  eq, sql, desc, count, gte, isNull, and, or, gt,
 } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -341,6 +341,28 @@ router.delete("/owner/announcements/:id", async (req: Request, res: Response): P
   const { id } = req.params;
   await db.delete(announcementsTable).where(eq(announcementsTable.id, Number(id)));
   res.json({ success: true });
+});
+
+// ── GET /api/announcements (public) ──────────────────────────────────────────────
+router.get("/announcements", async (req: Request, res: Response): Promise<void> => {
+  const now = new Date();
+
+  const rows = await db
+    .select()
+    .from(announcementsTable)
+    .where(
+      and(
+        eq(announcementsTable.type, "global"),
+        eq(announcementsTable.isDraft, false),
+        or(
+          isNull(announcementsTable.expiresAt),
+          gt(announcementsTable.expiresAt, now),
+        ),
+      ),
+    )
+    .orderBy(desc(announcementsTable.isPinned), desc(announcementsTable.createdAt));
+
+  res.json({ announcements: rows });
 });
 
 // ── GET /api/owner/feedback ──────────────────────────────────────────────────

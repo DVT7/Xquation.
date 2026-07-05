@@ -2307,6 +2307,83 @@ export const useUnbanUser = <TError = ErrorType<void>,
       return useMutation(getUnbanUserMutationOptions(options));
     }
 
+export const getListPublicAnnouncementsUrl = () => {
+
+
+
+
+  return `/api/announcements`
+}
+
+/**
+ * @summary Get active public global announcements
+ */
+export const listPublicAnnouncements = async ( options?: RequestInit): Promise<OwnerAnnouncementList> => {
+
+  return customFetch<OwnerAnnouncementList>(getListPublicAnnouncementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicAnnouncementsQueryKey = () => {
+    return [
+    `/api/announcements`
+    ] as const;
+    }
+
+
+export const getListPublicAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicAnnouncementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicAnnouncements>>> = ({ signal }) => listPublicAnnouncements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPublicAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicAnnouncements>>>
+export type ListPublicAnnouncementsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get active public global announcements
+ */
+
+export function useListPublicAnnouncements<TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPublicAnnouncementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getListAnnouncementsUrl = () => {
 
 

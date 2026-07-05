@@ -603,6 +603,18 @@ paths:
         "403":
           description: Forbidden
 
+  /announcements:
+    get:
+      operationId: listPublicAnnouncements
+      tags: [Announcements]
+      summary: Get active public global announcements
+      responses:
+        "200":
+          description: Active global announcements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnerAnnouncementList"
   /owner/announcements:
     get:
       operationId: listAnnouncements
