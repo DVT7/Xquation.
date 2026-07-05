@@ -457,6 +457,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Discord Community */}
+      <section>
+        <a
+          href="https://discord.com/channels/1523311638374256651/1523311639032631307"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/5 hover:bg-[#5865F2]/10 hover:border-[#5865F2]/50 transition-all duration-200 p-5"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#5865F2]/15 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 9a5 5 0 0 0-5-5h-2a5 5 0 0 0-5 5v6a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5V9z"/>
+                <path d="m9 15 6-6"/>
+                <path d="M15 15 9 9"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-foreground">Join our Discord</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Chat with the community, ask questions, and share discoveries.</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-[#5865F2] shrink-0" />
+          </div>
+        </a>
+      </section>
+
       {/* Featured Formulas */}
       <section>
         <h2 className="text-2xl font-bold font-mono tracking-tight mb-6 flex items-center gap-2">
