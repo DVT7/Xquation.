@@ -7,10 +7,10 @@ interface FormulaItem {
   id: number;
   name: string;
   category: string;
-  subcategory: string | null;
-  relatedFormulas: string | null;
-  description: string | null;
-  latex: string | null;
+  subcategory?: string | null;
+  relatedFormulas?: string | null;
+  description?: string | null;
+  latex?: string | null;
 }
 
 interface ConstantItem {
@@ -18,8 +18,8 @@ interface ConstantItem {
   name: string;
   symbol: string;
   value: string;
-  units: string | null;
-  category: string | null;
+  units?: string | null;
+  category?: string | null;
 }
 
 export interface MatchedFormula {

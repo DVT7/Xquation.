@@ -438,19 +438,52 @@ export default function FormulaDetail() {
   const related = FORMULA_RELATED[id];
   const problems = [...(FORMULA_PROBLEMS[id] ?? [])].sort((a, b) => a.difficulty - b.difficulty);
 
-  const relatedConstantObjs = useMemo(
-    () => (allConstants ?? []).filter(c => related?.constantIds.includes(c.id)),
+  // ── Curated related formulas (from DB field) ──────────────────────────────
+  const curatedFormulaObjs = useMemo(() => {
+    if (!formula?.relatedFormulas) return [];
+    const names = formula.relatedFormulas.split(",").map(s => s.trim()).filter(Boolean);
+    return names
+      .map(name => ({ formula: sortedAll.find(f => f.name.toLowerCase().includes(name.toLowerCase())), isAutoMatched: false }))
+      .filter((x): x is { formula: NonNullable<typeof x.formula>; isAutoMatched: false } => !!x.formula);
+  }, [formula, sortedAll]);
+
+  // ── Matchmade related formulas (padded in when curated list is short) ─────
+  const relatedFormulaObjs = useMemo(() => {
+    const curatedIds = new Set(curatedFormulaObjs.map(x => x.formula.id));
+    const auto = matchRelatedFormulas(id, sortedAll, 8)
+      .filter(m => !curatedIds.has(m.formula.id))
+      .slice(0, Math.max(0, 6 - curatedFormulaObjs.length))
+      .map(m => ({ formula: m.formula, isAutoMatched: true }));
+    return [...curatedFormulaObjs, ...auto];
+  }, [id, sortedAll, curatedFormulaObjs]);
+
+  // ── Curated constants (from FORMULA_RELATED map) ──────────────────────────
+  const curatedConstantObjs = useMemo(
+    () => (allConstants ?? []).filter(c => related?.constantIds.includes(c.id)).map(c => ({ constant: c, isAutoMatched: false })),
     [allConstants, related]
   );
 
-  const relatedFormulaObjs = useMemo(() => {
-    if (!formula?.relatedFormulas) return [];
-    const names = formula.relatedFormulas.split(",").map(s => s.trim()).filter(Boolean);
-    return names.map(name => ({
-      name,
-      formula: sortedAll.find(f => f.name.toLowerCase().includes(name.toLowerCase())),
-    }));
-  }, [formula, sortedAll]);
+  // ── Matchmade constants (padded in when curated list is short) ────────────
+  const relatedConstantObjs = useMemo(() => {
+    const curatedIds = new Set(curatedConstantObjs.map(x => x.constant.id));
+    const auto = matchRelatedConstants(id, sortedAll, allConstants ?? [], 8)
+      .filter(m => !curatedIds.has(m.constant.id))
+      .slice(0, Math.max(0, 4 - curatedConstantObjs.length))
+      .map(m => ({ constant: m.constant, isAutoMatched: true }));
+    return [...curatedConstantObjs, ...auto];
+  }, [id, sortedAll, allConstants, curatedConstantObjs]);
+
+  // ── Matchmade topics (augment curated list) ───────────────────────────────
+  const allTopics = useMemo(() => {
+    const curated = related?.topics ?? [];
+    const curatedSet = new Set(curated);
+    const auto = matchRelatedTopics(id, sortedAll, 8)
+      .filter(m => !curatedSet.has(m.topic))
+      .slice(0, Math.max(0, 8 - curated.length))
+      .map(m => ({ topic: m.topic, isAutoMatched: true }));
+    const curatedItems = curated.map(t => ({ topic: t, isAutoMatched: false }));
+    return [...curatedItems, ...auto];
+  }, [id, sortedAll, related]);
 
   const derivationFormulaObjs = useMemo(() => {
     if (!related?.derivationFormulaNames) return [];
@@ -564,21 +597,29 @@ export default function FormulaDetail() {
             <FlaskConical className="w-5 h-5 text-primary" /> Related Formulas
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {relatedFormulaObjs.map(({ name, formula: rf }) =>
-              rf ? (
-                <Link key={name} href={`/formulas/${rf.id}`}>
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer">
-                    <div>
-                      <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{rf.name}</div>
-                      <div className="text-xs font-mono text-muted-foreground mt-0.5">{rf.category}</div>
+            {relatedFormulaObjs.map(({ formula: rf, isAutoMatched }) => (
+              <Link key={rf.id} href={`/formulas/${rf.id}`}>
+                <div className={cn(
+                  "flex items-center justify-between p-3 rounded-lg border transition-all group cursor-pointer",
+                  isAutoMatched
+                    ? "border-dashed border-border/40 bg-card/60 hover:border-primary/40 hover:bg-primary/5"
+                    : "border-border/50 bg-card hover:border-primary/50 hover:bg-primary/5"
+                )}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{rf.name}</span>
+                      {isAutoMatched && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-mono text-primary/50 bg-primary/5 border border-primary/15 px-1.5 py-0.5 rounded-full shrink-0">
+                          <Sparkles className="w-2.5 h-2.5" /> Similar
+                        </span>
+                      )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <div className="text-xs font-mono text-muted-foreground mt-0.5">{rf.category}</div>
                   </div>
-                </Link>
-              ) : (
-                <div key={name} className="p-3 rounded-lg border border-border/30 bg-card/50 text-sm text-muted-foreground">{name}</div>
-              )
-            )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-2" />
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       )}
@@ -590,14 +631,26 @@ export default function FormulaDetail() {
             <Atom className="w-5 h-5 text-[#FFD700]" /> Related Constants
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {relatedConstantObjs.map(c => (
+            {relatedConstantObjs.map(({ constant: c, isAutoMatched }) => (
               <Link key={c.id} href={`/constants?search=${encodeURIComponent(c.name)}`}>
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-[#FFD700]/20 bg-[#FFD700]/5 hover:border-[#FFD700]/50 hover:bg-[#FFD700]/10 transition-all cursor-pointer group">
+                <div className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer group",
+                  isAutoMatched
+                    ? "border-dashed border-[#FFD700]/15 bg-[#FFD700]/3 hover:border-[#FFD700]/40 hover:bg-[#FFD700]/8"
+                    : "border-[#FFD700]/20 bg-[#FFD700]/5 hover:border-[#FFD700]/50 hover:bg-[#FFD700]/10"
+                )}>
                   <div className="w-10 h-10 rounded-md bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center shrink-0">
                     <span className="font-mono font-bold text-[#FFD700] text-sm">{c.symbol}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-foreground group-hover:text-[#FFD700] transition-colors truncate">{c.name}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-foreground group-hover:text-[#FFD700] transition-colors truncate">{c.name}</span>
+                      {isAutoMatched && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-mono text-[#FFD700]/50 bg-[#FFD700]/5 border border-[#FFD700]/15 px-1.5 py-0.5 rounded-full shrink-0">
+                          <Sparkles className="w-2.5 h-2.5" /> Similar
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs font-mono text-muted-foreground truncate">{c.value} {c.units}</div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-[#FFD700] transition-colors shrink-0" />
@@ -609,15 +662,21 @@ export default function FormulaDetail() {
       )}
 
       {/* ── 8. Related Topics ─────────────────────────────────────────── */}
-      {related?.topics && related.topics.length > 0 && (
+      {allTopics.length > 0 && (
         <div>
           <h2 className="text-xl font-bold font-mono mb-4 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" /> Related Topics
           </h2>
           <div className="flex flex-wrap gap-2">
-            {related.topics.map(topic => (
+            {allTopics.map(({ topic, isAutoMatched }) => (
               <Link key={topic} href={`/glossary?search=${encodeURIComponent(topic)}`}>
-                <div className="px-3 py-1.5 rounded-full border border-border/50 bg-card text-sm font-mono text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all cursor-pointer">
+                <div className={cn(
+                  "px-3 py-1.5 rounded-full border text-sm font-mono transition-all cursor-pointer flex items-center gap-1",
+                  isAutoMatched
+                    ? "border-dashed border-border/30 bg-card/60 text-muted-foreground/70 hover:border-primary/40 hover:text-primary/80 hover:bg-primary/5"
+                    : "border-border/50 bg-card text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5"
+                )}>
+                  {isAutoMatched && <Sparkles className="w-3 h-3 text-primary/40 shrink-0" />}
                   {topic}
                 </div>
               </Link>
