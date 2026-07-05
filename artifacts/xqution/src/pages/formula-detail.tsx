@@ -21,8 +21,13 @@ import { SymbolCards } from "@/components/formula/symbol-cards";
 import {
   Star, Copy, Check, ChevronLeft, ChevronRight, ArrowUp,
   RotateCcw, ChevronDown, ChevronUp, Lightbulb, BookOpen,
-  FlaskConical, Calculator, Atom, LogIn,
+  FlaskConical, Calculator, Atom, LogIn, Sparkles,
 } from "lucide-react";
+import {
+  matchRelatedFormulas,
+  matchRelatedConstants,
+  matchRelatedTopics,
+} from "@/lib/formula-matchmaking";
 import { CALCULATORS, type SolveMode } from "@/lib/formula-calculators";
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
 import { FORMULA_RELATED } from "@/lib/formula-related";
