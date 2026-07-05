@@ -312,7 +312,9 @@ export function ReadAloudMenu() {
 
   const cleanupDOM = () => {
     if (activeIdxRef.current >= 0 && spansRef.current[activeIdxRef.current]) {
-      spansRef.current[activeIdxRef.current].className = "ra-word text-foreground/70";
+      const el = spansRef.current[activeIdxRef.current];
+      el.style.cssText = "";
+      el.className = "ra-word";
     }
     if (restoreRef.current) {
       restoreRef.current();
@@ -358,7 +360,7 @@ export function ReadAloudMenu() {
     const html = tokens
       .map((token) => {
         if (/^\s+$/.test(token)) return token;
-        return `<span class="ra-word text-foreground/70" data-idx="${wordIdx++}">${escapeHtml(token)}</span>`;
+        return `<span class="ra-word" style="color:inherit;" data-idx="${wordIdx++}">${escapeHtml(token)}</span>`;
       })
       .join("");
 
@@ -399,12 +401,18 @@ export function ReadAloudMenu() {
 
       // Un-highlight previous
       if (activeIdxRef.current >= 0 && spans[activeIdxRef.current]) {
-        spans[activeIdxRef.current].className = "ra-word text-foreground/70";
+        const prev = spans[activeIdxRef.current];
+        prev.style.cssText = "";
+        prev.className = "ra-word";
       }
-      // Highlight current word
+      // Highlight current word — use inline styles so colors work regardless
+      // of Tailwind v4 dark variant scoping on dynamically injected elements
       if (spans[newIdx]) {
-        spans[newIdx].className =
-          "ra-word bg-sky-400 text-white dark:text-black rounded px-1 transition-colors duration-100";
+        const curr = spans[newIdx];
+        const isDark = document.documentElement.classList.contains("dark");
+        curr.style.cssText =
+          "background:#38bdf8;color:" + (isDark ? "#000000" : "#ffffff") +
+          ";border-radius:4px;padding:0 4px;transition:background 100ms,color 100ms;";
       }
       activeIdxRef.current = newIdx;
       spokenCountRef.current++;
