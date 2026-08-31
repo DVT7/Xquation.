@@ -13,6 +13,7 @@ export const formulasTable = pgTable("formulas", {
   siUnits: text("si_units"),
   example: text("example"),
   relatedFormulas: text("related_formulas"),
+  calculator: text("calculator"),
   isFeatured: boolean("is_featured").notNull().default(false),
 });
 

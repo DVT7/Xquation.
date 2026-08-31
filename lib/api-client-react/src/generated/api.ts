@@ -28,6 +28,7 @@ import type {
   ChangeUserRoleBody,
   Constant,
   CreateAnnouncementBody,
+  CreateFormulaBody,
   ErrorEnvelope,
   Favorite,
   FavoriteInput,
@@ -305,6 +306,77 @@ export function useGetFormula<TData = Awaited<ReturnType<typeof getFormula>>, TE
 
 
 
+
+export const getCreateOwnerFormulaUrl = () => {
+
+
+
+
+  return `/api/owner/formulas`
+}
+
+/**
+ * @summary Create a formula
+ */
+export const createOwnerFormula = async (createFormulaBody: CreateFormulaBody, options?: RequestInit): Promise<Formula> => {
+
+  return customFetch<Formula>(getCreateOwnerFormulaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createFormulaBody,)
+  }
+);}
+
+
+
+
+export const getCreateOwnerFormulaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOwnerFormula>>, TError,{data: BodyType<CreateFormulaBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createOwnerFormula>>, TError,{data: BodyType<CreateFormulaBody>}, TContext> => {
+
+const mutationKey = ['createOwnerFormula'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createOwnerFormula>>, {data: BodyType<CreateFormulaBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createOwnerFormula(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateOwnerFormulaMutationResult = NonNullable<Awaited<ReturnType<typeof createOwnerFormula>>>
+    export type CreateOwnerFormulaMutationBody = BodyType<CreateFormulaBody>
+    export type CreateOwnerFormulaMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a formula
+ */
+export const useCreateOwnerFormula = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOwnerFormula>>, TError,{data: BodyType<CreateFormulaBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createOwnerFormula>>,
+        TError,
+        {data: BodyType<CreateFormulaBody>},
+        TContext
+      > => {
+      return useMutation(getCreateOwnerFormulaMutationOptions(options));
+    }
 
 export const getListFormulaCategoriesUrl = () => {
 

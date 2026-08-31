@@ -36,6 +36,7 @@ export const ListFormulasResponseItem = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })
 export const ListFormulasResponse = zod.array(ListFormulasResponseItem)
@@ -59,7 +60,33 @@ export const GetFormulaResponse = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Create a formula
+ */
+
+
+
+
+export const createOwnerFormulaBodyVariablesDefault = ``;
+export const createOwnerFormulaBodyIsFeaturedDefault = false;
+
+export const CreateOwnerFormulaBody = zod.object({
+  "name": zod.string().min(1),
+  "category": zod.string().min(1),
+  "subcategory": zod.string().nullish(),
+  "latex": zod.string().min(1),
+  "description": zod.string().min(1),
+  "variables": zod.string().default(createOwnerFormulaBodyVariablesDefault),
+  "siUnits": zod.string().nullish(),
+  "example": zod.string().nullish(),
+  "relatedFormulas": zod.string().nullish(),
+  "calculator": zod.string().nullish().describe('JSON definition for the safe interactive calculator'),
+  "isFeatured": zod.boolean().default(createOwnerFormulaBodyIsFeaturedDefault)
 })
 
 
@@ -230,6 +257,7 @@ export const GlobalSearchResponse = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })),
   "constants": zod.array(zod.object({
@@ -387,6 +415,7 @@ export const ListFeaturedFormulasResponseItem = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })
 export const ListFeaturedFormulasResponse = zod.array(ListFeaturedFormulasResponseItem)

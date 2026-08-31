@@ -44,17 +44,24 @@ export function Sidebar() {
       {NAV_ITEMS.map((item) => {
         const isActive = location.startsWith(item.href);
         return (
-          <Link key={item.href} href={item.href} className="block">
-            <div className={cn(
-              "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm",
-              isActive 
-                ? "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]" 
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-              <item.icon className={cn("w-5 h-5 mr-3", isActive ? "text-primary" : "text-muted-foreground")} />
-              {item.label}
-            </div>
-          </Link>
+          <div key={item.href}>
+            {item.href === "/donate" && (
+              <div className="mb-2 rounded-md border border-red-500/50 bg-red-500/15 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider text-red-400">
+                Not available
+              </div>
+            )}
+            <Link href={item.href} className="block">
+              <div className={cn(
+                "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm",
+                isActive 
+                  ? "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]" 
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}>
+                <item.icon className={cn("w-5 h-5 mr-3", isActive ? "text-primary" : "text-muted-foreground")} />
+                {item.label}
+              </div>
+            </Link>
+          </div>
         );
       })}
     </nav>

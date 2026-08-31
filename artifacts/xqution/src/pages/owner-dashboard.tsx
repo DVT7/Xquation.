@@ -23,10 +23,11 @@ import {
   type OwnerFeedback,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { FormulaBuilder } from "@/components/formula/formula-builder";
 import {
   Crown, Users, Eye, Heart, Search, MessageSquare, Shield,
   Megaphone, Activity, Ban, CheckCircle, BarChart3, Send,
-  Trash2, Reply,
+  Trash2, Reply, SquarePen,
 } from "lucide-react";
 
 export default function OwnerDashboard() {
@@ -159,7 +160,21 @@ export default function OwnerDashboard() {
           <TabsTrigger value="feedback" className="gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" /> Feedback
           </TabsTrigger>
+          <TabsTrigger value="formula-builder" className="gap-1.5">
+            <SquarePen className="w-3.5 h-3.5" /> Formula Builder
+          </TabsTrigger>
         </TabsList>
+
+        {/* FORMULA BUILDER */}
+        <TabsContent value="formula-builder" className="space-y-4 mt-4">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <p className="text-sm font-semibold text-primary">Create a formula page yourself</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Paste the equation, describe its symbols, and optionally add a working calculator. Your saved page is immediately available in the formula library.
+            </p>
+          </div>
+          <FormulaBuilder />
+        </TabsContent>
 
         {/* ANALYTICS */}
         <TabsContent value="analytics" className="space-y-6 mt-4">

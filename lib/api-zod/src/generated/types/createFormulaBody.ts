@@ -6,13 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Formula {
-  id: number;
+export interface CreateFormulaBody {
+  /** @minLength 1 */
   name: string;
+  /** @minLength 1 */
   category: string;
   /** @nullable */
   subcategory?: string | null;
+  /** @minLength 1 */
   latex: string;
+  /** @minLength 1 */
   description: string;
   variables?: string;
   /** @nullable */
@@ -21,7 +24,10 @@ export interface Formula {
   example?: string | null;
   /** @nullable */
   relatedFormulas?: string | null;
-  /** @nullable */
+  /**
+     * JSON definition for the safe interactive calculator
+     * @nullable
+     */
   calculator?: string | null;
   isFeatured?: boolean;
 }

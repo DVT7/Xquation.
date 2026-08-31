@@ -11,12 +11,60 @@ import {
   userSessionsTable,
   adminActionsTable,
   feedbackTable,
+  insertFormulaSchema,
 } from "@workspace/db";
 import {
   eq, sql, desc, count, gte, isNull, and, or, gt,
 } from "drizzle-orm";
 
 const router: IRouter = Router();
+
+// ── POST /api/owner/formulas ─────────────────────────────────────────────────────
+router.post("/owner/formulas", async (req: Request, res: Response): Promise<void> => {
+  if (!req.isAuthenticated() || req.user!.role !== "owner") {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const parsed = insertFormulaSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Please provide a name, category, LaTeX formula, and description." });
+    return;
+  }
+
+  const data = parsed.data;
+  if (data.calculator) {
+    if (data.calculator.length > 50_000) {
+      res.status(400).json({ error: "Calculator definition is too large." });
+      return;
+    }
+    try {
+      const calculator = JSON.parse(data.calculator) as Record<string, unknown>;
+      if (
+        !calculator ||
+        typeof calculator !== "object" ||
+        typeof calculator.expression !== "string" ||
+        !Array.isArray(calculator.inputs)
+      ) {
+        res.status(400).json({ error: "Calculator definition is invalid." });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: "Calculator definition must be valid JSON." });
+      return;
+    }
+  }
+
+  const [formula] = await db.insert(formulasTable).values(data).returning();
+
+  await db.insert(adminActionsTable).values({
+    adminId: req.user!.id,
+    action: "create_formula",
+    details: { formulaId: formula.id, formulaName: formula.name },
+  });
+
+  res.status(201).json(formula);
+});
 
 // ── GET /api/owner/analytics ────────────────────────────────────────────────────
 router.get("/owner/analytics", async (req: Request, res: Response): Promise<void> => {

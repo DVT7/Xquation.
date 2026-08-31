@@ -101,6 +101,9 @@ const CONTEXT_VAR_OVERRIDES: Record<string, RegExp> = {
 
 function symType(sym: string, desc: string, isFirst: boolean): 'answer' | 'variable' | 'constant' {
   if (isFirst) return 'answer';
+  const explicitType = desc.match(/\[(constant|variable)\]/i)?.[1].toLowerCase();
+  if (explicitType === 'constant') return 'constant';
+  if (explicitType === 'variable') return 'variable';
   if (KNOWN_CONST_SET.has(sym)) {
     // Allow a context override: if the description clearly names it a variable
     // quantity (e.g. "height"), treat it as a variable for this formula.

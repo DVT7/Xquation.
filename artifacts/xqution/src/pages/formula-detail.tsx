@@ -28,7 +28,7 @@ import {
   matchRelatedConstants,
   matchRelatedTopics,
 } from "@/lib/formula-matchmaking";
-import { CALCULATORS, type SolveMode } from "@/lib/formula-calculators";
+import { CALCULATORS, parseStoredCalculator, type SolveMode } from "@/lib/formula-calculators";
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
 import { FORMULA_RELATED } from "@/lib/formula-related";
 import { FORMULA_PROBLEMS, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from "@/lib/formula-problems";
@@ -36,8 +36,16 @@ import { cn } from "@/lib/utils";
 
 /* ─── Inline Calculator ──────────────────────────────────────────────────── */
 
-function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLatex?: string }) {
-  const config = CALCULATORS[formulaId];
+function FormulaCalc({
+  formulaId,
+  formulaLatex,
+  calculator,
+}: {
+  formulaId: number;
+  formulaLatex?: string;
+  calculator?: string | null;
+}) {
+  const config = CALCULATORS[formulaId] ?? parseStoredCalculator(calculator);
 
   // Build a unified modes list: index 0 = default, rest = solveModes
   const modes: Array<{
@@ -62,6 +70,7 @@ function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLa
   const [result, setResult] = useState<number | null>(null);
   const [steps, setSteps] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | null>(null);
 
   if (!config) return (
     <p className="text-center py-8 text-muted-foreground text-sm italic">
@@ -76,6 +85,7 @@ function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLa
     setInputs(Object.fromEntries(m.inputs.map(f => [f.key, f.default ?? ""])));
     setResult(null);
     setSteps([]);
+    setCalculationError(null);
   };
 
   const numeric = Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, parseFloat(v)]));
@@ -83,14 +93,23 @@ function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLa
 
   const calculate = () => {
     if (!allFilled) return;
-    const r = activeMode.calculate(numeric);
-    setResult(r);
-    setSteps(activeMode.steps(numeric, r));
+    try {
+      const r = activeMode.calculate(numeric);
+      if (!Number.isFinite(r)) throw new Error("This combination of values has no finite result.");
+      setResult(r);
+      setSteps(activeMode.steps(numeric, r));
+      setCalculationError(null);
+    } catch {
+      setResult(null);
+      setSteps([]);
+      setCalculationError("Check the values and try again.");
+    }
   };
 
   const reset = () => {
     setInputs(Object.fromEntries(activeMode.inputs.map(f => [f.key, f.default ?? ""])));
     setResult(null); setSteps([]);
+    setCalculationError(null);
   };
 
   const fmt = (n: number) =>
@@ -98,7 +117,7 @@ function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLa
     : Math.abs(n) > 1e6 || (Math.abs(n) < 1e-3 && n !== 0) ? n.toExponential(4)
     : n.toPrecision(5);
 
-  const displayLatex = activeMode.latex;
+  const displayLatex = activeMode.latex ?? config.formulaLatex;
 
   return (
     <div className="space-y-5">
@@ -151,6 +170,12 @@ function FormulaCalc({ formulaId, formulaLatex }: { formulaId: number; formulaLa
         </Button>
         <Button variant="outline" size="icon" onClick={reset} title="Reset"><RotateCcw className="w-4 h-4" /></Button>
       </div>
+
+      {calculationError && (
+        <p className="text-sm text-red-400 border border-red-400/20 bg-red-400/5 rounded-lg px-3 py-2">
+          {calculationError}
+        </p>
+      )}
 
       {result !== null && (
         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -583,12 +608,26 @@ export default function FormulaDetail() {
           <CardDescription>Enter known values to calculate the result with step-by-step working.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <FormulaCalc formulaId={id} formulaLatex={formula.latex} />
+          <FormulaCalc formulaId={id} formulaLatex={formula.latex} calculator={formula.calculator} />
         </CardContent>
       </Card>
 
       {/* ── 5. Worked Example ─────────────────────────────────────────── */}
       <WorkedExampleSection formulaId={id} latex={formula.latex} variables={formula.variables} />
+
+      {formula.example && (
+        <Card className="border-border/50 bg-card">
+          <CardHeader className="border-b border-border/50 pb-4">
+            <CardTitle className="text-lg font-mono flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" /> Example
+            </CardTitle>
+            <CardDescription>A practical note or example for using this formula.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{formula.example}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── 6. Related Formulas ───────────────────────────────────────── */}
       {relatedFormulaObjs.length > 0 && (

@@ -90,6 +90,29 @@ paths:
         "404":
           description: Not found
 
+  /owner/formulas:
+    post:
+      operationId: createOwnerFormula
+      tags: [owner]
+      summary: Create a formula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFormulaBody"
+      responses:
+        "201":
+          description: Created formula
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+        "400":
+          description: Invalid formula
+        "403":
+          description: Owner access required
+
   /formulas/categories:
     get:
       operationId: listFormulaCategories
@@ -872,8 +895,44 @@ components:
           type: ["string", "null"]
         relatedFormulas:
           type: ["string", "null"]
+        calculator:
+          type: ["string", "null"]
         isFeatured:
           type: boolean
+
+    CreateFormulaBody:
+      type: object
+      required: [name, category, latex, description]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          minLength: 1
+        subcategory:
+          type: ["string", "null"]
+        latex:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        variables:
+          type: string
+          default: ""
+        siUnits:
+          type: ["string", "null"]
+        example:
+          type: ["string", "null"]
+        relatedFormulas:
+          type: ["string", "null"]
+        calculator:
+          type: ["string", "null"]
+          description: JSON definition for the safe interactive calculator
+        isFeatured:
+          type: boolean
+          default: false
 
     Constant:
       type: object

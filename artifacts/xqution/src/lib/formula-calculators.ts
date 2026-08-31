@@ -22,6 +22,195 @@ export interface CalcConfig {
   calculate: (v: Record<string, number>) => number;
   steps: (v: Record<string, number>, r: number) => string[];
   solveModes?: SolveMode[];
+  formulaLatex?: string;
+}
+
+export interface StoredCalculatorInput extends CalcField {}
+
+export interface StoredCalculatorDefinition {
+  formulaLatex?: string;
+  outputLabel: string;
+  outputUnit: string;
+  expression: string;
+  inputs: StoredCalculatorInput[];
+}
+
+type ExpressionToken = { kind: "number" | "identifier" | "operator" | "paren" | "comma"; value: string };
+
+function tokenizeExpression(expression: string): ExpressionToken[] {
+  const tokens: ExpressionToken[] = [];
+  let i = 0;
+  while (i < expression.length) {
+    const char = expression[i];
+    if (/\s/.test(char)) {
+      i++;
+      continue;
+    }
+    if (/[0-9.]/.test(char)) {
+      const match = expression.slice(i).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i);
+      if (!match) throw new Error("Invalid number");
+      tokens.push({ kind: "number", value: match[0] });
+      i += match[0].length;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(char)) {
+      const match = expression.slice(i).match(/^[A-Za-z_][A-Za-z0-9_]*/);
+      if (!match) throw new Error("Invalid variable");
+      tokens.push({ kind: "identifier", value: match[0] });
+      i += match[0].length;
+      continue;
+    }
+    if ("+-*/^".includes(char)) {
+      tokens.push({ kind: "operator", value: char });
+      i++;
+      continue;
+    }
+    if (char === "(" || char === ")") {
+      tokens.push({ kind: "paren", value: char });
+      i++;
+      continue;
+    }
+    if (char === ",") {
+      tokens.push({ kind: "comma", value: char });
+      i++;
+      continue;
+    }
+    throw new Error("Unsupported character");
+  }
+  return tokens;
+}
+
+function evaluateExpression(expression: string, values: Record<string, number>): number {
+  const tokens = tokenizeExpression(expression);
+  let position = 0;
+  const peek = () => tokens[position];
+  const take = () => tokens[position++];
+
+  const parseAddSub = (): number => {
+    let value = parseMulDiv();
+    while (peek()?.kind === "operator" && (peek()?.value === "+" || peek()?.value === "-")) {
+      const operator = take().value;
+      const right = parseMulDiv();
+      value = operator === "+" ? value + right : value - right;
+    }
+    return value;
+  };
+
+  const parseMulDiv = (): number => {
+    let value = parsePower();
+    while (peek()?.kind === "operator" && (peek()?.value === "*" || peek()?.value === "/")) {
+      const operator = take().value;
+      const right = parsePower();
+      value = operator === "*" ? value * right : value / right;
+    }
+    return value;
+  };
+
+  const parsePower = (): number => {
+    const left = parseUnary();
+    if (peek()?.kind === "operator" && peek()?.value === "^") {
+      take();
+      return Math.pow(left, parsePower());
+    }
+    return left;
+  };
+
+  const parseUnary = (): number => {
+    if (peek()?.kind === "operator" && (peek()?.value === "+" || peek()?.value === "-")) {
+      const operator = take().value;
+      const value = parseUnary();
+      return operator === "-" ? -value : value;
+    }
+    return parsePrimary();
+  };
+
+  const parsePrimary = (): number => {
+    const token = take();
+    if (!token) throw new Error("Incomplete expression");
+    if (token.kind === "number") return Number(token.value);
+    if (token.kind === "paren" && token.value === "(") {
+      const value = parseAddSub();
+      const closing = take();
+      if (!closing || closing.value !== ")") throw new Error("Missing closing parenthesis");
+      return value;
+    }
+    if (token.kind === "identifier") {
+      if (peek()?.kind === "paren" && peek()?.value === "(") {
+        take();
+        const argument = parseAddSub();
+        const closing = take();
+        if (!closing || closing.value !== ")") throw new Error("Missing function parenthesis");
+        const functions: Record<string, (n: number) => number> = {
+          abs: Math.abs,
+          cos: Math.cos,
+          exp: Math.exp,
+          ln: Math.log,
+          log: Math.log10,
+          sin: Math.sin,
+          sqrt: Math.sqrt,
+          tan: Math.tan,
+        };
+        const fn = functions[token.value.toLowerCase()];
+        if (!fn) throw new Error("Unsupported function");
+        return fn(argument);
+      }
+      if (token.value.toLowerCase() === "pi") return Math.PI;
+      if (token.value.toLowerCase() === "e") return Math.E;
+      if (!(token.value in values)) throw new Error(`Missing value for ${token.value}`);
+      return values[token.value];
+    }
+    throw new Error("Invalid expression");
+  };
+
+  const result = parseAddSub();
+  if (position !== tokens.length || !Number.isFinite(result)) throw new Error("Expression could not be calculated");
+  return result;
+}
+
+export function parseStoredCalculator(raw?: string | null): CalcConfig | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as Partial<StoredCalculatorDefinition>;
+    if (
+      typeof parsed.expression !== "string" ||
+      !parsed.expression.trim() ||
+      typeof parsed.outputLabel !== "string" ||
+      typeof parsed.outputUnit !== "string" ||
+      !Array.isArray(parsed.inputs) ||
+      parsed.inputs.length === 0 ||
+      parsed.inputs.length > 12
+    ) return undefined;
+
+    const inputs = parsed.inputs.filter((input): input is StoredCalculatorInput =>
+      !!input &&
+      typeof input === "object" &&
+      typeof input.key === "string" &&
+      /^[A-Za-z_][A-Za-z0-9_]*$/.test(input.key) &&
+      typeof input.label === "string" &&
+      typeof input.unit === "string" &&
+      (input.default === undefined || typeof input.default === "string")
+    );
+    if (inputs.length !== parsed.inputs.length || new Set(inputs.map(input => input.key)).size !== inputs.length) return undefined;
+
+    const expression = parsed.expression.trim();
+    // Parse once so an invalid expression is rejected before it reaches the UI.
+    tokenizeExpression(expression);
+    const outputUnit = parsed.outputUnit.trim();
+    return {
+      inputs,
+      outputLabel: parsed.outputLabel.trim() || "Result",
+      outputUnit,
+      formulaLatex: typeof parsed.formulaLatex === "string" ? parsed.formulaLatex : undefined,
+      calculate: (values) => evaluateExpression(expression, values),
+      steps: (values, result) => [
+        `Result = ${expression}`,
+        `${expression} = ${inputs.map(input => `${input.key}: ${values[input.key]}`).join(", ")}`,
+        `Result = ${result.toPrecision(6)}${outputUnit ? ` ${outputUnit}` : ""}`,
+      ],
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 const G = 6.674e-11;

@@ -51,6 +51,9 @@ const CONTEXT_VAR_OVERRIDES: Record<string, RegExp> = {
 
 function detectType(symbol: string, description: string, index: number): SymbolType {
   if (index === 0) return "answer";
+  const explicitType = description.match(/\[(constant|variable)\]/i)?.[1].toLowerCase();
+  if (explicitType === "constant") return "constant";
+  if (explicitType === "variable") return "variable";
   const base = symbol.split(/[₀₁₂]/)[0];
   const isKnownConst = !!(KNOWN_CONSTANTS[symbol] || KNOWN_CONSTANTS[base]);
   if (isKnownConst) {
@@ -113,6 +116,7 @@ function parseVariables(variables: string): SymbolCard[] {
 
     const rawSymbol = part.substring(0, eqIdx).trim();
     const description = part.substring(eqIdx + 3).trim();
+    const displayDescription = description.replace(/\s*\[(?:constant|variable)\]\s*/gi, "").trim();
 
     // All pending symbols + any comma-separated symbols in this part share this description
     const allSyms = [...pending, ...rawSymbol.split(/,\s*/)];
@@ -124,7 +128,7 @@ function parseVariables(variables: string): SymbolCard[] {
       const type = detectType(s, description, cards.length);
       cards.push({
         symbol: s,
-        name: description.replace(VALUE_PATTERN, "").trim(),
+        name: displayDescription.replace(VALUE_PATTERN, "").trim(),
         description,
         unit: getUnit(s, description),
         value: type === "constant" ? getValue(s, description) : undefined,

@@ -80,6 +80,34 @@ export interface Formula {
   example?: string | null;
   /** @nullable */
   relatedFormulas?: string | null;
+  /** @nullable */
+  calculator?: string | null;
+  isFeatured?: boolean;
+}
+
+export interface CreateFormulaBody {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  category: string;
+  /** @nullable */
+  subcategory?: string | null;
+  /** @minLength 1 */
+  latex: string;
+  /** @minLength 1 */
+  description: string;
+  variables?: string;
+  /** @nullable */
+  siUnits?: string | null;
+  /** @nullable */
+  example?: string | null;
+  /** @nullable */
+  relatedFormulas?: string | null;
+  /**
+     * JSON definition for the safe interactive calculator
+     * @nullable
+     */
+  calculator?: string | null;
   isFeatured?: boolean;
 }
 
