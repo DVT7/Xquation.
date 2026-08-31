@@ -36,6 +36,10 @@ export const ListFormulasResponseItem = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "relatedConstants": zod.string().nullish().describe('JSON array of selected constant IDs'),
+  "relatedGlossary": zod.string().nullish().describe('JSON array of selected glossary term IDs'),
+  "derivation": zod.string().nullish().describe('Newline-separated derivation steps'),
+  "problems": zod.string().nullish().describe('JSON array of formula-specific practice problems'),
   "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })
@@ -60,6 +64,10 @@ export const GetFormulaResponse = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "relatedConstants": zod.string().nullish().describe('JSON array of selected constant IDs'),
+  "relatedGlossary": zod.string().nullish().describe('JSON array of selected glossary term IDs'),
+  "derivation": zod.string().nullish().describe('Newline-separated derivation steps'),
+  "problems": zod.string().nullish().describe('JSON array of formula-specific practice problems'),
   "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })
@@ -85,6 +93,10 @@ export const CreateOwnerFormulaBody = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "relatedConstants": zod.string().nullish().describe('JSON array of selected constant IDs'),
+  "relatedGlossary": zod.string().nullish().describe('JSON array of selected glossary term IDs'),
+  "derivation": zod.string().nullish().describe('Newline-separated derivation steps'),
+  "problems": zod.string().nullish().describe('JSON array of formula-specific practice problems'),
   "calculator": zod.string().nullish().describe('JSON definition for the safe interactive calculator'),
   "isFeatured": zod.boolean().default(createOwnerFormulaBodyIsFeaturedDefault)
 })
@@ -257,6 +269,10 @@ export const GlobalSearchResponse = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "relatedConstants": zod.string().nullish().describe('JSON array of selected constant IDs'),
+  "relatedGlossary": zod.string().nullish().describe('JSON array of selected glossary term IDs'),
+  "derivation": zod.string().nullish().describe('Newline-separated derivation steps'),
+  "problems": zod.string().nullish().describe('JSON array of formula-specific practice problems'),
   "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })),
@@ -415,6 +431,10 @@ export const ListFeaturedFormulasResponseItem = zod.object({
   "siUnits": zod.string().nullish(),
   "example": zod.string().nullish(),
   "relatedFormulas": zod.string().nullish(),
+  "relatedConstants": zod.string().nullish().describe('JSON array of selected constant IDs'),
+  "relatedGlossary": zod.string().nullish().describe('JSON array of selected glossary term IDs'),
+  "derivation": zod.string().nullish().describe('Newline-separated derivation steps'),
+  "problems": zod.string().nullish().describe('JSON array of formula-specific practice problems'),
   "calculator": zod.string().nullish(),
   "isFeatured": zod.boolean().optional()
 })

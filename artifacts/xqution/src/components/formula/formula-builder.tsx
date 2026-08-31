@@ -1,6 +1,9 @@
 import {
   useCreateOwnerFormula,
   useListFormulaCategories,
+  useListFormulas,
+  useListConstants,
+  useListGlossaryTerms,
   getListFormulasQueryKey,
   type CreateFormulaBody,
 } from "@workspace/api-client-react";
@@ -14,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { BlockMath, ColoredBlockMath } from "@/components/ui/math";
-import { Calculator, Code2, Eye, Plus, Save, Trash2 } from "lucide-react";
+import { Calculator, Code2, Eye, Plus, Save, Trash2, Link2, BookOpen, FlaskConical, ListChecks } from "lucide-react";
+import { DIFFICULTY_LABELS } from "@/lib/formula-problems";
 
 type FormulaComponent = {
   id: number;
@@ -29,6 +33,23 @@ type CalculatorInput = {
   label: string;
   unit: string;
   default: string;
+};
+
+type ProblemVariable = {
+  id: number;
+  symbol: string;
+  value: string;
+  unit: string;
+};
+
+type ProblemDraft = {
+  id: number;
+  difficulty: number;
+  question: string;
+  hint: string;
+  solution: string;
+  answer: string;
+  variables: ProblemVariable[];
 };
 
 const newComponent = (id: number): FormulaComponent => ({
@@ -46,9 +67,23 @@ const newCalculatorInput = (id: number): CalculatorInput => ({
   default: "",
 });
 
+const newProblemVariable = (id: number): ProblemVariable => ({ id, symbol: "", value: "", unit: "" });
+const newProblem = (id: number): ProblemDraft => ({
+  id,
+  difficulty: 3,
+  question: "",
+  hint: "",
+  solution: "",
+  answer: "",
+  variables: [newProblemVariable(id + 1)],
+});
+
 export function FormulaBuilder() {
   const queryClient = useQueryClient();
   const { data: categories } = useListFormulaCategories();
+  const { data: existingFormulas } = useListFormulas({});
+  const { data: existingConstants } = useListConstants({});
+  const { data: existingGlossary } = useListGlossaryTerms({});
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
@@ -57,7 +92,14 @@ export function FormulaBuilder() {
   const [components, setComponents] = useState<FormulaComponent[]>([newComponent(1)]);
   const [siUnits, setSiUnits] = useState("");
   const [example, setExample] = useState("");
-  const [relatedFormulas, setRelatedFormulas] = useState("");
+  const [selectedFormulaIds, setSelectedFormulaIds] = useState<number[]>([]);
+  const [selectedConstantIds, setSelectedConstantIds] = useState<number[]>([]);
+  const [selectedGlossaryIds, setSelectedGlossaryIds] = useState<number[]>([]);
+  const [formulaSearch, setFormulaSearch] = useState("");
+  const [constantSearch, setConstantSearch] = useState("");
+  const [glossarySearch, setGlossarySearch] = useState("");
+  const [derivation, setDerivation] = useState("");
+  const [problemDrafts, setProblemDrafts] = useState<ProblemDraft[]>([]);
   const [isFeatured, setIsFeatured] = useState(false);
   const [calculatorEnabled, setCalculatorEnabled] = useState(false);
   const [calculatorLatex, setCalculatorLatex] = useState("");
@@ -81,6 +123,23 @@ export function FormulaBuilder() {
     setCalculatorInputs((items) => items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   };
 
+  const updateProblem = (id: number, patch: Partial<ProblemDraft>) => {
+    setProblemDrafts((items) => items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  const updateProblemVariable = (problemId: number, variableId: number, patch: Partial<ProblemVariable>) => {
+    setProblemDrafts((items) => items.map((problem) => problem.id === problemId
+      ? {
+          ...problem,
+          variables: problem.variables.map((variable) => variable.id === variableId ? { ...variable, ...patch } : variable),
+        }
+      : problem));
+  };
+
+  const toggleSelected = (ids: number[], id: number, setIds: (next: number[]) => void) => {
+    setIds(ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]);
+  };
+
   const reset = () => {
     setName("");
     setCategory("");
@@ -90,7 +149,14 @@ export function FormulaBuilder() {
     setComponents([newComponent(Date.now())]);
     setSiUnits("");
     setExample("");
-    setRelatedFormulas("");
+    setSelectedFormulaIds([]);
+    setSelectedConstantIds([]);
+    setSelectedGlossaryIds([]);
+    setFormulaSearch("");
+    setConstantSearch("");
+    setGlossarySearch("");
+    setDerivation("");
+    setProblemDrafts([]);
     setIsFeatured(false);
     setCalculatorEnabled(false);
     setCalculatorLatex("");
@@ -127,6 +193,16 @@ export function FormulaBuilder() {
     const variables = validComponents
       .map((item) => `${item.symbol.trim()} = ${item.description.trim()} [${item.type}]`)
       .join(", ");
+
+    if (problemDrafts.some((problem) =>
+      !problem.question.trim() ||
+      !problem.answer.trim() ||
+      !problem.solution.split("\n").some((step) => step.trim()) ||
+      problem.variables.some((variable) => !variable.symbol.trim() || !variable.value.trim())
+    )) {
+      setFormError("Each practice problem needs a question, difficulty, selected variable values, a solution, and an answer.");
+      return;
+    }
 
     let calculator: string | null = null;
     if (calculatorEnabled) {
@@ -167,7 +243,24 @@ export function FormulaBuilder() {
       variables,
       siUnits: siUnits.trim() || null,
       example: example.trim() || null,
-      relatedFormulas: relatedFormulas.trim() || null,
+      relatedFormulas: selectedFormulaIds.length ? JSON.stringify(selectedFormulaIds) : null,
+      relatedConstants: selectedConstantIds.length ? JSON.stringify(selectedConstantIds) : null,
+      relatedGlossary: selectedGlossaryIds.length ? JSON.stringify(selectedGlossaryIds) : null,
+      derivation: derivation.trim() || null,
+      problems: problemDrafts.length ? JSON.stringify(problemDrafts.map(({ id: _id, ...problem }) => ({
+        ...problem,
+        question: problem.question.trim(),
+        hint: problem.hint.trim(),
+        answer: problem.answer.trim(),
+        solution: problem.solution.split("\n").map((step) => step.trim()).filter(Boolean),
+        variables: problem.variables
+          .filter((variable) => variable.symbol.trim() && variable.value.trim())
+          .map(({ id: _variableId, ...variable }) => ({
+            symbol: variable.symbol.trim(),
+            value: variable.value.trim(),
+            unit: variable.unit.trim(),
+          })),
+      }))) : null,
       calculator,
       isFeatured,
     };
@@ -290,10 +383,95 @@ export function FormulaBuilder() {
             <Field label="Example or extra explanation">
               <Textarea value={example} onChange={(e) => setExample(e.target.value)} placeholder="Add a worked example or helpful note." className="min-h-[90px]" />
             </Field>
-            <Field label="Related formulas">
-              <Textarea value={relatedFormulas} onChange={(e) => setRelatedFormulas(e.target.value)} placeholder="Comma-separated formula names" className="min-h-[90px]" />
+            <Field label="Derivation" hint="Write one step per line. These steps appear in the Derivation section of the formula page.">
+              <Textarea value={derivation} onChange={(e) => setDerivation(e.target.value)} placeholder={"Start from ...\nRearrange ...\nTherefore ..."} className="min-h-[90px] font-mono" />
             </Field>
           </div>
+
+          <Card className="bg-background/40 border-border/40">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-primary" /> Related content
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Select from records already in XQution. Nothing is saved as a misspelled or unavailable related item.
+              </p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SelectionPanel
+                label="Related formulas"
+                icon={<FlaskConical className="w-3.5 h-3.5 text-primary" />}
+                search={formulaSearch}
+                onSearch={setFormulaSearch}
+                selectedIds={selectedFormulaIds}
+                onToggle={(id) => toggleSelected(selectedFormulaIds, id, setSelectedFormulaIds)}
+                items={(existingFormulas ?? [])
+                  .filter((item) => item.name.toLowerCase().includes(formulaSearch.toLowerCase()))
+                  .map((item) => ({ id: item.id, label: item.name, meta: item.category }))}
+              />
+              <SelectionPanel
+                label="Related constants"
+                icon={<span className="font-mono text-[#FFD700]">C</span>}
+                search={constantSearch}
+                onSearch={setConstantSearch}
+                selectedIds={selectedConstantIds}
+                onToggle={(id) => toggleSelected(selectedConstantIds, id, setSelectedConstantIds)}
+                items={(existingConstants ?? [])
+                  .filter((item) => `${item.name} ${item.symbol}`.toLowerCase().includes(constantSearch.toLowerCase()))
+                  .map((item) => ({ id: item.id, label: item.name, meta: `${item.symbol} · ${item.units}` }))}
+              />
+              <SelectionPanel
+                label="Related glossary terms"
+                icon={<BookOpen className="w-3.5 h-3.5 text-primary" />}
+                search={glossarySearch}
+                onSearch={setGlossarySearch}
+                selectedIds={selectedGlossaryIds}
+                onToggle={(id) => toggleSelected(selectedGlossaryIds, id, setSelectedGlossaryIds)}
+                items={(existingGlossary ?? [])
+                  .filter((item) => item.term.toLowerCase().includes(glossarySearch.toLowerCase()))
+                  .map((item) => ({ id: item.id, label: item.term, meta: item.category ?? "Glossary" }))}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-background/40 border-border/40">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-primary" /> Practice problems
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add problems that use this formula. Each one includes its own difficulty, selected variable values, solution, and final answer.
+                  </p>
+                </div>
+                <Button type="button" size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setProblemDrafts((items) => [...items, newProblem(Date.now())])}>
+                  <Plus className="w-3.5 h-3.5" /> Add problem
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {problemDrafts.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic border border-dashed border-border/50 rounded-lg px-3 py-4 text-center">
+                  No formula-specific problems yet.
+                </p>
+              ) : (
+                problemDrafts.map((problem, index) => (
+                  <ProblemEditor
+                    key={problem.id}
+                    problem={problem}
+                    index={index}
+                    symbols={components.filter((item) => item.symbol.trim()).map((item) => item.symbol.trim())}
+                    onUpdate={(patch) => updateProblem(problem.id, patch)}
+                    onUpdateVariable={(variableId, patch) => updateProblemVariable(problem.id, variableId, patch)}
+                    onAddVariable={() => updateProblem(problem.id, { variables: [...problem.variables, newProblemVariable(Date.now())] })}
+                    onRemoveVariable={(variableId) => updateProblem(problem.id, { variables: problem.variables.filter((item) => item.id !== variableId) })}
+                    onRemove={() => setProblemDrafts((items) => items.filter((item) => item.id !== problem.id))}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
 
           <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
             <Checkbox checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(checked === true)} />
@@ -393,6 +571,130 @@ export function FormulaBuilder() {
           <Save className="w-4 h-4" /> {createFormula.isPending ? "Saving..." : "Create formula page"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+type SelectionItem = { id: number; label: string; meta: string };
+
+function SelectionPanel({
+  label,
+  icon,
+  items,
+  selectedIds,
+  search,
+  onSearch,
+  onToggle,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  items: SelectionItem[];
+  selectedIds: number[];
+  search: string;
+  onSearch: (value: string) => void;
+  onToggle: (id: number) => void;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-2">
+        {icon} {label}
+        {selectedIds.length > 0 && <Badge variant="outline" className="ml-auto text-[10px]">{selectedIds.length} selected</Badge>}
+      </div>
+      <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder={`Search ${label.toLowerCase()}...`} className="h-8 text-xs mb-2" />
+      <div className="max-h-44 overflow-y-auto space-y-1 rounded-lg border border-border/40 bg-background/50 p-1.5">
+        {items.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground italic px-2 py-3 text-center">No matching records.</p>
+        ) : (
+          items.map((item) => (
+            <label key={item.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-primary/5 cursor-pointer">
+              <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => onToggle(item.id)} className="mt-0.5" />
+              <span className="min-w-0">
+                <span className="block text-xs text-foreground truncate">{item.label}</span>
+                <span className="block text-[10px] text-muted-foreground truncate">{item.meta}</span>
+              </span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProblemEditor({
+  problem,
+  index,
+  symbols,
+  onUpdate,
+  onUpdateVariable,
+  onAddVariable,
+  onRemoveVariable,
+  onRemove,
+}: {
+  problem: ProblemDraft;
+  index: number;
+  symbols: string[];
+  onUpdate: (patch: Partial<ProblemDraft>) => void;
+  onUpdateVariable: (id: number, patch: Partial<ProblemVariable>) => void;
+  onAddVariable: () => void;
+  onRemoveVariable: (id: number) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">Problem {index + 1}</p>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-red-400" onClick={onRemove} aria-label={`Remove problem ${index + 1}`}>
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+        <Field label="Question *">
+          <Textarea value={problem.question} onChange={(e) => onUpdate({ question: e.target.value })} placeholder="A body of mass ... Find ..." className="min-h-[70px]" />
+        </Field>
+        <Field label="Difficulty *">
+          <select value={problem.difficulty} onChange={(e) => onUpdate({ difficulty: Number(e.target.value) })} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground">
+            {Object.entries(DIFFICULTY_LABELS).map(([level, label]) => <option key={level} value={level}>Level {level} — {label}</option>)}
+          </select>
+        </Field>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-xs">Selected variables *</Label>
+          <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={onAddVariable} disabled={symbols.length === 0}>
+            <Plus className="w-3 h-3" /> Add value
+          </Button>
+        </div>
+        {symbols.length === 0 ? (
+          <p className="text-[11px] text-amber-300/80 border border-amber-300/20 bg-amber-300/5 rounded-md px-2 py-2">Add symbols above before assigning problem values.</p>
+        ) : (
+          <div className="space-y-2">
+            {problem.variables.map((variable) => (
+              <div key={variable.id} className="grid grid-cols-[1fr_1fr_0.8fr_auto] gap-2">
+                <select value={variable.symbol} onChange={(e) => onUpdateVariable(variable.id, { symbol: e.target.value })} className="h-9 rounded-md border border-input bg-background px-2 text-xs text-foreground">
+                  <option value="">Select symbol</option>
+                  {symbols.map((symbol) => <option key={symbol} value={symbol}>{symbol}</option>)}
+                </select>
+                <Input value={variable.value} onChange={(e) => onUpdateVariable(variable.id, { value: e.target.value })} placeholder="Value" className="font-mono text-xs" />
+                <Input value={variable.unit} onChange={(e) => onUpdateVariable(variable.id, { unit: e.target.value })} placeholder="Unit" className="text-xs" />
+                <Button type="button" size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-red-400" onClick={() => onRemoveVariable(variable.id)} disabled={problem.variables.length === 1} aria-label="Remove variable value">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Field label="Hint">
+          <Textarea value={problem.hint} onChange={(e) => onUpdate({ hint: e.target.value })} placeholder="Give a small nudge." className="min-h-[60px]" />
+        </Field>
+        <Field label="Final answer *">
+          <Input value={problem.answer} onChange={(e) => onUpdate({ answer: e.target.value })} placeholder="e.g. 12 N" className="font-mono" />
+        </Field>
+      </div>
+      <Field label="Solution steps *" hint="One step per line. These appear when the learner opens the solution.">
+        <Textarea value={problem.solution} onChange={(e) => onUpdate({ solution: e.target.value })} placeholder={"F = ma\nF = (2 kg)(6 m/s²)\nF = 12 N"} className="min-h-[90px] font-mono" />
+      </Field>
     </div>
   );
 }

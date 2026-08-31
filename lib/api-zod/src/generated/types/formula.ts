@@ -21,6 +21,26 @@ export interface Formula {
   example?: string | null;
   /** @nullable */
   relatedFormulas?: string | null;
+  /**
+     * JSON array of selected constant IDs
+     * @nullable
+     */
+  relatedConstants?: string | null;
+  /**
+     * JSON array of selected glossary term IDs
+     * @nullable
+     */
+  relatedGlossary?: string | null;
+  /**
+     * Newline-separated derivation steps
+     * @nullable
+     */
+  derivation?: string | null;
+  /**
+     * JSON array of formula-specific practice problems
+     * @nullable
+     */
+  problems?: string | null;
   /** @nullable */
   calculator?: string | null;
   isFeatured?: boolean;

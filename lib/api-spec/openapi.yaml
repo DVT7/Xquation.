@@ -895,6 +895,18 @@ components:
           type: ["string", "null"]
         relatedFormulas:
           type: ["string", "null"]
+        relatedConstants:
+          type: ["string", "null"]
+          description: JSON array of selected constant IDs
+        relatedGlossary:
+          type: ["string", "null"]
+          description: JSON array of selected glossary term IDs
+        derivation:
+          type: ["string", "null"]
+          description: Newline-separated derivation steps
+        problems:
+          type: ["string", "null"]
+          description: JSON array of formula-specific practice problems
         calculator:
           type: ["string", "null"]
         isFeatured:
@@ -927,6 +939,18 @@ components:
           type: ["string", "null"]
         relatedFormulas:
           type: ["string", "null"]
+        relatedConstants:
+          type: ["string", "null"]
+          description: JSON array of selected constant IDs
+        relatedGlossary:
+          type: ["string", "null"]
+          description: JSON array of selected glossary term IDs
+        derivation:
+          type: ["string", "null"]
+          description: Newline-separated derivation steps
+        problems:
+          type: ["string", "null"]
+          description: JSON array of formula-specific practice problems
         calculator:
           type: ["string", "null"]
           description: JSON definition for the safe interactive calculator

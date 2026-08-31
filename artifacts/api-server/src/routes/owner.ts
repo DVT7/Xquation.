@@ -11,10 +11,12 @@ import {
   userSessionsTable,
   adminActionsTable,
   feedbackTable,
+  constantsTable,
+  glossaryTable,
   insertFormulaSchema,
 } from "@workspace/db";
 import {
-  eq, sql, desc, count, gte, isNull, and, or, gt,
+  eq, sql, desc, count, gte, isNull, and, or, gt, inArray,
 } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -33,6 +35,73 @@ router.post("/owner/formulas", async (req: Request, res: Response): Promise<void
   }
 
   const data = parsed.data;
+  const parseSelectedIds = (value: string | null | undefined): number[] | null => {
+    if (!value) return [];
+    try {
+      const ids = JSON.parse(value);
+      if (!Array.isArray(ids) || ids.length > 50 || ids.some((id) => !Number.isInteger(id) || id < 1)) return null;
+      return [...new Set(ids)];
+    } catch {
+      return null;
+    }
+  };
+
+  const formulaIds = parseSelectedIds(data.relatedFormulas);
+  const constantIds = parseSelectedIds(data.relatedConstants);
+  const glossaryIds = parseSelectedIds(data.relatedGlossary);
+  if (formulaIds === null || constantIds === null || glossaryIds === null) {
+    res.status(400).json({ error: "Related content selections are invalid." });
+    return;
+  }
+  const [existingFormulaRows, existingConstantRows, existingGlossaryRows] = await Promise.all([
+    formulaIds.length ? db.select({ id: formulasTable.id }).from(formulasTable).where(inArray(formulasTable.id, formulaIds)) : [],
+    constantIds.length ? db.select({ id: constantsTable.id }).from(constantsTable).where(inArray(constantsTable.id, constantIds)) : [],
+    glossaryIds.length ? db.select({ id: glossaryTable.id }).from(glossaryTable).where(inArray(glossaryTable.id, glossaryIds)) : [],
+  ]);
+  if (
+    existingFormulaRows.length !== formulaIds.length ||
+    existingConstantRows.length !== constantIds.length ||
+    existingGlossaryRows.length !== glossaryIds.length
+  ) {
+    res.status(400).json({ error: "Every related item must be selected from an existing record." });
+    return;
+  }
+
+  if (data.derivation && data.derivation.length > 50_000) {
+    res.status(400).json({ error: "Derivation is too large." });
+    return;
+  }
+  if (data.problems) {
+    if (data.problems.length > 100_000) {
+      res.status(400).json({ error: "Practice problems are too large." });
+      return;
+    }
+    try {
+      const problems = JSON.parse(data.problems);
+      if (
+        !Array.isArray(problems) ||
+        problems.length > 50 ||
+        problems.some((problem) =>
+          !problem ||
+          typeof problem !== "object" ||
+          typeof problem.question !== "string" ||
+          typeof problem.answer !== "string" ||
+          typeof problem.difficulty !== "number" ||
+          problem.difficulty < 1 ||
+          problem.difficulty > 10 ||
+          !Array.isArray(problem.solution) ||
+          !problem.solution.length ||
+          !Array.isArray(problem.variables)
+        )
+      ) {
+        res.status(400).json({ error: "Each practice problem needs a difficulty, variables, solution, and answer." });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: "Practice problems must be valid JSON." });
+      return;
+    }
+  }
   if (data.calculator) {
     if (data.calculator.length > 50_000) {
       res.status(400).json({ error: "Calculator definition is too large." });

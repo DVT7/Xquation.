@@ -6,6 +6,50 @@ export interface PracticeProblem {
   answer: string;
 }
 
+export interface ProblemVariable {
+  symbol: string;
+  value: string;
+  unit?: string;
+}
+
+export interface StoredFormulaProblem extends PracticeProblem {
+  variables?: ProblemVariable[];
+}
+
+export function parseStoredFormulaProblems(raw?: string | null): StoredFormulaProblem[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((problem): problem is StoredFormulaProblem =>
+      !!problem &&
+      typeof problem === "object" &&
+      typeof problem.difficulty === "number" &&
+      problem.difficulty >= 1 &&
+      problem.difficulty <= 10 &&
+      typeof problem.question === "string" &&
+      typeof problem.answer === "string" &&
+      Array.isArray(problem.solution) &&
+      problem.solution.every((step: unknown) => typeof step === "string") &&
+      (problem.hint === undefined || typeof problem.hint === "string") &&
+      (problem.variables === undefined || (
+        Array.isArray(problem.variables) &&
+        problem.variables.every((variable: unknown) =>
+          !!variable &&
+          typeof variable === "object" &&
+          typeof (variable as ProblemVariable).symbol === "string" &&
+          typeof (variable as ProblemVariable).value === "string"
+        )
+      ))
+    ).map((problem) => ({
+      ...problem,
+      hint: problem.hint ?? "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export const DIFFICULTY_COLORS: Record<number, string> = {
   1: "#22C55E",
   2: "#84CC16",

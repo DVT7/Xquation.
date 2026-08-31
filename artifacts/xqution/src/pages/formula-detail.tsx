@@ -1,6 +1,6 @@
 import { useRoute, Link, useLocation } from "wouter";
 import {
-  useGetFormula, useListFormulas, useListConstants,
+  useGetFormula, useListFormulas, useListConstants, useListGlossaryTerms,
   useListFavorites, useAddFavorite, useRemoveFavorite, getListFavoritesQueryKey,
   useRecordFormulaView,
 } from "@workspace/api-client-react";
@@ -31,7 +31,7 @@ import {
 import { CALCULATORS, parseStoredCalculator, type SolveMode } from "@/lib/formula-calculators";
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
 import { FORMULA_RELATED } from "@/lib/formula-related";
-import { FORMULA_PROBLEMS, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from "@/lib/formula-problems";
+import { FORMULA_PROBLEMS, DIFFICULTY_COLORS, DIFFICULTY_LABELS, parseStoredFormulaProblems, type StoredFormulaProblem } from "@/lib/formula-problems";
 import { cn } from "@/lib/utils";
 
 /* ─── Inline Calculator ──────────────────────────────────────────────────── */
@@ -300,7 +300,7 @@ function WorkedExampleSection({ formulaId, latex, variables }: { formulaId: numb
 
 /* ─── Practice Problem Card ──────────────────────────────────────────────── */
 
-function ProblemCard({ problem, index }: { problem: { difficulty: number; question: string; hint: string; solution: string[]; answer: string }; index: number }) {
+function ProblemCard({ problem, index }: { problem: StoredFormulaProblem; index: number }) {
   const [showHint, setShowHint] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const color = DIFFICULTY_COLORS[problem.difficulty] ?? "#00D9FF";
@@ -325,13 +325,15 @@ function ProblemCard({ problem, index }: { problem: { difficulty: number; questi
         </div>
 
         <div className="flex gap-2 ml-7">
-          <button
-            onClick={() => setShowHint(v => !v)}
-            className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors font-mono"
-          >
-            <Lightbulb className="w-3.5 h-3.5" />
-            {showHint ? "Hide Hint" : "Show Hint"}
-          </button>
+          {problem.hint && (
+            <button
+              onClick={() => setShowHint(v => !v)}
+              className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors font-mono"
+            >
+              <Lightbulb className="w-3.5 h-3.5" />
+              {showHint ? "Hide Hint" : "Show Hint"}
+            </button>
+          )}
           <button
             onClick={() => setShowSolution(v => !v)}
             className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-mono"
@@ -345,6 +347,19 @@ function ProblemCard({ problem, index }: { problem: { difficulty: number; questi
       {showHint && (
         <div className="mx-4 mb-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-md text-sm text-amber-300/90 font-mono animate-in fade-in duration-200">
           💡 {problem.hint}
+        </div>
+      )}
+
+      {problem.variables && problem.variables.length > 0 && (
+        <div className="mx-4 mb-3 flex flex-wrap gap-2">
+          {problem.variables.map((variable, i) => (
+            <div key={`${variable.symbol}-${i}`} className="flex items-center gap-1.5 rounded-md border border-[#00BFFF]/20 bg-[#00BFFF]/5 px-2.5 py-1">
+              <span className="font-mono text-xs font-bold text-[#00BFFF]">{variable.symbol}</span>
+              <span className="text-xs text-muted-foreground">=</span>
+              <span className="font-mono text-xs text-foreground">{variable.value}</span>
+              {variable.unit && <span className="text-[10px] text-muted-foreground">{variable.unit}</span>}
+            </div>
+          ))}
         </div>
       )}
 
@@ -389,6 +404,19 @@ function DifficultyLegend() {
   );
 }
 
+function parseSelectedIds(raw?: string | null): number[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((id): id is number => Number.isInteger(id) && id > 0);
+    }
+  } catch {
+    // Older formula records used comma-separated names.
+  }
+  return [];
+}
+
 /* ─── Main Page ──────────────────────────────────────────────────────────── */
 
 export default function FormulaDetail() {
@@ -398,6 +426,7 @@ export default function FormulaDetail() {
   const { data: formula, isLoading } = useGetFormula(id);
   const { data: allFormulas } = useListFormulas({});
   const { data: allConstants } = useListConstants({});
+  const { data: allGlossaryTerms } = useListGlossaryTerms({});
   const { data: favorites } = useListFavorites();
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
@@ -461,11 +490,20 @@ export default function FormulaDetail() {
   };
 
   const related = FORMULA_RELATED[id];
-  const problems = [...(FORMULA_PROBLEMS[id] ?? [])].sort((a, b) => a.difficulty - b.difficulty);
+  const storedProblems = useMemo(() => parseStoredFormulaProblems(formula?.problems), [formula?.problems]);
+  const problems = [...(storedProblems.length > 0 ? storedProblems : (FORMULA_PROBLEMS[id] ?? []))]
+    .sort((a, b) => a.difficulty - b.difficulty);
 
   // ── Curated related formulas (from DB field) ──────────────────────────────
   const curatedFormulaObjs = useMemo(() => {
     if (!formula?.relatedFormulas) return [];
+    const selectedIds = parseSelectedIds(formula.relatedFormulas);
+    if (selectedIds.length > 0) {
+      return selectedIds
+        .map((selectedId) => sortedAll.find((item) => item.id === selectedId))
+        .filter((item): item is NonNullable<typeof item> => !!item)
+        .map((selectedFormula) => ({ formula: selectedFormula, isAutoMatched: false as const }));
+    }
     const names = formula.relatedFormulas.split(",").map(s => s.trim()).filter(Boolean);
     return names
       .map(name => ({ formula: sortedAll.find(f => f.name.toLowerCase().includes(name.toLowerCase())), isAutoMatched: false }))
@@ -482,10 +520,14 @@ export default function FormulaDetail() {
     return [...curatedFormulaObjs, ...auto];
   }, [id, sortedAll, curatedFormulaObjs]);
 
-  // ── Curated constants (from FORMULA_RELATED map) ──────────────────────────
+  // ── Curated constants (selected IDs for new formulas, legacy map otherwise) ─
   const curatedConstantObjs = useMemo(
-    () => (allConstants ?? []).filter(c => related?.constantIds.includes(c.id)).map(c => ({ constant: c, isAutoMatched: false })),
-    [allConstants, related]
+    () => {
+      const selectedIds = parseSelectedIds(formula?.relatedConstants);
+      const ids = selectedIds.length > 0 ? selectedIds : (related?.constantIds ?? []);
+      return (allConstants ?? []).filter(c => ids.includes(c.id)).map(c => ({ constant: c, isAutoMatched: false }));
+    },
+    [allConstants, formula?.relatedConstants, related]
   );
 
   // ── Matchmade constants (padded in when curated list is short) ────────────
@@ -498,9 +540,13 @@ export default function FormulaDetail() {
     return [...curatedConstantObjs, ...auto];
   }, [id, sortedAll, allConstants, curatedConstantObjs]);
 
-  // ── Matchmade topics (augment curated list) ───────────────────────────────
+  // ── Selected glossary terms + legacy topics + matchmade topics ────────────
   const allTopics = useMemo(() => {
-    const curated = related?.topics ?? [];
+    const selectedGlossaryIds = parseSelectedIds(formula?.relatedGlossary);
+    const selectedGlossary = (allGlossaryTerms ?? [])
+      .filter((term) => selectedGlossaryIds.includes(term.id))
+      .map((term) => term.term);
+    const curated = [...selectedGlossary, ...(related?.topics ?? [])].filter((topic, index, items) => items.indexOf(topic) === index);
     const curatedSet = new Set(curated);
     const auto = matchRelatedTopics(id, sortedAll, 8)
       .filter(m => !curatedSet.has(m.topic))
@@ -508,15 +554,29 @@ export default function FormulaDetail() {
       .map(m => ({ topic: m.topic, isAutoMatched: true }));
     const curatedItems = curated.map(t => ({ topic: t, isAutoMatched: false }));
     return [...curatedItems, ...auto];
-  }, [id, sortedAll, related]);
+  }, [id, sortedAll, related, allGlossaryTerms, formula?.relatedGlossary]);
 
   const derivationFormulaObjs = useMemo(() => {
-    if (!related?.derivationFormulaNames) return [];
-    return related.derivationFormulaNames.map(name => ({
+    const selected = related?.derivationFormulaNames ?? [];
+    if (!selected.length && !related?.derivationFormulaNames) {
+      return relatedFormulaObjs.map(({ formula: selectedFormula }) => ({
+        name: selectedFormula.name,
+        formula: selectedFormula,
+      }));
+    }
+    return selected.map(name => ({
       name,
       formula: sortedAll.find(f => f.name.toLowerCase().includes(name.toLowerCase())),
     }));
   }, [related, sortedAll]);
+
+  const derivationSteps = useMemo(() => {
+    const stored = formula?.derivation
+      ?.split("\n")
+      .map((step) => step.trim())
+      .filter(Boolean) ?? [];
+    return stored.length > 0 ? stored : (related?.derivation ?? []);
+  }, [formula?.derivation, related]);
 
   if (isLoading) return (
     <div className="space-y-6 pb-12">
@@ -725,7 +785,7 @@ export default function FormulaDetail() {
       )}
 
       {/* ── 9. Derivation ─────────────────────────────────────────────── */}
-      {related?.derivation && related.derivation.length > 0 && (
+      {derivationSteps.length > 0 && (
         <Card className="border-border/50 bg-card">
           <CardHeader className="border-b border-border/50 pb-4">
             <CardTitle className="text-lg font-mono">Derivation</CardTitle>
@@ -733,7 +793,7 @@ export default function FormulaDetail() {
           </CardHeader>
           <CardContent className="pt-6">
             <ol className="space-y-3">
-              {related.derivation.map((step, i) => (
+              {derivationSteps.map((step, i) => (
                 <li key={i} className="flex gap-4">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mt-0.5">
                     <span className="text-xs font-bold text-primary">{i + 1}</span>
