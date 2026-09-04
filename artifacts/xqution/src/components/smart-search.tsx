@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Search, FlaskConical, BookOpen, Calculator, BookA, FileQuestion, LayoutGrid, X } from "lucide-react";
+import { hasDiscoveredLimbo, LIMBO_SEARCH_HREF, LIMBO_TRIGGER_EVENT } from "@/lib/limbo";
 
 /* ─── static local entries ─────────────────────────────────────────────────── */
 
@@ -36,6 +37,14 @@ const CALCULATORS: LocalEntry[] = [
 ];
 
 const LOCAL_ENTRIES = [...PAGES, ...CALCULATORS];
+const LIMBO_ENTRY: LocalEntry = {
+  id: "cmd-limbo",
+  label: "/limbo",
+  href: LIMBO_SEARCH_HREF,
+  description: "Enter the hidden Limbo challenge",
+  kind: "page",
+  tags: ["easter egg", "secret", "challenge"],
+};
 
 /* ─── fuzzy scoring ─────────────────────────────────────────────────────────── */
 
@@ -127,6 +136,7 @@ export function SmartSearch() {
   const [apiData, setApiData] = useState<ApiResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [cursor,  setCursor]  = useState(0);
+  const [limboDiscovered, setLimboDiscovered] = useState(hasDiscoveredLimbo);
   const inputRef  = useRef<HTMLInputElement>(null);
   const listRef   = useRef<HTMLDivElement>(null);
   const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -150,6 +160,12 @@ export function SmartSearch() {
       window.removeEventListener("xqution:open-search", onEvent);
     };
   }, [open, openSearch, closeSearch]);
+
+  useEffect(() => {
+    const onDiscovered = () => setLimboDiscovered(true);
+    window.addEventListener("xqution:limbo-discovered", onDiscovered);
+    return () => window.removeEventListener("xqution:limbo-discovered", onDiscovered);
+  }, []);
 
   /* focus input when opened */
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 50); }, [open]);
@@ -175,7 +191,8 @@ export function SmartSearch() {
     const q = query.trim();
 
     // Local fuzzy matches
-    const local: ResultItem[] = LOCAL_ENTRIES
+    const visibleEntries = limboDiscovered ? [...LOCAL_ENTRIES, LIMBO_ENTRY] : LOCAL_ENTRIES;
+    const local: ResultItem[] = visibleEntries
       .map(e => ({ e, s: score(q, e) }))
       .filter(x => q.length < 2 ? x.e.kind === "page" : x.s > 0)
       .sort((a, b) => b.s - a.s)
@@ -226,7 +243,7 @@ export function SmartSearch() {
     const all = [...formulas, ...local, ...constants, ...glossary, ...problems];
     const seen = new Set<string>();
     return all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
-  }, [query, apiData]);
+  }, [query, apiData, limboDiscovered]);
 
   /* group results */
   const groups = useMemo(() => {
@@ -259,6 +276,10 @@ export function SmartSearch() {
 
   const navigateTo = (href: string) => {
     closeSearch();
+    if (href === LIMBO_SEARCH_HREF) {
+      window.dispatchEvent(new Event(LIMBO_TRIGGER_EVENT));
+      return;
+    }
     navigate(href);
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { LIMBO_TRIGGER_EVENT, markLimboDiscovered } from "@/lib/limbo";
 
 /* ─────────────────────────────── constants ───────────────────────────────── */
 
@@ -124,6 +125,19 @@ export function LimboEasterEgg() {
   const orbitRafRef = useRef(0);
   const orbitAngle  = useRef(0);
 
+  const triggerLimbo = () => {
+    if (phase !== "hidden") return;
+    markLimboDiscovered();
+    colorOrder.current = shuffled(COLORS);
+    const idx = Math.floor(Math.random() * COUNT);
+    correctIdx.current = idx;
+    xSlot.current = [0,1,2,3,4,5,6,7];
+    setPositions(GRID.map(g => ({ ...g })));
+    setIsGlowing(false);
+    setPhase("dance");
+    window.dispatchEvent(new Event("xqution:limbo-discovered"));
+  };
+
   /* ── utils ── */
   const clearSwap = () => {
     if (swapTimerRef.current != null) { clearTimeout(swapTimerRef.current); swapTimerRef.current = null; }
@@ -131,25 +145,22 @@ export function LimboEasterEgg() {
 
   /* ── keydown trigger ── */
   useEffect(() => {
-    if (phase !== "hidden") return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key.length === 1) bufRef.current += e.key;
       if (bufRef.current.length > 10) bufRef.current = bufRef.current.slice(-10);
       if (bufRef.current.endsWith("/limbo")) {
         bufRef.current = "";
-        colorOrder.current = shuffled(COLORS);
-        const idx = Math.floor(Math.random() * COUNT);
-        correctIdx.current = idx;
-        xSlot.current = [0,1,2,3,4,5,6,7];        // reset permutation
-        setPositions(GRID.map(g => ({ ...g })));   // reset to grid
-        setIsGlowing(false);
-        setPhase("dance");
+        triggerLimbo();
       }
     };
+    const onCommand = () => triggerLimbo();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [phase]);
+    window.addEventListener(LIMBO_TRIGGER_EVENT, onCommand);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(LIMBO_TRIGGER_EVENT, onCommand);
+    };
+  });
 
   /* ── dance phase: glow → shuffle → transition to pick ── */
   useEffect(() => {
