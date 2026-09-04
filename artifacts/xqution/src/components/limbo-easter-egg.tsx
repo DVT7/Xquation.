@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { LIMBO_TRIGGER_EVENT, markLimboDiscovered } from "@/lib/limbo";
+import { emitAchievementEvent } from "@/lib/achievement-events";
 
 /* ─────────────────────────────── constants ───────────────────────────────── */
 
@@ -291,8 +292,10 @@ export function LimboEasterEgg() {
     if (phase !== "pick") return;
     cancelAnimationFrame(orbitRafRef.current);
     if (idx === correctIdx.current) {
+      emitAchievementEvent("limbo_passed");
       setPhase("won");
     } else {
+      emitAchievementEvent("limbo_failed");
       const until = Date.now() + LOCKOUT_MS;
       localStorage.setItem(LOCKOUT_KEY, JSON.stringify(until));
       setLockoutEnd(until);

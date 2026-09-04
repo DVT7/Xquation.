@@ -18,16 +18,20 @@ import {
   useCreateAnnouncement,
   useDeleteAnnouncement,
   useReplyToFeedback,
+  useListOwnerAchievements,
+  useUpdateOwnerAchievement,
+  getListOwnerAchievementsQueryKey,
   type OwnerEnrichedUser,
   type OwnerAnnouncement,
   type OwnerFeedback,
+  type OwnerAchievement,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormulaBuilder } from "@/components/formula/formula-builder";
 import {
   Crown, Users, Eye, Heart, Search, MessageSquare, Shield,
   Megaphone, Activity, Ban, CheckCircle, BarChart3, Send,
-  Trash2, Reply, SquarePen,
+  Trash2, Reply, SquarePen, Trophy, Power, PowerOff,
 } from "lucide-react";
 
 export default function OwnerDashboard() {
@@ -44,6 +48,7 @@ export default function OwnerDashboard() {
   const { data: usersData, isLoading: usersLoading } = useListOwnerUsers();
   const { data: announcementsData, isLoading: announcementsLoading } = useListAnnouncements();
   const { data: feedbackData, isLoading: feedbackLoading } = useListOwnerFeedback();
+  const { data: achievementData, isLoading: achievementsLoading } = useListOwnerAchievements();
 
   // Mutations
   const changeRole = useChangeUserRole({
@@ -85,6 +90,13 @@ export default function OwnerDashboard() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/owner/feedback"] });
+      },
+    },
+  });
+  const updateAchievement = useUpdateOwnerAchievement({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListOwnerAchievementsQueryKey() });
       },
     },
   });
@@ -163,6 +175,9 @@ export default function OwnerDashboard() {
           <TabsTrigger value="formula-builder" className="gap-1.5">
             <SquarePen className="w-3.5 h-3.5" /> Formula Builder
           </TabsTrigger>
+          <TabsTrigger value="achievements" className="gap-1.5">
+            <Trophy className="w-3.5 h-3.5" /> Achievements
+          </TabsTrigger>
         </TabsList>
 
         {/* FORMULA BUILDER */}
@@ -174,6 +189,35 @@ export default function OwnerDashboard() {
             </p>
           </div>
           <FormulaBuilder />
+        </TabsContent>
+
+        {/* ACHIEVEMENTS */}
+        <TabsContent value="achievements" className="space-y-4 mt-4">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <p className="text-sm font-semibold text-primary">Control account achievements</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Enabled achievements appear for every account. Disabling one hides it from account pages without deleting earned progress.
+            </p>
+          </div>
+          {achievementsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Spinner className="w-8 h-8 text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(achievementData?.achievements ?? []).map((achievement) => (
+                <AchievementAdminCard
+                  key={achievement.key}
+                  achievement={achievement}
+                  isSaving={updateAchievement.isPending}
+                  onToggle={() => updateAchievement.mutate({
+                    key: achievement.key,
+                    data: { enabled: !achievement.enabled },
+                  })}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* ANALYTICS */}
@@ -370,6 +414,54 @@ export default function OwnerDashboard() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function AchievementAdminCard({
+  achievement,
+  isSaving,
+  onToggle,
+}: {
+  achievement: OwnerAchievement;
+  isSaving: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Card className={`bg-card/60 border-border/40 ${achievement.enabled ? "" : "opacity-70"}`}>
+      <CardContent className="p-4 flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+          achievement.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        }`}>
+          <Trophy className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold text-foreground">{achievement.name}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+            </div>
+            <Badge variant="outline" className={achievement.enabled ? "border-green-400/30 text-green-400" : "border-border/50 text-muted-foreground"}>
+              {achievement.enabled ? "Enabled" : "Disabled"}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <span className="text-xs text-muted-foreground">
+              {achievement.unlockedCount ?? 0} recorded unlocks
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5"
+              onClick={onToggle}
+              disabled={isSaving}
+            >
+              {achievement.enabled ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
+              {achievement.enabled ? "Disable" : "Enable"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

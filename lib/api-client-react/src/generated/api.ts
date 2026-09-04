@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AchievementEventBody,
+  AchievementList,
   AdminActionList,
   AuthUserEnvelope,
   BanUserBody,
@@ -45,6 +47,8 @@ import type {
   LogoutSuccess,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  OwnerAchievement,
+  OwnerAchievementList,
   OwnerAnalytics,
   OwnerAnnouncementList,
   OwnerFeedbackList,
@@ -53,6 +57,7 @@ import type {
   Problem,
   ReplyToFeedbackBody,
   SearchResults,
+  UpdateAchievementBody,
   UserStats
 } from './api.schemas';
 
@@ -1856,6 +1861,303 @@ export function useGetUserStats<TData = Awaited<ReturnType<typeof getUserStats>>
 
 
 
+
+export const getGetAchievementsUrl = () => {
+
+
+
+
+  return `/api/achievements`
+}
+
+/**
+ * @summary Get enabled achievements and the authenticated user's progress
+ */
+export const getAchievements = async ( options?: RequestInit): Promise<AchievementList> => {
+
+  return customFetch<AchievementList>(getGetAchievementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAchievementsQueryKey = () => {
+    return [
+    `/api/achievements`
+    ] as const;
+    }
+
+
+export const getGetAchievementsQueryOptions = <TData = Awaited<ReturnType<typeof getAchievements>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAchievementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAchievements>>> = ({ signal }) => getAchievements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAchievements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAchievementsQueryResult = NonNullable<Awaited<ReturnType<typeof getAchievements>>>
+export type GetAchievementsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get enabled achievements and the authenticated user's progress
+ */
+
+export function useGetAchievements<TData = Awaited<ReturnType<typeof getAchievements>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAchievementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRecordAchievementEventUrl = () => {
+
+
+
+
+  return `/api/achievements/events`
+}
+
+/**
+ * @summary Record an achievement-related user action
+ */
+export const recordAchievementEvent = async (achievementEventBody: AchievementEventBody, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRecordAchievementEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      achievementEventBody,)
+  }
+);}
+
+
+
+
+export const getRecordAchievementEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAchievementEvent>>, TError,{data: BodyType<AchievementEventBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordAchievementEvent>>, TError,{data: BodyType<AchievementEventBody>}, TContext> => {
+
+const mutationKey = ['recordAchievementEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordAchievementEvent>>, {data: BodyType<AchievementEventBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordAchievementEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordAchievementEventMutationResult = NonNullable<Awaited<ReturnType<typeof recordAchievementEvent>>>
+    export type RecordAchievementEventMutationBody = BodyType<AchievementEventBody>
+    export type RecordAchievementEventMutationError = ErrorType<void>
+
+    /**
+ * @summary Record an achievement-related user action
+ */
+export const useRecordAchievementEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAchievementEvent>>, TError,{data: BodyType<AchievementEventBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordAchievementEvent>>,
+        TError,
+        {data: BodyType<AchievementEventBody>},
+        TContext
+      > => {
+      return useMutation(getRecordAchievementEventMutationOptions(options));
+    }
+
+export const getListOwnerAchievementsUrl = () => {
+
+
+
+
+  return `/api/owner/achievements`
+}
+
+/**
+ * @summary List achievement settings
+ */
+export const listOwnerAchievements = async ( options?: RequestInit): Promise<OwnerAchievementList> => {
+
+  return customFetch<OwnerAchievementList>(getListOwnerAchievementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerAchievementsQueryKey = () => {
+    return [
+    `/api/owner/achievements`
+    ] as const;
+    }
+
+
+export const getListOwnerAchievementsQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerAchievements>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listOwnerAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerAchievementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerAchievements>>> = ({ signal }) => listOwnerAchievements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerAchievements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListOwnerAchievementsQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerAchievements>>>
+export type ListOwnerAchievementsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List achievement settings
+ */
+
+export function useListOwnerAchievements<TData = Awaited<ReturnType<typeof listOwnerAchievements>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listOwnerAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListOwnerAchievementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateOwnerAchievementUrl = (key: string,) => {
+
+
+
+
+  return `/api/owner/achievements/${key}`
+}
+
+/**
+ * @summary Enable or disable an achievement
+ */
+export const updateOwnerAchievement = async (key: string,
+    updateAchievementBody: UpdateAchievementBody, options?: RequestInit): Promise<OwnerAchievement> => {
+
+  return customFetch<OwnerAchievement>(getUpdateOwnerAchievementUrl(key),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateAchievementBody,)
+  }
+);}
+
+
+
+
+export const getUpdateOwnerAchievementMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOwnerAchievement>>, TError,{key: string;data: BodyType<UpdateAchievementBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOwnerAchievement>>, TError,{key: string;data: BodyType<UpdateAchievementBody>}, TContext> => {
+
+const mutationKey = ['updateOwnerAchievement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOwnerAchievement>>, {key: string;data: BodyType<UpdateAchievementBody>}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOwnerAchievement(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOwnerAchievementMutationResult = NonNullable<Awaited<ReturnType<typeof updateOwnerAchievement>>>
+    export type UpdateOwnerAchievementMutationBody = BodyType<UpdateAchievementBody>
+    export type UpdateOwnerAchievementMutationError = ErrorType<void>
+
+    /**
+ * @summary Enable or disable an achievement
+ */
+export const useUpdateOwnerAchievement = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOwnerAchievement>>, TError,{key: string;data: BodyType<UpdateAchievementBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateOwnerAchievement>>,
+        TError,
+        {key: string;data: BodyType<UpdateAchievementBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateOwnerAchievementMutationOptions(options));
+    }
 
 export const getLogoutMobileSessionUrl = () => {
 

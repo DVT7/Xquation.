@@ -12,6 +12,7 @@ import viewsRouter from "./views";
 import userStatsRouter from "./userStats";
 import feedbackRouter from "./feedback";
 import ownerRouter from "./owner";
+import achievementsRouter from "./achievements";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(searchRouter);
 router.use(statsRouter);
 router.use(feedbackRouter);
 router.use(ownerRouter);
+router.use(achievementsRouter);
 
 export default router;

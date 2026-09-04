@@ -61,6 +61,54 @@ export interface UserStats {
   formulasViewed: number;
 }
 
+export interface Achievement {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  enabled: boolean;
+  progress: number;
+  target?: number;
+  completed: boolean;
+  /** @nullable */
+  completedAt?: string | null;
+}
+
+export interface AchievementList {
+  achievements: Achievement[];
+}
+
+export type AchievementEventBodyEvent = typeof AchievementEventBodyEvent[keyof typeof AchievementEventBodyEvent];
+
+
+export const AchievementEventBodyEvent = {
+  limbo_passed: 'limbo_passed',
+  limbo_failed: 'limbo_failed',
+  formula_click: 'formula_click',
+  read_aloud: 'read_aloud',
+} as const;
+
+export interface AchievementEventBody {
+  event: AchievementEventBodyEvent;
+}
+
+export interface OwnerAchievement {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  enabled: boolean;
+  unlockedCount?: number;
+}
+
+export interface OwnerAchievementList {
+  achievements: OwnerAchievement[];
+}
+
+export interface UpdateAchievementBody {
+  enabled: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

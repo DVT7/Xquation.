@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './achievement';
+export * from './achievementEventBody';
+export * from './achievementEventBodyEvent';
+export * from './achievementList';
 export * from './adminAction';
 export * from './adminActionList';
 export * from './authorizationSessionHeaderParameter';
@@ -37,6 +41,8 @@ export * from './listProblemsParams';
 export * from './logoutSuccess';
 export * from './mobileTokenExchangeRequest';
 export * from './mobileTokenExchangeSuccess';
+export * from './ownerAchievement';
+export * from './ownerAchievementList';
 export * from './ownerAnalytics';
 export * from './ownerAnalyticsFeedback';
 export * from './ownerAnalyticsTopFavoritedItem';
@@ -53,4 +59,5 @@ export * from './platformStats';
 export * from './problem';
 export * from './replyToFeedbackBody';
 export * from './searchResults';
+export * from './updateAchievementBody';
 export * from './userStats';

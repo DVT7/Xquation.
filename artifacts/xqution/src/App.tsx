@@ -12,6 +12,8 @@ import { LimboEasterEgg } from "@/components/limbo-easter-egg";
 import { SmartSearch } from "@/components/smart-search";
 import { BannedScreen } from "@/components/banned-screen";
 import { AnnouncementToasts } from "@/components/announcement-toasts";
+import { useRecordAchievementEvent, getGetAchievementsQueryKey } from "@workspace/api-client-react";
+import { ACHIEVEMENT_EVENT, type AchievementEvent } from "@/lib/achievement-events";
 import 'katex/dist/katex.min.css';
 
 const queryClient = new QueryClient({
@@ -127,6 +129,7 @@ function AppGate() {
           <Router />
         </WouterRouter>
         <Toaster />
+        <AchievementEventBridge />
         <ReadAloudMenu />
         <LimboEasterEgg />
         <SmartSearch />
@@ -134,6 +137,30 @@ function AppGate() {
       </TooltipProvider>
     </AppSettingsProvider>
   );
+}
+
+function AchievementEventBridge() {
+  const { isAuthenticated } = useAuth();
+  const recordEvent = useRecordAchievementEvent({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetAchievementsQueryKey() });
+      },
+    },
+  });
+
+  useEffect(() => {
+    const onAchievementEvent = (event: Event) => {
+      if (!isAuthenticated || recordEvent.isPending) return;
+      const detail = (event as CustomEvent<AchievementEvent>).detail;
+      if (!detail) return;
+      recordEvent.mutate({ data: { event: detail } });
+    };
+    window.addEventListener(ACHIEVEMENT_EVENT, onAchievementEvent);
+    return () => window.removeEventListener(ACHIEVEMENT_EVENT, onAchievementEvent);
+  }, [isAuthenticated, recordEvent]);
+
+  return null;
 }
 
 function App() {

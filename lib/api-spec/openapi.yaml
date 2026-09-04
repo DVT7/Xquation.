@@ -479,6 +479,84 @@ paths:
         '401':
           description: Not authenticated
 
+  /achievements:
+    get:
+      tags: [Auth]
+      operationId: getAchievements
+      summary: Get enabled achievements and the authenticated user's progress
+      responses:
+        '200':
+          description: Achievement progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AchievementList'
+        '401':
+          description: Not authenticated
+
+  /achievements/events:
+    post:
+      tags: [Auth]
+      operationId: recordAchievementEvent
+      summary: Record an achievement-related user action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AchievementEventBody'
+      responses:
+        '204':
+          description: Event recorded
+        '400':
+          description: Invalid event
+        '401':
+          description: Not authenticated
+
+  /owner/achievements:
+    get:
+      tags: [Owner]
+      operationId: listOwnerAchievements
+      summary: List achievement settings
+      responses:
+        '200':
+          description: Achievement settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerAchievementList'
+        '403':
+          description: Owner access required
+
+  /owner/achievements/{key}:
+    patch:
+      tags: [Owner]
+      operationId: updateOwnerAchievement
+      summary: Enable or disable an achievement
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAchievementBody'
+      responses:
+        '200':
+          description: Updated achievement setting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerAchievement'
+        '400':
+          description: Invalid achievement key or body
+        '403':
+          description: Owner access required
+
   /mobile-auth/logout:
     post:
       tags: [Auth]
@@ -863,6 +941,74 @@ components:
           type: integer
         formulasViewed:
           type: integer
+    Achievement:
+      type: object
+      required: [key, name, description, icon, enabled, progress, completed]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        enabled:
+          type: boolean
+        progress:
+          type: integer
+        target:
+          type: integer
+        completed:
+          type: boolean
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+    AchievementList:
+      type: object
+      required: [achievements]
+      properties:
+        achievements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Achievement"
+    AchievementEventBody:
+      type: object
+      required: [event]
+      properties:
+        event:
+          type: string
+          enum: [limbo_passed, limbo_failed, formula_click, read_aloud]
+    OwnerAchievement:
+      type: object
+      required: [key, name, description, icon, enabled]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        enabled:
+          type: boolean
+        unlockedCount:
+          type: integer
+    OwnerAchievementList:
+      type: object
+      required: [achievements]
+      properties:
+        achievements:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerAchievement"
+    UpdateAchievementBody:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
     HealthStatus:
       type: object
       properties:

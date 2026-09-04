@@ -406,6 +406,68 @@ export const GetUserStatsResponse = zod.object({
 
 
 /**
+ * @summary Get enabled achievements and the authenticated user's progress
+ */
+export const GetAchievementsResponse = zod.object({
+  "achievements": zod.array(zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "icon": zod.string(),
+  "enabled": zod.boolean(),
+  "progress": zod.number(),
+  "target": zod.number().optional(),
+  "completed": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
+ * @summary Record an achievement-related user action
+ */
+export const RecordAchievementEventBody = zod.object({
+  "event": zod.enum(['limbo_passed', 'limbo_failed', 'formula_click', 'read_aloud'])
+})
+
+
+/**
+ * @summary List achievement settings
+ */
+export const ListOwnerAchievementsResponse = zod.object({
+  "achievements": zod.array(zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "icon": zod.string(),
+  "enabled": zod.boolean(),
+  "unlockedCount": zod.number().optional()
+}))
+})
+
+
+/**
+ * @summary Enable or disable an achievement
+ */
+export const UpdateOwnerAchievementParams = zod.object({
+  "key": zod.coerce.string()
+})
+
+export const UpdateOwnerAchievementBody = zod.object({
+  "enabled": zod.boolean()
+})
+
+export const UpdateOwnerAchievementResponse = zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "icon": zod.string(),
+  "enabled": zod.boolean(),
+  "unlockedCount": zod.number().optional()
+})
+
+
+/**
  * @summary Delete a mobile session token
  */
 export const LogoutMobileSessionHeader = zod.object({

@@ -32,6 +32,7 @@ import { CALCULATORS, parseStoredCalculator, type SolveMode } from "@/lib/formul
 import { WORKED_EXAMPLES } from "@/lib/formula-worked-examples";
 import { FORMULA_RELATED } from "@/lib/formula-related";
 import { FORMULA_PROBLEMS, DIFFICULTY_COLORS, DIFFICULTY_LABELS, parseStoredFormulaProblems, type StoredFormulaProblem } from "@/lib/formula-problems";
+import { emitAchievementEvent } from "@/lib/achievement-events";
 import { cn } from "@/lib/utils";
 
 /* ─── Inline Calculator ──────────────────────────────────────────────────── */
@@ -637,7 +638,7 @@ export default function FormulaDetail() {
       </div>
 
       {/* ── 2. Color-coded Equation ───────────────────────────────────── */}
-      <Card className="border-border/50 bg-card">
+      <Card className="border-border/50 bg-card" onClick={() => emitAchievementEvent("formula_click")}>
         <CardContent className="pt-6">
           <div className="bg-background/80 rounded-lg p-8 border border-border/50 flex items-center justify-center overflow-x-auto min-h-[140px] mb-6">
             <ColoredBlockMath math={formula.latex} variables={formula.variables} />

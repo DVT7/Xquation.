@@ -1,5 +1,5 @@
 import { useAuth } from "@workspace/replit-auth-web";
-import { useListFavorites, useGetUserStats } from "@workspace/api-client-react";
+import { useListFavorites, useGetUserStats, useGetAchievements, getGetAchievementsQueryKey, type Achievement } from "@workspace/api-client-react";
 import { useAppSettings } from "@/contexts/app-settings";
 import { useLocalFormulaViews } from "@/hooks/use-local-views";
 import { useLocation, Link } from "wouter";
@@ -13,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
   Sun, Moon, Volume2, ArrowRight, RotateCcw, MessageSquare, AlertCircle, Lightbulb, CheckCircle,
-  Reply, ChevronDown, ChevronUp, Clock, Send, Crown,
+  Reply, ChevronDown, ChevronUp, Clock, Send, Crown, Trophy, Flame, MousePointerClick,
+  Library, Sparkles,
 } from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
@@ -37,6 +38,9 @@ export default function Account() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const { data: favorites } = useListFavorites();
   const { data: stats } = useGetUserStats({ query: { enabled: isAuthenticated, queryKey: ["/api/user/stats"] } });
+  const { data: achievementData, isLoading: achievementsLoading } = useGetAchievements({
+    query: { enabled: isAuthenticated, queryKey: getGetAchievementsQueryKey() },
+  });
   const {
     theme, setTheme,
     voiceURI, setVoiceURI,
@@ -174,6 +178,8 @@ export default function Account() {
         </CardContent>
       </Card>
 
+      <AchievementsSection achievements={achievementData?.achievements ?? []} isLoading={achievementsLoading} />
+
       {/* Preferences */}
       <PreferencesCards
         theme={theme} setTheme={setTheme}
@@ -210,6 +216,88 @@ export default function Account() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function achievementIcon(icon: string) {
+  const Icon = icon === "flame"
+    ? Flame
+    : icon === "mouse-pointer-click"
+      ? MousePointerClick
+      : icon === "volume-2"
+        ? Volume2
+        : icon === "library"
+          ? Library
+          : icon === "sparkles"
+            ? Sparkles
+            : icon === "crown"
+              ? Crown
+              : Trophy;
+  return Icon;
+}
+
+function AchievementsSection({ achievements, isLoading }: { achievements: Achievement[]; isLoading: boolean }) {
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base text-muted-foreground font-medium flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-primary" /> Achievements
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">Milestones earned across your Xquation journey.</p>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Spinner className="w-5 h-5 text-primary" /></div>
+        ) : achievements.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No achievements are currently enabled.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {achievements.map((achievement) => {
+              const Icon = achievementIcon(achievement.icon);
+              const target = achievement.target ?? 1;
+              const progress = Math.min(achievement.progress, target);
+              const percent = achievement.completed ? 100 : Math.round((progress / Math.max(target, 1)) * 100);
+              return (
+                <div
+                  key={achievement.key}
+                  className={`rounded-lg border p-3 transition-colors ${
+                    achievement.completed
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-border/60 bg-background"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      achievement.completed ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                    }`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground leading-snug">{achievement.name}</p>
+                        {achievement.completed && <Badge className="text-[10px] bg-primary/15 text-primary border-primary/20 shrink-0">Earned</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+                      {!achievement.completed && (
+                        <div className="mt-2">
+                          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                            <span>Progress</span>
+                            <span>{achievement.progress.toLocaleString()} / {target.toLocaleString()}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

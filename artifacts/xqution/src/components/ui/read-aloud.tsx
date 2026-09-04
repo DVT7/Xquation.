@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Volume2, VolumeX, Square } from "lucide-react";
 import { useAppSettings } from "@/contexts/app-settings";
+import { emitAchievementEvent } from "@/lib/achievement-events";
 
 // ── Smart math-to-speech converter ───────────────────────────────────────────
 //
@@ -429,6 +430,7 @@ export function ReadAloudMenu() {
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utt);
+    emitAchievementEvent("read_aloud");
     setSpeaking(true);
     setMenu(null);
   };
