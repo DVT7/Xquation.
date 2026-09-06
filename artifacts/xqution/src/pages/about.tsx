@@ -28,8 +28,9 @@ export default function About() {
           <Card className="bg-card border-border/50">
             <CardContent className="p-6 space-y-4">
               <Sparkles className="w-8 h-8 text-accent" />
-              <h3 className="font-mono text-xl font-bold">Immersive Design</h3>
-              <p className="text-sm">A distraction-free, dark-themed cosmic interface designed for late-night study sessions and complex problem solving.</p>
+              <h3 className="font-mono text-xl font-bold">DO THE LIMBO
+</h3>
+              <p className="text-sm">lssls slss ss ll lsss lll</p>
             </CardContent>
           </Card>
         </div>
