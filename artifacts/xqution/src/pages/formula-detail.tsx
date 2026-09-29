@@ -455,7 +455,7 @@ export default function FormulaDetail() {
     if (!formula) return;
     const label = formula.name;
     setLastVisited({ path: `/formulas/${id}`, label });
-    document.title = `${label} — Formula Page | Xquation`;
+    document.title = `${label} — Formula Page | XQuation`;
     // SEO meta description
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
     if (!meta) {
@@ -463,10 +463,10 @@ export default function FormulaDetail() {
       meta.name = "description";
       document.head.appendChild(meta);
     }
-    meta.content = `Learn about the ${label} formula on Xquation. Includes LaTeX, visualizations, worked examples, and practice problems.`;
+    meta.content = `Learn about the ${label} formula on XQuation. Includes LaTeX, visualizations, worked examples, and practice problems.`;
     return () => {
-      document.title = "Xquation";
-      if (meta) meta.content = "Explore physics and astronomy formulas, constants, calculators, and more on Xquation.";
+      document.title = "XQuation";
+      if (meta) meta.content = "Explore physics and astronomy formulas, constants, calculators, and more on XQuation.";
     };
   }, [formula, id]);
 

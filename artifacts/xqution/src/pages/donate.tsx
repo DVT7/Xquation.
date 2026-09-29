@@ -14,9 +14,9 @@ export default function Donate() {
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-3">Support Xquation</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-3">Support XQuation</h1>
         <p className="text-muted-foreground leading-relaxed">
-          Xquation is free for everyone. If it's helped you study, learn, or just satisfy your curiosity — consider buying us a coffee. Every contribution keeps the platform running and growing.
+          XQuation is free for everyone. If it's helped you study, learn, or just satisfy your curiosity — consider buying us a coffee. Every contribution keeps the platform running and growing.
         </p>
       </div>
 

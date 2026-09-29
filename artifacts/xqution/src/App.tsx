@@ -83,7 +83,7 @@ function RouteTracker() {
   useEffect(() => {
     if (location.startsWith("/formulas/") && location !== "/formulas") return;
     const title = lastVisited?.label ?? getLabel(location);
-    document.title = title ? `${title} | Xquation` : "Xquation";
+    document.title = title ? `${title} | XQuation` : "XQuation";
   }, [location, lastVisited]);
 
   return null;

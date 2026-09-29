@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const BASE = "Xquation";
+const BASE = "XQuation";
 
 export function useDocumentTitle(title?: string) {
   useEffect(() => {

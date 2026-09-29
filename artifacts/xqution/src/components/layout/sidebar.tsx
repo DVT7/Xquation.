@@ -33,7 +33,7 @@ function BrandMark() {
     <span className="flex items-center gap-2">
       <span className="font-mono text-xl font-bold tracking-tight text-foreground">
         <span className="text-2xl text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.9)]">X</span>
-        QUTION
+        Quation
       </span>
       <span className="font-mono text-[10px] font-semibold tracking-wider text-primary/70">V0.5</span>
     </span>

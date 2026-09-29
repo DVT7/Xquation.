@@ -47,7 +47,7 @@ export function BannedScreen({ ban }: { ban: BanInfo }) {
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">You've been banned</h1>
         <p className="text-sm text-gray-400 mb-6">
-          Your account has been suspended from Xquation.
+          Your account has been suspended from XQuation.
         </p>
 
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 mb-6 text-left">

@@ -7,14 +7,14 @@ export default function About() {
       <div className="text-center space-y-6">
         <Telescope className="w-16 h-16 text-primary mx-auto" />
         <h1 className="text-4xl md:text-5xl font-black font-mono tracking-tighter">
-          About XQUATION
+          About XQuation
         </h1>
         <p className="text-xl text-muted-foreground leading-relaxed">
           The precise, immersive reference tool for serious students and space enthusiasts.
         </p>
       </div>
       <div className="space-y-8 text-foreground/80 leading-relaxed">
-        <p className="text-lg">Xquation was built to solve one of the more prominent problems in physics: mainly remembering and knowing formulas. Sometimes you may know what a formula is. You might know how to use it but many times you don't know when to use it. That is a big problem in physics. It's the main reason why people who study so hard might still not do well. In Xquation we're trying to solve that problem, one update at a time.</p>
+        <p className="text-lg">XQuation was built to solve one of the more prominent problems in physics: mainly remembering and knowing formulas. Sometimes you may know what a formula is. You might know how to use it but many times you don't know when to use it. That is a big problem in physics. It's the main reason why people who study so hard might still not do well. In XQuation we're trying to solve that problem, one update at a time.</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           <Card className="bg-card border-border/50">

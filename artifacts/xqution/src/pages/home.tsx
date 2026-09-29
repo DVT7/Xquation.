@@ -24,8 +24,8 @@ const PAGES: NavEntry[] = [
   { id:"pg-problems",   label:"Practice Problems",  href:"/problems",        kind:"page",       description:"Test your knowledge",                    tags:["quiz","test","exercise"] },
   { id:"pg-favorites",  label:"Favorites",          href:"/favorites",       kind:"page",       description:"Your saved content",                     tags:["saved","starred","bookmarks"] },
   { id:"pg-astronomy",  label:"Astronomy Tools",    href:"/astronomy-tools", kind:"page",       description:"Planetary and orbital tools",            tags:["space","planet","star","telescope"] },
-  { id:"pg-donate",     label:"Donate",             href:"/donate",          kind:"page",       description:"Support Xquation",                       tags:["support","help"] },
-  { id:"pg-about",      label:"About",              href:"/about",           kind:"page",       description:"About Xquation" },
+  { id:"pg-donate",     label:"Donate",             href:"/donate",          kind:"page",       description:"Support XQuation",                       tags:["support","help"] },
+  { id:"pg-about",      label:"About",              href:"/about",           kind:"page",       description:"About XQuation" },
 ];
 
 const CALCULATORS: NavEntry[] = [
@@ -370,14 +370,19 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative text-center py-20 px-4 flex flex-col items-center justify-center min-h-[40vh] border border-border rounded-xl bg-card/30 backdrop-blur overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
-        <h1 className="text-4xl md:text-6xl font-black font-mono tracking-tighter mb-2">
-          <span
-            className="inline-block text-cyan-300 drop-shadow-[0_0_12px_rgba(103,232,249,0.9)]"
-            style={{ fontSize: "1.18em", lineHeight: 0.8 }}
-          >
-            X
+        <h1 className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-4xl md:text-6xl font-black font-mono tracking-tighter mb-2">
+          <span className="inline-flex items-baseline">
+            <span
+              className="inline-block text-cyan-300 drop-shadow-[0_0_12px_rgba(103,232,249,0.9)]"
+              style={{ fontSize: "1.18em", lineHeight: 0.8 }}
+            >
+              X
+            </span>
+            <span className="text-foreground/90">Quation</span>
           </span>
-          <span className="text-foreground/90">QUTION</span>
+          <span className="text-base md:text-xl font-semibold tracking-wider text-primary/80">
+            V0.5
+          </span>
         </h1>
         <p className="text-base md:text-lg text-primary/80 font-mono tracking-widest mb-4 uppercase">
           Explore. Calculate. Understand.

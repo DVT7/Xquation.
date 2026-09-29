@@ -394,7 +394,7 @@ export function FormulaBuilder() {
                 <Link2 className="w-4 h-4 text-primary" /> Related content
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Select from records already in XQution. Nothing is saved as a misspelled or unavailable related item.
+                Select from records already in XQuation. Nothing is saved as a misspelled or unavailable related item.
               </p>
             </CardHeader>
             <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4">

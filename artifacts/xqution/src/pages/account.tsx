@@ -64,7 +64,7 @@ export default function Account() {
           <Telescope className="w-10 h-10 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to Xquation</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to XQuation</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Create an account to save your favorite formulas, track your progress, and get personalized recommendations.
           </p>
@@ -243,7 +243,7 @@ function AchievementsSection({ achievements, isLoading }: { achievements: Achiev
         <CardTitle className="text-base text-muted-foreground font-medium flex items-center gap-2">
           <Trophy className="w-4 h-4 text-primary" /> Achievements
         </CardTitle>
-        <p className="text-xs text-muted-foreground">Milestones earned across your Xquation journey.</p>
+        <p className="text-xs text-muted-foreground">Milestones earned across your XQuation journey.</p>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -351,7 +351,7 @@ function FeedbackCard() {
         <CardContent className="py-8 flex flex-col items-center gap-3 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
           <p className="font-semibold text-foreground">Thanks for your feedback!</p>
-          <p className="text-sm text-muted-foreground">We'll review it and use it to improve Xquation.</p>
+          <p className="text-sm text-muted-foreground">We'll review it and use it to improve XQuation.</p>
           <Button variant="ghost" size="sm" onClick={() => setStatus("idle")} className="mt-1 text-primary">
             Send another
           </Button>
@@ -635,7 +635,7 @@ function UserRepliesSection() {
     <Card className="bg-card border-border border-green-500/20">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium flex items-center gap-2 text-green-500">
-          <Reply className="w-4 h-4" /> Replies from Xquation
+          <Reply className="w-4 h-4" /> Replies from XQuation
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -660,7 +660,7 @@ function UserRepliesSection() {
             {/* Owner reply */}
             <div className="space-y-1">
               <p className="text-xs font-medium text-green-500 flex items-center gap-1">
-                <Reply className="w-3 h-3" /> Xquation replied
+                <Reply className="w-3 h-3" /> XQuation replied
                 {fb.ownerRepliedAt && (
                   <span className="ml-auto text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />{formatDate(fb.ownerRepliedAt)}
@@ -767,7 +767,7 @@ function PreferencesCards({
                       key={v.voiceURI}
                       onClick={() => {
                         setVoiceURI(v.voiceURI);
-                        const sample = new SpeechSynthesisUtterance("Hello, welcome to xquation");
+                        const sample = new SpeechSynthesisUtterance("Hello, welcome to XQuation");
                         sample.voice = v;
                         sample.volume = volume;
                         sample.rate = 0.92;

@@ -23,7 +23,7 @@ const PAGES: LocalEntry[] = [
   { id: "pg-problems",   label: "Practice Problems", href: "/problems",   description: "Test your knowledge",               kind: "page", tags: ["quiz","test","exercise"] },
   { id: "pg-favorites",  label: "Favorites",         href: "/favorites",  description: "Your saved content",               kind: "page", tags: ["saved","starred"] },
   { id: "pg-astronomy",  label: "Astronomy Tools",   href: "/astronomy-tools", description: "Planetary and orbital tools", kind: "page", tags: ["space","planet","star"] },
-  { id: "pg-about",      label: "About",             href: "/about",      description: "About Xquation",                   kind: "page" },
+  { id: "pg-about",      label: "About",             href: "/about",      description: "About XQuation",                   kind: "page" },
 ];
 
 const CALCULATORS: LocalEntry[] = [
