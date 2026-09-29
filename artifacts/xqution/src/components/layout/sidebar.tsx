@@ -43,6 +43,11 @@ export function Sidebar() {
         const isActive = location.startsWith(item.href);
         return (
           <div key={item.href}>
+            {item.href === "/donate" && (
+              <div className="mb-2 rounded-md border border-red-500/50 bg-red-500/15 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider text-red-400">
+                Not in order
+              </div>
+            )}
             <Link href={item.href} className="block">
               <div className={cn(
                 "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm",

@@ -513,44 +513,6 @@ paths:
         '401':
           description: Not authenticated
 
-  /limbo/state:
-    get:
-      tags: [Auth]
-      operationId: getLimboState
-      summary: Get the authenticated user's persistent Limbo state
-      responses:
-        '200':
-          description: Limbo state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LimboState'
-        '401':
-          description: Not authenticated
-
-  /limbo/attempt:
-    post:
-      tags: [Auth]
-      operationId: recordLimboAttempt
-      summary: Record a Limbo correct or wrong-color attempt
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LimboAttemptBody'
-      responses:
-        '200':
-          description: Updated Limbo state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LimboState'
-        '400':
-          description: Invalid Limbo attempt
-        '401':
-          description: Not authenticated
-
   /owner/achievements:
     get:
       tags: [Owner]
@@ -1017,30 +979,6 @@ components:
         event:
           type: string
           enum: [limbo_passed, limbo_failed, formula_click, read_aloud]
-    LimboState:
-      type: object
-      required: [wrongColors, centerActivated, completed]
-      properties:
-        wrongColors:
-          type: array
-          items:
-            type: string
-        centerActivated:
-          type: boolean
-        completed:
-          type: boolean
-        completedAt:
-          type: ["string", "null"]
-          format: date-time
-    LimboAttemptBody:
-      type: object
-      required: [outcome, color]
-      properties:
-        outcome:
-          type: string
-          enum: [correct, wrong]
-        color:
-          type: string
     OwnerAchievement:
       type: object
       required: [key, name, description, icon, enabled]

@@ -1,3 +1,2 @@
 - [Orval barrel export collisions](orval-barrel-collisions.md) — after every `api-spec codegen` run, check for duplicate `*Body` type/schema re-exports between generated/types and generated/api in @workspace/api-zod.
 - [Achievement rules](achievement-rules.md) — first ten accounts are veterans; owner disable/enable preserves earned progress.
-- [Limbo progression](limbo-progression.md) — authenticated accounts keep six stable wrong-color slots and a center activation.

@@ -432,33 +432,6 @@ export const RecordAchievementEventBody = zod.object({
 
 
 /**
- * @summary Get the authenticated user's persistent Limbo state
- */
-export const GetLimboStateResponse = zod.object({
-  "wrongColors": zod.array(zod.string()),
-  "centerActivated": zod.boolean(),
-  "completed": zod.boolean(),
-  "completedAt": zod.coerce.date().nullish()
-})
-
-
-/**
- * @summary Record a Limbo correct or wrong-color attempt
- */
-export const RecordLimboAttemptBody = zod.object({
-  "outcome": zod.enum(['correct', 'wrong']),
-  "color": zod.string()
-})
-
-export const RecordLimboAttemptResponse = zod.object({
-  "wrongColors": zod.array(zod.string()),
-  "centerActivated": zod.boolean(),
-  "completed": zod.boolean(),
-  "completedAt": zod.coerce.date().nullish()
-})
-
-
-/**
  * @summary List achievement settings
  */
 export const ListOwnerAchievementsResponse = zod.object({
