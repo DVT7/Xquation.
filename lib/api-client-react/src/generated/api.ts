@@ -39,6 +39,8 @@ import type {
   GlossaryTerm,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  LimboAttemptBody,
+  LimboState,
   ListConstantsParams,
   ListFormulasParams,
   ListGlossaryTermsParams,
@@ -2008,6 +2010,154 @@ export const useRecordAchievementEvent = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRecordAchievementEventMutationOptions(options));
+    }
+
+export const getGetLimboStateUrl = () => {
+
+
+
+
+  return `/api/limbo/state`
+}
+
+/**
+ * @summary Get the authenticated user's persistent Limbo state
+ */
+export const getLimboState = async ( options?: RequestInit): Promise<LimboState> => {
+
+  return customFetch<LimboState>(getGetLimboStateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLimboStateQueryKey = () => {
+    return [
+    `/api/limbo/state`
+    ] as const;
+    }
+
+
+export const getGetLimboStateQueryOptions = <TData = Awaited<ReturnType<typeof getLimboState>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLimboState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLimboStateQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLimboState>>> = ({ signal }) => getLimboState({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLimboState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLimboStateQueryResult = NonNullable<Awaited<ReturnType<typeof getLimboState>>>
+export type GetLimboStateQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the authenticated user's persistent Limbo state
+ */
+
+export function useGetLimboState<TData = Awaited<ReturnType<typeof getLimboState>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLimboState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLimboStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRecordLimboAttemptUrl = () => {
+
+
+
+
+  return `/api/limbo/attempt`
+}
+
+/**
+ * @summary Record a Limbo correct or wrong-color attempt
+ */
+export const recordLimboAttempt = async (limboAttemptBody: LimboAttemptBody, options?: RequestInit): Promise<LimboState> => {
+
+  return customFetch<LimboState>(getRecordLimboAttemptUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      limboAttemptBody,)
+  }
+);}
+
+
+
+
+export const getRecordLimboAttemptMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLimboAttempt>>, TError,{data: BodyType<LimboAttemptBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordLimboAttempt>>, TError,{data: BodyType<LimboAttemptBody>}, TContext> => {
+
+const mutationKey = ['recordLimboAttempt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordLimboAttempt>>, {data: BodyType<LimboAttemptBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordLimboAttempt(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordLimboAttemptMutationResult = NonNullable<Awaited<ReturnType<typeof recordLimboAttempt>>>
+    export type RecordLimboAttemptMutationBody = BodyType<LimboAttemptBody>
+    export type RecordLimboAttemptMutationError = ErrorType<void>
+
+    /**
+ * @summary Record a Limbo correct or wrong-color attempt
+ */
+export const useRecordLimboAttempt = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLimboAttempt>>, TError,{data: BodyType<LimboAttemptBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordLimboAttempt>>,
+        TError,
+        {data: BodyType<LimboAttemptBody>},
+        TContext
+      > => {
+      return useMutation(getRecordLimboAttemptMutationOptions(options));
     }
 
 export const getListOwnerAchievementsUrl = () => {

@@ -92,6 +92,27 @@ export interface AchievementEventBody {
   event: AchievementEventBodyEvent;
 }
 
+export interface LimboState {
+  wrongColors: string[];
+  centerActivated: boolean;
+  completed: boolean;
+  /** @nullable */
+  completedAt?: string | null;
+}
+
+export type LimboAttemptBodyOutcome = typeof LimboAttemptBodyOutcome[keyof typeof LimboAttemptBodyOutcome];
+
+
+export const LimboAttemptBodyOutcome = {
+  correct: 'correct',
+  wrong: 'wrong',
+} as const;
+
+export interface LimboAttemptBody {
+  outcome: LimboAttemptBodyOutcome;
+  color: string;
+}
+
 export interface OwnerAchievement {
   key: string;
   name: string;

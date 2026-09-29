@@ -7,7 +7,6 @@ import {
   ArrowRightLeft, 
   BookA, 
   Star, 
-  Info,
   Menu,
   Telescope,
   Heart,
@@ -28,7 +27,6 @@ const NAV_ITEMS = [
   { href: "/donate", label: "Donate", icon: Heart },
   { href: "/glossary", label: "Glossary", icon: BookA },
   { href: "/favorites", label: "Favorites", icon: Star },
-  { href: "/about", label: "About", icon: Info },
 ];
 
 export function Sidebar() {
@@ -45,11 +43,6 @@ export function Sidebar() {
         const isActive = location.startsWith(item.href);
         return (
           <div key={item.href}>
-            {item.href === "/donate" && (
-              <div className="mb-2 rounded-md border border-red-500/50 bg-red-500/15 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider text-red-400">
-                Not available
-              </div>
-            )}
             <Link href={item.href} className="block">
               <div className={cn(
                 "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm",

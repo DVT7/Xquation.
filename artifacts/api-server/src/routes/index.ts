@@ -13,6 +13,7 @@ import userStatsRouter from "./userStats";
 import feedbackRouter from "./feedback";
 import ownerRouter from "./owner";
 import achievementsRouter from "./achievements";
+import limboRouter from "./limbo";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(statsRouter);
 router.use(feedbackRouter);
 router.use(ownerRouter);
 router.use(achievementsRouter);
+router.use(limboRouter);
 
 export default router;
