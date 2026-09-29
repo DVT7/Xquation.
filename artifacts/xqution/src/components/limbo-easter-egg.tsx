@@ -4,6 +4,7 @@ import { LIMBO_TRIGGER_EVENT, markLimboDiscovered } from "@/lib/limbo";
 import { emitAchievementEvent } from "@/lib/achievement-events";
 
 const LOCKOUT_KEY = "xqution_limbo_lockout";
+const LIT_COLORS_KEY = "xqution_limbo_lit_colors";
 const LOCKOUT_MS = 5 * 60 * 1000;
 const DANCE_MS = 30_000;
 const GLOW_MS = 1_800;
@@ -27,8 +28,10 @@ const COLORS = [
   { label: "purple", hex: "#CC44FF" },
 ];
 
-type Phase = "hidden" | "dance" | "pick" | "won" | "lost";
+type Phase = "hidden" | "dance" | "pick" | "result" | "lost";
 type XPos = { x: number; y: number };
+type ResultKind = "right" | "wrong";
+type ResultStage = "fade" | "formation";
 
 function getLockout(): number | null {
   try {
@@ -48,6 +51,23 @@ function shuffled<T>(arr: T[]): T[] {
     [copy[index], copy[j]] = [copy[j], copy[index]];
   }
   return copy;
+}
+
+function getLitColors(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LIT_COLORS_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((value): value is string => typeof value === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLitColors(colors: string[]) {
+  try {
+    localStorage.setItem(LIT_COLORS_KEY, JSON.stringify(colors));
+  } catch {
+    // Progress remains available for the current run if storage is unavailable.
+  }
 }
 
 function startLimboAudio(ctx: AudioContext): () => void {
@@ -110,7 +130,11 @@ export function LimboEasterEgg() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isGlowing, setIsGlowing] = useState(false);
   const [pickReady, setPickReady] = useState(false);
-  const [wrongFlash, setWrongFlash] = useState<{ color: string; x: number; y: number } | null>(null);
+  const [litColors, setLitColors] = useState<string[]>(getLitColors);
+  const [resultKind, setResultKind] = useState<ResultKind>("right");
+  const [resultStage, setResultStage] = useState<ResultStage>("formation");
+  const [resultColor, setResultColor] = useState(COLORS[0]);
+  const [resultPosition, setResultPosition] = useState<XPos>({ x: 50, y: 50 });
   const [positions, setPositions] = useState<XPos[]>(() => GRID.map((point) => ({ ...point })));
   const xSlot = useRef<number[]>([0, 1, 2, 3, 4, 5, 6, 7]);
   const correctIdx = useRef(0);
@@ -131,11 +155,14 @@ export function LimboEasterEgg() {
     if (phase !== "hidden") return;
     markLimboDiscovered();
     colorOrder.current = shuffled(COLORS);
-    correctIdx.current = Math.floor(Math.random() * COUNT);
+    const unlitIndexes = colorOrder.current
+      .map((color, index) => litColors.includes(color.label) ? -1 : index)
+      .filter((index) => index >= 0);
+    const candidateIndexes = unlitIndexes.length > 0 ? unlitIndexes : colorOrder.current.map((_, index) => index);
+    correctIdx.current = candidateIndexes[Math.floor(Math.random() * candidateIndexes.length)] ?? 0;
     xSlot.current = [0, 1, 2, 3, 4, 5, 6, 7];
     setPositions(GRID.map((point) => ({ ...point })));
     setIsGlowing(false);
-    setWrongFlash(null);
     setPhase("dance");
     window.dispatchEvent(new Event("xqution:limbo-discovered"));
   };
@@ -198,14 +225,16 @@ export function LimboEasterEgg() {
       let first = Math.floor(Math.random() * COUNT);
       let second = Math.floor(Math.random() * (COUNT - 1));
       if (second >= first) second += 1;
-      const next = [...positions];
       const firstSlot = xSlot.current[first];
       const secondSlot = xSlot.current[second];
       xSlot.current[first] = secondSlot;
       xSlot.current[second] = firstSlot;
-      next[first] = { ...GRID[secondSlot] };
-      next[second] = { ...GRID[firstSlot] };
-      setPositions(next);
+      setPositions((previous) => {
+        const next = [...previous];
+        next[first] = { ...GRID[secondSlot] };
+        next[second] = { ...GRID[firstSlot] };
+        return next;
+      });
       scheduleNextSwap();
     }, delay);
   };
@@ -215,7 +244,7 @@ export function LimboEasterEgg() {
     setPickReady(false);
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const radius = Math.min(width, height) * 0.3;
+    const radius = Math.min(width, height) * 0.32;
     const circlePosition = (angle: number, index: number): XPos => ({
       x: ((width / 2 + radius * Math.cos(angle + (index / COUNT) * Math.PI * 2)) / width) * 100,
       y: ((height / 2 + radius * Math.sin(angle + (index / COUNT) * Math.PI * 2)) / height) * 100,
@@ -238,10 +267,19 @@ export function LimboEasterEgg() {
   }, [phase]);
 
   useEffect(() => {
-    if (phase !== "won") return;
-    const timer = setTimeout(() => setPhase("hidden"), 2200);
-    return () => clearTimeout(timer);
-  }, [phase]);
+    if (phase !== "result") return;
+    setResultStage(resultKind === "wrong" ? "fade" : "formation");
+    const formationTimer = resultKind === "wrong"
+      ? setTimeout(() => setResultStage("formation"), 850)
+      : null;
+    const closeTimer = setTimeout(() => {
+      setPhase(resultKind === "wrong" ? "lost" : "hidden");
+    }, resultKind === "wrong" ? 2_200 : 2_400);
+    return () => {
+      if (formationTimer) clearTimeout(formationTimer);
+      clearTimeout(closeTimer);
+    };
+  }, [phase, resultKind]);
 
   useEffect(() => {
     if (phase !== "lost" || !lockoutEnd) return;
@@ -265,19 +303,27 @@ export function LimboEasterEgg() {
     cancelAnimationFrame(orbitRaf.current);
     const selected = colorOrder.current[index] ?? COLORS[index];
     const selectedPosition = positions[index] ?? { x: 50, y: 50 };
+    setResultColor(selected);
+    setResultPosition(selectedPosition);
+    setResultKind(index === correctIdx.current ? "right" : "wrong");
+    setResultStage(index === correctIdx.current ? "formation" : "fade");
+    setLitColors((previous) => {
+      if (previous.includes(selected.label)) return previous;
+      const next = [...previous, selected.label];
+      saveLitColors(next);
+      return next;
+    });
     if (index === correctIdx.current) {
       emitAchievementEvent("limbo_passed");
-      setPhase("won");
+      setPhase("result");
       return;
     }
 
     emitAchievementEvent("limbo_failed");
-    setWrongFlash({ color: selected.hex, x: selectedPosition.x, y: selectedPosition.y });
-    setTimeout(() => setWrongFlash(null), 900);
     const until = Date.now() + LOCKOUT_MS;
     localStorage.setItem(LOCKOUT_KEY, JSON.stringify(until));
     setLockoutEnd(until);
-    setPhase("lost");
+    setPhase("result");
   };
 
   const handleBypass = () => {
@@ -295,16 +341,17 @@ export function LimboEasterEgg() {
       <style>{`
         @keyframes limbo-glow { 0%,100% { text-shadow:0 0 10px #00ff88,0 0 32px #00ff88; color:#00ff88; } 50% { text-shadow:0 0 32px #00ff88,0 0 80px #00ff88; color:#afffdd; } }
         @keyframes center-pulse { 0%,100% { opacity:.72; text-shadow:0 0 14px #00D9FF,0 0 36px #00D9FF; transform:translate(-50%,-50%) scale(1); } 50% { opacity:1; text-shadow:0 0 36px #00D9FF,0 0 110px #00D9FF; transform:translate(-50%,-50%) scale(1.12); } }
-        @keyframes won-pop { 0% { transform:translate(-50%,-50%) scale(.7); opacity:0; } 60% { transform:translate(-50%,-50%) scale(1.12); opacity:1; } 100% { transform:translate(-50%,-50%) scale(1); opacity:1; } }
-        @keyframes wrong-flash { 0%,100% { opacity:0; transform:translate(-50%,-50%) scale(.8); } 25%,75% { opacity:1; transform:translate(-50%,-50%) scale(1.25); } }
+        @keyframes wrong-fade { 0% { opacity:1; filter:brightness(1.8); } 100% { opacity:0; filter:brightness(1); } }
         @keyframes spin-in { from { transform:rotate(-180deg) scale(0); opacity:0; } to { transform:rotate(0deg) scale(1); opacity:1; } }
         .lx-btn { position:absolute; transform:translate(-50%,-50%); background:transparent; border:0; padding:0; outline:0; }
         .lx-btn.pickable { cursor:pointer; }
         .lx-btn.pickable:hover .lx-char { filter:brightness(1.6) drop-shadow(0 0 12px currentColor); }
         .lx-char { display:block; font-size:72px; font-weight:900; font-style:italic; font-family:'Times New Roman',Georgia,serif; line-height:1; user-select:none; }
+        .lx-char.lit { animation:limbo-glow 1.1s ease-in-out infinite; }
         .limbo-center { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:#00D9FF; font-size:132px; font-weight:900; font-style:italic; font-family:'Times New Roman',Georgia,serif; line-height:1; pointer-events:none; }
         .limbo-center.pulsing { animation:center-pulse 1.1s ease-in-out infinite; }
-        .wrong-flash { position:absolute; z-index:8; font-size:104px; font-weight:900; font-style:italic; font-family:'Times New Roman',Georgia,serif; line-height:1; pointer-events:none; animation:wrong-flash .9s ease-in-out forwards; }
+        .result-ring-x { position:absolute; transform:translate(-50%,-50%); font-size:72px; font-weight:900; font-style:italic; font-family:'Times New Roman',Georgia,serif; line-height:1; pointer-events:none; }
+        .result-fade-x { position:absolute; transform:translate(-50%,-50%); font-size:104px; font-weight:900; font-style:italic; font-family:'Times New Roman',Georgia,serif; line-height:1; pointer-events:none; animation:wrong-fade .85s ease-out forwards; }
       `}</style>
 
       <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(2,11,36,.97)", backdropFilter: "blur(8px)", overflow: "hidden" }}>
@@ -315,7 +362,8 @@ export function LimboEasterEgg() {
             </p>
             {Array.from({ length: COUNT }).map((_, index) => {
               const isGlow = phase === "dance" && isGlowing && index === correctIdx.current;
-              const color = phase === "pick" ? (colorOrder.current[index]?.hex ?? "#00D9FF") : "#00D9FF";
+              const colorEntry = colorOrder.current[index] ?? COLORS[index];
+              const color = phase === "pick" ? colorEntry.hex : "#00D9FF";
               const position = positions[index] ?? { x: 50, y: 50 };
               const transition = phase === "dance"
                 ? "left .35s cubic-bezier(.4,0,.2,1),top .35s cubic-bezier(.4,0,.2,1)"
@@ -330,20 +378,41 @@ export function LimboEasterEgg() {
                   disabled={phase === "dance"}
                   style={{ left: `${position.x}%`, top: `${position.y}%`, transition, animation: isGlow ? "limbo-glow .55s ease-in-out infinite" : "none" }}
                 >
-                  <span className="lx-char" style={{ color: isGlow ? "#00ff88" : color, textShadow: isGlow ? undefined : phase === "pick" ? `0 0 20px ${color}aa` : `0 0 10px ${color}55` }}>𝑥</span>
+                  <span className={`lx-char${phase === "pick" && litColors.includes(colorEntry.label) ? " lit" : ""}`} style={{ color: isGlow ? "#00ff88" : color, textShadow: isGlow ? undefined : phase === "pick" ? `0 0 20px ${color}aa` : `0 0 10px ${color}55` }}>𝑥</span>
                 </button>
               );
             })}
-            <div className="limbo-center">𝑥</div>
           </>
         )}
 
-        {wrongFlash && (
-          <div className="wrong-flash" style={{ left: `${wrongFlash.x}%`, top: `${wrongFlash.y}%`, color: wrongFlash.color, textShadow: `0 0 18px ${wrongFlash.color},0 0 48px ${wrongFlash.color}` }}>𝑥</div>
+        {phase === "result" && resultStage === "fade" && resultKind === "wrong" && (
+          <div className="result-fade-x" style={{ left: `${resultPosition.x}%`, top: `${resultPosition.y}%`, color: resultColor.hex, textShadow: `0 0 18px ${resultColor.hex},0 0 48px ${resultColor.hex}` }}>𝑥</div>
         )}
 
-        {phase === "won" && (
-          <div className="limbo-center pulsing" style={{ zIndex: 4 }}>𝑥</div>
+        {phase === "result" && resultStage === "formation" && (
+          <>
+            {Array.from({ length: COUNT }).map((_, index) => {
+              const entry = colorOrder.current[index] ?? COLORS[index];
+              const position = positions[index] ?? { x: 50, y: 50 };
+              const lit = litColors.includes(entry.label);
+              return (
+                <div
+                  key={entry.label}
+                  className={`result-ring-x${lit ? " lit" : ""}`}
+                  style={{
+                    left: `${position.x}%`,
+                    top: `${position.y}%`,
+                    color: entry.hex,
+                    textShadow: lit ? `0 0 18px ${entry.hex},0 0 48px ${entry.hex}` : `0 0 8px ${entry.hex}66`,
+                    opacity: lit ? 1 : .65,
+                  }}
+                >
+                  𝑥
+                </div>
+              );
+            })}
+            <div className={`limbo-center${resultKind === "right" ? " pulsing" : ""}`} style={{ zIndex: 4 }}>𝑥</div>
+          </>
         )}
 
         {phase === "lost" && (

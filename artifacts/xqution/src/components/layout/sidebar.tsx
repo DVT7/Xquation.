@@ -8,7 +8,6 @@ import {
   BookA, 
   Star, 
   Menu,
-  Telescope,
   Heart,
   UserCircle
 } from "lucide-react";
@@ -29,6 +28,18 @@ const NAV_ITEMS = [
   { href: "/favorites", label: "Favorites", icon: Star },
 ];
 
+function BrandMark() {
+  return (
+    <span className="flex items-center gap-2">
+      <span className="font-mono text-xl font-bold tracking-tight text-foreground">
+        <span className="text-2xl text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.9)]">X</span>
+        QUTION
+      </span>
+      <span className="font-mono text-[10px] font-semibold tracking-wider text-primary/70">V0.5</span>
+    </span>
+  );
+}
+
 export function Sidebar() {
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
@@ -42,12 +53,7 @@ export function Sidebar() {
       {NAV_ITEMS.map((item) => {
         const isActive = location.startsWith(item.href);
         return (
-          <div key={item.href}>
-            {item.href === "/donate" && (
-              <div className="mb-2 rounded-md border border-red-500/50 bg-red-500/15 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider text-red-400">
-                Not in order
-              </div>
-            )}
+            <div key={item.href} className={item.href === "/donate" ? "group" : undefined}>
             <Link href={item.href} className="block">
               <div className={cn(
                 "flex items-center px-4 py-3 rounded-md transition-colors font-medium text-sm",
@@ -59,6 +65,11 @@ export function Sidebar() {
                 {item.label}
               </div>
             </Link>
+            {item.href === "/donate" && (
+              <div className="max-h-0 overflow-hidden rounded-md border border-red-500/50 bg-red-500/15 px-3 text-center text-xs font-bold uppercase tracking-wider text-red-400 opacity-0 transition-all duration-200 group-hover:mt-1 group-hover:max-h-10 group-hover:px-3 group-hover:py-2 group-hover:opacity-100">
+                Not in order
+              </div>
+            )}
           </div>
         );
       })}
@@ -96,8 +107,7 @@ export function Sidebar() {
       {/* Mobile Topbar & Sheet */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/80 backdrop-blur-md flex items-center justify-between px-4 z-50">
         <Link href="/" className="flex items-center gap-2">
-          <Telescope className="w-6 h-6 text-primary" />
-          <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUATION</span>
+          <BrandMark />
         </Link>
         <Sheet>
           <SheetTrigger asChild>
@@ -119,8 +129,7 @@ export function Sidebar() {
       <div className="hidden md:flex w-64 h-screen fixed top-0 left-0 flex-col border-r border-border bg-card/50 backdrop-blur z-40">
         <div className="h-16 flex items-center px-6 border-b border-border">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Telescope className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold tracking-tight text-foreground font-mono">XQUATION</span>
+            <BrandMark />
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">

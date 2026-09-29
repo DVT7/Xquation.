@@ -371,8 +371,13 @@ export default function Home() {
       <section className="relative text-center py-20 px-4 flex flex-col items-center justify-center min-h-[40vh] border border-border rounded-xl bg-card/30 backdrop-blur overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
         <h1 className="text-4xl md:text-6xl font-black font-mono tracking-tighter mb-2">
-          <span style={{ color: "#00D9FF" }}>X</span>
-          <span className="text-foreground/90">QUATION</span>
+          <span
+            className="inline-block text-cyan-300 drop-shadow-[0_0_12px_rgba(103,232,249,0.9)]"
+            style={{ fontSize: "1.18em", lineHeight: 0.8 }}
+          >
+            X
+          </span>
+          <span className="text-foreground/90">QUTION</span>
         </h1>
         <p className="text-base md:text-lg text-primary/80 font-mono tracking-widest mb-4 uppercase">
           Explore. Calculate. Understand.
