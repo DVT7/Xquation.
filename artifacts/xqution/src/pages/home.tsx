@@ -380,8 +380,8 @@ export default function Home() {
             </span>
             <span className="text-foreground/90">Quation</span>
           </span>
-          <span className="text-base md:text-xl font-semibold tracking-wider text-primary/80">
-            V0.5
+          <span className="text-[10px] md:text-sm font-semibold tracking-wider text-primary/80">
+            version.0.5
           </span>
         </h1>
         <p className="text-base md:text-lg text-primary/80 font-mono tracking-widest mb-4 uppercase">
