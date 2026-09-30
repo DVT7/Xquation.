@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { setBaseUrl } from "@workspace/api-client-react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Trophy } from "lucide-react";
@@ -17,6 +18,7 @@ import { AnnouncementToasts } from "@/components/announcement-toasts";
 import { useRecordAchievementEvent, getGetAchievementsQueryKey } from "@workspace/api-client-react";
 import { ACHIEVEMENT_EVENT, type AchievementEvent } from "@/lib/achievement-events";
 import 'katex/dist/katex.min.css';
+setBaseUrl("https://xquation-api.onrender.com");
 
 const queryClient = new QueryClient({
   defaultOptions: {
