@@ -64,8 +64,14 @@ router.get("/formulas", async (req, res): Promise<void> => {
     ) as typeof query;
   }
   console.log("ABOUT TO QUERY FORMULAS");
-  
+
+try {
   const formulas = await query;
+  res.json(ListFormulasResponse.parse(formulas));
+} catch (error) {
+  console.error("FORMULAS DB ERROR:", error);
+  throw error;
+}
   res.json(ListFormulasResponse.parse(formulas));
 });
 
