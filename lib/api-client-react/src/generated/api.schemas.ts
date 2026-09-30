@@ -90,6 +90,26 @@ export const AchievementEventBodyEvent = {
 
 export interface AchievementEventBody {
   event: AchievementEventBodyEvent;
+  /**
+     * Number of words read when event is read_aloud.
+     * @minimum 1
+     * @maximum 1000000
+     */
+  amount?: number;
+}
+
+export interface AchievementUnlock {
+  key: string;
+  name: string;
+  icon: string;
+}
+
+export interface AchievementEventResponse {
+  completed: AchievementUnlock[];
+}
+
+export interface GrantAchievementBody {
+  userId: string;
 }
 
 export interface OwnerAchievement {

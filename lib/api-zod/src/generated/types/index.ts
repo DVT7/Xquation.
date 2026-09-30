@@ -9,7 +9,9 @@
 export * from './achievement';
 export * from './achievementEventBody';
 export * from './achievementEventBodyEvent';
+export * from './achievementEventResponse';
 export * from './achievementList';
+export * from './achievementUnlock';
 export * from './adminAction';
 export * from './adminActionList';
 export * from './authorizationSessionHeaderParameter';
@@ -31,6 +33,7 @@ export * from './favoriteInput';
 export * from './formula';
 export * from './globalSearchParams';
 export * from './glossaryTerm';
+export * from './grantAchievementBody';
 export * from './handleBrowserLoginCallbackParams';
 export * from './healthStatus';
 export * from './listConstantsParams';

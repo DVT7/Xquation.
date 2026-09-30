@@ -14,7 +14,7 @@ import {
   User, Mail, LogOut, LogIn, Telescope, Star, BookOpen, FlaskConical,
   Sun, Moon, Volume2, ArrowRight, RotateCcw, MessageSquare, AlertCircle, Lightbulb, CheckCircle,
   Reply, ChevronDown, ChevronUp, Clock, Send, Crown, Trophy, Flame, MousePointerClick,
-  Library, Sparkles,
+  Library, Sparkles, Users, UserRound,
 } from "lucide-react";
 
 function getInitials(firstName?: string | null, lastName?: string | null): string {
@@ -232,6 +232,10 @@ function achievementIcon(icon: string) {
             ? Sparkles
             : icon === "crown"
               ? Crown
+              : icon === "users"
+                ? Users
+                : icon === "user-round"
+                  ? UserRound
               : Trophy;
   return Icon;
 }
@@ -277,7 +281,9 @@ function AchievementsSection({ achievements, isLoading }: { achievements: Achiev
                         <p className="text-sm font-semibold text-foreground leading-snug">{achievement.name}</p>
                         {achievement.completed && <Badge className="text-[10px] bg-primary/15 text-primary border-primary/20 shrink-0">Earned</Badge>}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+                      {achievement.description && (
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+                      )}
                       {!achievement.completed && (
                         <div className="mt-2">
                           <div className="flex justify-between text-[10px] text-muted-foreground mb-1">

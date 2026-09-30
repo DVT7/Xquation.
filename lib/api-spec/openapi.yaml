@@ -506,8 +506,12 @@ paths:
             schema:
               $ref: '#/components/schemas/AchievementEventBody'
       responses:
-        '204':
+        '200':
           description: Event recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AchievementEventResponse'
         '400':
           description: Invalid event
         '401':
@@ -554,6 +558,35 @@ paths:
                 $ref: '#/components/schemas/OwnerAchievement'
         '400':
           description: Invalid achievement key or body
+        '403':
+          description: Owner access required
+
+  /owner/achievements/{key}/grant:
+    post:
+      tags: [Owner]
+      operationId: grantOwnerAchievement
+      summary: Grant an achievement to an account
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantAchievementBody'
+      responses:
+        '200':
+          description: Updated achievement progress for the selected account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AchievementList'
+        '400':
+          description: Invalid achievement or account
         '403':
           description: Owner access required
 
@@ -979,6 +1012,35 @@ components:
         event:
           type: string
           enum: [limbo_passed, limbo_failed, formula_click, read_aloud]
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: Number of words read when event is read_aloud.
+    AchievementUnlock:
+      type: object
+      required: [key, name, icon]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+    AchievementEventResponse:
+      type: object
+      required: [completed]
+      properties:
+        completed:
+          type: array
+          items:
+            $ref: "#/components/schemas/AchievementUnlock"
+    GrantAchievementBody:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
     OwnerAchievement:
       type: object
       required: [key, name, description, icon, enabled]

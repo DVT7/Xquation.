@@ -426,8 +426,21 @@ export const GetAchievementsResponse = zod.object({
 /**
  * @summary Record an achievement-related user action
  */
+export const recordAchievementEventBodyAmountMax = 1000000;
+
+
+
 export const RecordAchievementEventBody = zod.object({
-  "event": zod.enum(['limbo_passed', 'limbo_failed', 'formula_click', 'read_aloud'])
+  "event": zod.enum(['limbo_passed', 'limbo_failed', 'formula_click', 'read_aloud']),
+  "amount": zod.number().min(1).max(recordAchievementEventBodyAmountMax).optional().describe('Number of words read when event is read_aloud.')
+})
+
+export const RecordAchievementEventResponse = zod.object({
+  "completed": zod.array(zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "icon": zod.string()
+}))
 })
 
 
@@ -464,6 +477,32 @@ export const UpdateOwnerAchievementResponse = zod.object({
   "icon": zod.string(),
   "enabled": zod.boolean(),
   "unlockedCount": zod.number().optional()
+})
+
+
+/**
+ * @summary Grant an achievement to an account
+ */
+export const GrantOwnerAchievementParams = zod.object({
+  "key": zod.coerce.string()
+})
+
+export const GrantOwnerAchievementBody = zod.object({
+  "userId": zod.string()
+})
+
+export const GrantOwnerAchievementResponse = zod.object({
+  "achievements": zod.array(zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "icon": zod.string(),
+  "enabled": zod.boolean(),
+  "progress": zod.number(),
+  "target": zod.number().optional(),
+  "completed": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish()
+}))
 })
 
 

@@ -21,6 +21,7 @@ import type {
 
 import type {
   AchievementEventBody,
+  AchievementEventResponse,
   AchievementList,
   AdminActionList,
   AuthUserEnvelope,
@@ -37,6 +38,7 @@ import type {
   Formula,
   GlobalSearchParams,
   GlossaryTerm,
+  GrantAchievementBody,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ListConstantsParams,
@@ -1950,9 +1952,9 @@ export const getRecordAchievementEventUrl = () => {
 /**
  * @summary Record an achievement-related user action
  */
-export const recordAchievementEvent = async (achievementEventBody: AchievementEventBody, options?: RequestInit): Promise<void> => {
+export const recordAchievementEvent = async (achievementEventBody: AchievementEventBody, options?: RequestInit): Promise<AchievementEventResponse> => {
 
-  return customFetch<void>(getRecordAchievementEventUrl(),
+  return customFetch<AchievementEventResponse>(getRecordAchievementEventUrl(),
   {
     ...options,
     method: 'POST',
@@ -2157,6 +2159,78 @@ export const useUpdateOwnerAchievement = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateOwnerAchievementMutationOptions(options));
+    }
+
+export const getGrantOwnerAchievementUrl = (key: string,) => {
+
+
+
+
+  return `/api/owner/achievements/${key}/grant`
+}
+
+/**
+ * @summary Grant an achievement to an account
+ */
+export const grantOwnerAchievement = async (key: string,
+    grantAchievementBody: GrantAchievementBody, options?: RequestInit): Promise<AchievementList> => {
+
+  return customFetch<AchievementList>(getGrantOwnerAchievementUrl(key),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      grantAchievementBody,)
+  }
+);}
+
+
+
+
+export const getGrantOwnerAchievementMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof grantOwnerAchievement>>, TError,{key: string;data: BodyType<GrantAchievementBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof grantOwnerAchievement>>, TError,{key: string;data: BodyType<GrantAchievementBody>}, TContext> => {
+
+const mutationKey = ['grantOwnerAchievement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof grantOwnerAchievement>>, {key: string;data: BodyType<GrantAchievementBody>}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  grantOwnerAchievement(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GrantOwnerAchievementMutationResult = NonNullable<Awaited<ReturnType<typeof grantOwnerAchievement>>>
+    export type GrantOwnerAchievementMutationBody = BodyType<GrantAchievementBody>
+    export type GrantOwnerAchievementMutationError = ErrorType<void>
+
+    /**
+ * @summary Grant an achievement to an account
+ */
+export const useGrantOwnerAchievement = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof grantOwnerAchievement>>, TError,{key: string;data: BodyType<GrantAchievementBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof grantOwnerAchievement>>,
+        TError,
+        {key: string;data: BodyType<GrantAchievementBody>},
+        TContext
+      > => {
+      return useMutation(getGrantOwnerAchievementMutationOptions(options));
     }
 
 export const getLogoutMobileSessionUrl = () => {

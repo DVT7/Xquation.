@@ -422,6 +422,7 @@ export function ReadAloudMenu() {
     utt.onend = () => {
       setSpeaking(false);
       cleanupDOM();
+      emitAchievementEvent("read_aloud", spokenWords.length);
     };
     utt.onerror = () => {
       setSpeaking(false);
@@ -430,7 +431,6 @@ export function ReadAloudMenu() {
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utt);
-    emitAchievementEvent("read_aloud");
     setSpeaking(true);
     setMenu(null);
   };

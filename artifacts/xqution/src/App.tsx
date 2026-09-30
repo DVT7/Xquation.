@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Trophy } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReadAloudMenu } from "@/components/ui/read-aloud";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -143,8 +145,17 @@ function AchievementEventBridge() {
   const { isAuthenticated } = useAuth();
   const recordEvent = useRecordAchievementEvent({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
         queryClient.invalidateQueries({ queryKey: getGetAchievementsQueryKey() });
+        for (const achievement of result.completed) {
+          playAchievementSound();
+          toast({
+            title: "Achievement completed",
+            description: achievement.name,
+            icon: <Trophy className="h-5 w-5 text-primary" />,
+            className: "border-primary/40 bg-primary/10",
+          });
+        }
       },
     },
   });
@@ -154,13 +165,35 @@ function AchievementEventBridge() {
       if (!isAuthenticated || recordEvent.isPending) return;
       const detail = (event as CustomEvent<AchievementEvent>).detail;
       if (!detail) return;
-      recordEvent.mutate({ data: { event: detail } });
+      recordEvent.mutate({ data: detail });
     };
     window.addEventListener(ACHIEVEMENT_EVENT, onAchievementEvent);
     return () => window.removeEventListener(ACHIEVEMENT_EVENT, onAchievementEvent);
   }, [isAuthenticated, recordEvent]);
 
   return null;
+}
+
+function playAchievementSound() {
+  const AudioContextClass = window.AudioContext;
+  if (!AudioContextClass) return;
+
+  const context = new AudioContextClass();
+  const now = context.currentTime;
+  [523.25, 659.25, 783.99].forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, now + index * 0.09);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.09 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.09 + 0.22);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now + index * 0.09);
+    oscillator.stop(now + index * 0.09 + 0.24);
+  });
+  window.setTimeout(() => void context.close(), 650);
 }
 
 function App() {

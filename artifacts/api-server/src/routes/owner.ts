@@ -18,6 +18,7 @@ import {
 import {
   eq, sql, desc, count, gte, isNull, and, or, gt, inArray,
 } from "drizzle-orm";
+import { grantAchievement } from "../lib/achievements";
 
 const router: IRouter = Router();
 
@@ -308,6 +309,9 @@ router.patch("/owner/users/:id/role", async (req: Request, res: Response): Promi
   }
 
   await db.update(usersTable).set({ role }).where(eq(usersTable.id, userId));
+  if (role === "owner") {
+    await grantAchievement(userId, "passing_throne");
+  }
   await db.insert(adminActionsTable).values({
     adminId: req.user!.id,
     action: role === "owner" ? "promote" : "demote",

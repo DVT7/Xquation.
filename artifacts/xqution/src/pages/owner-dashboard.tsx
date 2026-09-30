@@ -20,6 +20,7 @@ import {
   useReplyToFeedback,
   useListOwnerAchievements,
   useUpdateOwnerAchievement,
+  useGrantOwnerAchievement,
   getListOwnerAchievementsQueryKey,
   type OwnerEnrichedUser,
   type OwnerAnnouncement,
@@ -27,6 +28,7 @@ import {
   type OwnerAchievement,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import { FormulaBuilder } from "@/components/formula/formula-builder";
 import {
   Crown, Users, Eye, Heart, Search, MessageSquare, Shield,
@@ -42,6 +44,7 @@ export default function OwnerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [announceForm, setAnnounceForm] = useState({ title: "", message: "" });
   const [replyText, setReplyText] = useState<Record<number, string>>({});
+  const [grantUserId, setGrantUserId] = useState("");
 
   // Queries
   const { data: analyticsData, isLoading: analyticsLoading } = useGetOwnerAnalytics();
@@ -100,6 +103,20 @@ export default function OwnerDashboard() {
       },
     },
   });
+  const grantAchievement = useGrantOwnerAchievement({
+    mutation: {
+      onSuccess: (result, variables) => {
+        queryClient.invalidateQueries({ queryKey: getListOwnerAchievementsQueryKey() });
+        const granted = result.achievements.find((achievement) => achievement.key === variables.key);
+        toast({
+          title: "Achievement granted",
+          description: granted?.name ?? variables.key,
+          icon: <Trophy className="h-5 w-5 text-primary" />,
+          className: "border-primary/40 bg-primary/10",
+        });
+      },
+    },
+  });
 
   // Redirect non-owners
   useEffect(() => {
@@ -107,6 +124,10 @@ export default function OwnerDashboard() {
       navigate("/account");
     }
   }, [isLoading, isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    if (!grantUserId && user?.id) setGrantUserId(user.id);
+  }, [grantUserId, user?.id]);
 
   if (isLoading || (!isAuthenticated || user?.role !== "owner")) {
     return (
@@ -196,7 +217,7 @@ export default function OwnerDashboard() {
           <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
             <p className="text-sm font-semibold text-primary">Control account achievements</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Enabled achievements appear for every account. Disabling one hides it from account pages without deleting earned progress.
+              Enable or disable achievements globally, or grant any achievement directly to any account.
             </p>
           </div>
           {achievementsLoading ? (
@@ -210,10 +231,21 @@ export default function OwnerDashboard() {
                   key={achievement.key}
                   achievement={achievement}
                   isSaving={updateAchievement.isPending}
+                  users={users}
+                  grantUserId={grantUserId}
+                  isGranting={grantAchievement.isPending}
+                  onGrantUserIdChange={setGrantUserId}
                   onToggle={() => updateAchievement.mutate({
                     key: achievement.key,
                     data: { enabled: !achievement.enabled },
                   })}
+                  onGrant={() => {
+                    if (!grantUserId) return;
+                    grantAchievement.mutate({
+                      key: achievement.key,
+                      data: { userId: grantUserId },
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -420,11 +452,21 @@ export default function OwnerDashboard() {
 function AchievementAdminCard({
   achievement,
   isSaving,
+  users,
+  grantUserId,
+  isGranting,
+  onGrantUserIdChange,
   onToggle,
+  onGrant,
 }: {
   achievement: OwnerAchievement;
   isSaving: boolean;
+  users: OwnerEnrichedUser[];
+  grantUserId: string;
+  isGranting: boolean;
+  onGrantUserIdChange: (userId: string) => void;
   onToggle: () => void;
+  onGrant: () => void;
 }) {
   return (
     <Card className={`bg-card/60 border-border/40 ${achievement.enabled ? "" : "opacity-70"}`}>
@@ -438,7 +480,9 @@ function AchievementAdminCard({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-semibold text-foreground">{achievement.name}</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+              {achievement.description && (
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{achievement.description}</p>
+              )}
             </div>
             <Badge variant="outline" className={achievement.enabled ? "border-green-400/30 text-green-400" : "border-border/50 text-muted-foreground"}>
               {achievement.enabled ? "Enabled" : "Disabled"}
@@ -448,16 +492,39 @@ function AchievementAdminCard({
             <span className="text-xs text-muted-foreground">
               {achievement.unlockedCount ?? 0} recorded unlocks
             </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={onToggle}
-              disabled={isSaving}
-            >
-              {achievement.enabled ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
-              {achievement.enabled ? "Disable" : "Enable"}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <select
+                value={grantUserId}
+                onChange={(event) => onGrantUserIdChange(event.target.value)}
+                className="h-7 max-w-[170px] rounded-md border border-border/50 bg-background px-2 text-[11px] text-foreground"
+                aria-label={`Account to grant ${achievement.name}`}
+              >
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.email ?? user.firstName ?? user.id}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1.5"
+                onClick={onGrant}
+                disabled={isGranting || !grantUserId}
+              >
+                <Trophy className="w-3.5 h-3.5" /> Grant
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1.5"
+                onClick={onToggle}
+                disabled={isSaving}
+              >
+                {achievement.enabled ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
+                {achievement.enabled ? "Disable" : "Enable"}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

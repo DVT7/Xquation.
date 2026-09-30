@@ -26,10 +26,46 @@ export const ACHIEVEMENT_DEFINITIONS = [
     icon: "mouse-pointer-click",
   },
   {
-    key: "read_aloud",
-    name: "Reading Aloud One Xquation",
-    description: "Use Read Aloud on one xquation.",
+    key: "read_aloud_1",
+    name: "Read Out One Word",
+    description: "Read one word aloud.",
     icon: "volume-2",
+  },
+  {
+    key: "read_aloud_10",
+    name: "Read Out Ten Words",
+    description: "Read ten words aloud.",
+    icon: "volume-2",
+  },
+  {
+    key: "read_aloud_100",
+    name: "Read Out One Hundred Words",
+    description: "Read one hundred words aloud.",
+    icon: "volume-2",
+  },
+  {
+    key: "read_aloud_1000",
+    name: "Read Out One Thousand Words",
+    description: "Read one thousand words aloud.",
+    icon: "volume-2",
+  },
+  {
+    key: "veteran",
+    name: "Veteran",
+    description: "Be one of the first 100 accounts to join XQuation.",
+    icon: "users",
+  },
+  {
+    key: "passing_throne",
+    name: "Passing of the Throne",
+    description: "Get promoted to owner rank.",
+    icon: "crown",
+  },
+  {
+    key: "meet_him",
+    name: "Get to Know Him",
+    description: "",
+    icon: "user-round",
   },
   {
     key: "formulas_complete",
@@ -42,12 +78,6 @@ export const ACHIEVEMENT_DEFINITIONS = [
     name: "The Maximizer",
     description: "Complete every enabled achievement available in Xquation.",
     icon: "sparkles",
-  },
-  {
-    key: "lonely_king",
-    name: "The Lonely King",
-    description: "Become an owner while being one of Xquation's first site veterans.",
-    icon: "crown",
   },
 ] as const;
 

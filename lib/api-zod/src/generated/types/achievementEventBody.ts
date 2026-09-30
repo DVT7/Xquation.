@@ -9,4 +9,10 @@ import type { AchievementEventBodyEvent } from './achievementEventBodyEvent';
 
 export interface AchievementEventBody {
   event: AchievementEventBodyEvent;
+  /**
+     * Number of words read when event is read_aloud.
+     * @minimum 1
+     * @maximum 1000000
+     */
+  amount?: number;
 }
