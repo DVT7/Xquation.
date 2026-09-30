@@ -63,7 +63,8 @@ router.get("/formulas", async (req, res): Promise<void> => {
       )
     ) as typeof query;
   }
-
+  console.log("ABOUT TO QUERY FORMULAS");
+  
   const formulas = await query;
   res.json(ListFormulasResponse.parse(formulas));
 });
