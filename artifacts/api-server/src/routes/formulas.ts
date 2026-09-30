@@ -23,6 +23,7 @@ router.get("/formulas/categories", async (_req, res): Promise<void> => {
 });
 
 router.get("/formulas/featured", async (_req, res): Promise<void> => {
+  console.log("FORMULAS ROUTE HIT");
   const formulas = await db.select().from(formulasTable).where(eq(formulasTable.isFeatured, true));
   res.json(ListFeaturedFormulasResponse.parse(formulas));
 });
